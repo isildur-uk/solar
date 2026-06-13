@@ -1,0 +1,17 @@
+node_modules
+sea-prep.blob
+sea-config.json
+dist
+exe_build
+_backups
+tests
+test_ingest
+guides
+GFX
+*.cmd
+*.exe
+package.json
+package-lock.json
+serve-lan.js
+BRIEF.md
+README.md

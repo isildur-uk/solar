@@ -1,0 +1,225 @@
+/* SOLAR — hero.css
+ * Cosmic-void landing cover, built against the SOLAR design system (css/tokens.css).
+ * A single luminous wordmark on a near-black void, a faint sample link-chart, an amber
+ * horizon wash. Clicking splits the word into a chromatic prism, blooms, and opens a
+ * circular aperture (iris) into the workbench. See GFX/DESIGN.md.
+ */
+
+/* ---------- topbar glass + brand wordmark ---------- */
+#topbar {
+  background: color-mix(in oklab, #0f1620 78%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+@keyframes cr-gradient-sweep { from { background-position: 100% 0; } to { background-position: 0 0; } }
+#brand { cursor: pointer; }
+#brand .brand-line {
+  display: inline-block;
+  background-image: linear-gradient(90deg,
+    #c9d4e0 0, #c9d4e0 33.33%, #82bcff 42%, #2483ff 48%,
+    #e8b34b 54%, #fe7b02 60%, #c9d4e0 66.67%, #c9d4e0);
+  background-size: 300% 100%; background-position: 100% 0;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+#brand:hover .brand-line {
+  animation: cr-gradient-sweep 1.2s cubic-bezier(0.455, 0.03, 0.515, 0.955) forwards;
+}
+
+/* ================================================================
+   COVER — the void + amber horizon
+   ================================================================ */
+#hero-cover {
+  position: fixed;
+  inset: 22px 0 0 0;
+  z-index: 900;
+  background:
+    linear-gradient(to top, rgba(var(--sol-glow), 0.085) 0%, rgba(var(--sol-glow), 0.0) 30%),
+    radial-gradient(130% 100% at 50% 40%, var(--sol-void) 0%, #08090d 54%, var(--sol-void-deep) 100%);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 1;
+  transition: opacity 460ms ease;
+  will-change: clip-path, opacity;
+}
+#hero-cover.hidden  { display: none; }
+#hero-cover.closing { opacity: 0; pointer-events: none; }
+
+/* vignette — the void closes in around the light */
+#hero-cover::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: radial-gradient(56% 56% at 50% 47%, transparent 50%, rgba(0,0,0,0.66) 100%);
+}
+
+#hero-stars {
+  position: absolute; inset: 0; z-index: 0;
+  opacity: 0; animation: cr-stars-in 1500ms ease 120ms forwards;
+}
+@keyframes cr-stars-in { to { opacity: 1; } }
+
+/* ---------- stage ---------- */
+#hero-stage {
+  position: relative; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+#solar-mark {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: none; background: transparent;
+  padding: 56px 80px 44px;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+#solar-mark:focus { outline: none; }
+
+/* light bloom — a dramatic, asymmetric light source behind the word (xAI hero) */
+#solar-mark .bloom {
+  position: absolute; z-index: 0;
+  left: 54%; top: 40%; transform: translate(-50%, -50%);
+  width: 178%; aspect-ratio: 1.7 / 1;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side at 58% 42%,
+      rgba(255,255,255,0.13) 0%,
+      rgba(var(--sol-glow), 0.13) 30%,
+      rgba(var(--sol-glow), 0.05) 52%,
+      transparent 70%);
+  opacity: 0;
+  animation: cr-bloom-in 1500ms ease 360ms forwards, cr-bloom-breathe 6.5s ease-in-out 1900ms infinite;
+}
+@keyframes cr-bloom-in { to { opacity: 1; } }
+@keyframes cr-bloom-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.97); }
+  50%      { transform: translate(-50%, -50%) scale(1.06); }
+}
+
+/* ---------- the wordmark: whisper-thin Inter, luminous ---------- */
+#solar-mark .word {
+  position: relative; z-index: 2;
+  display: inline-grid;
+  font-family: var(--sol-font-display);
+  font-weight: var(--sol-weight-thin);          /* 300 — light, luminous */
+  font-size: clamp(3.4rem, 13vw, 9.5rem);
+  letter-spacing: var(--sol-tracking-display);  /* -0.03em — one luminous mass */
+  line-height: 1;
+  color: transparent;
+  opacity: 0; transform: translateY(14px);
+  animation: cr-word-in 1100ms cubic-bezier(0.22, 1, 0.36, 1) 320ms forwards;
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes cr-word-in { to { opacity: 1; transform: translateY(0); } }
+#solar-mark .word .layer { grid-area: 1 / 1; }
+
+#solar-mark .word .base {
+  color: var(--sol-white);
+  text-shadow:
+    0 0 1px rgba(255,255,255,0.55),
+    0 0 24px rgba(255,255,255,0.20),
+    0 0 60px rgba(var(--sol-glow), 0.16);
+  transition: text-shadow 480ms ease;
+}
+#solar-mark .word .chroma {
+  opacity: 0; mix-blend-mode: screen; will-change: transform, opacity;
+}
+#solar-mark .word .cr { color: #ff2f3b; }
+#solar-mark .word .cb { color: #2f7bff; }
+
+/* mono enter cue — hidden at rest (just the name), whispers in on hover/focus */
+#solar-mark .cue {
+  position: relative; z-index: 2;
+  margin-top: 28px;
+  font-family: var(--sol-font-mono);
+  font-size: 11px; font-weight: 400;
+  letter-spacing: var(--sol-tracking-mono);
+  text-indent: var(--sol-tracking-mono);
+  color: rgba(var(--sol-glow), 0.0);
+  transform: translateY(2px);
+  transition: color 420ms ease, transform 420ms ease;
+}
+
+@media (hover: hover) {
+  #solar-mark:hover .word { transform: scale(1.012); }
+  #solar-mark:hover .base {
+    text-shadow:
+      0 0 2px rgba(255,255,255,0.85),
+      0 0 34px rgba(255,255,255,0.34),
+      0 0 86px rgba(var(--sol-glow), 0.32);
+  }
+  #solar-mark:hover .cue { color: rgba(var(--sol-glow), 0.74); transform: translateY(0); }
+}
+#solar-mark:focus-visible .base {
+  text-shadow: 0 0 2px #fff, 0 0 34px rgba(255,255,255,0.34), 0 0 86px rgba(var(--sol-glow), 0.32);
+}
+#solar-mark:focus-visible .cue { color: rgba(var(--sol-glow), 0.74); transform: translateY(0); }
+
+/* ================================================================
+   CLICK — chromatic prism split -> bloom flare -> iris aperture
+   ================================================================ */
+@property --iris { syntax: "<length>"; initial-value: 0px; inherits: true; }
+
+#hero-cover.opening {
+  -webkit-mask: radial-gradient(circle at 50% 44%,
+    transparent 0, transparent var(--iris), #000 calc(var(--iris) + 2px));
+  mask: radial-gradient(circle at 50% 44%,
+    transparent 0, transparent var(--iris), #000 calc(var(--iris) + 2px));
+  animation: cr-iris 1150ms cubic-bezier(0.7, 0, 0.3, 1) 150ms forwards;
+  pointer-events: none;
+}
+@keyframes cr-iris { from { --iris: 0px; } to { --iris: 175vmax; } }
+
+#hero-cover.opening .base { animation: cr-word-out 640ms cubic-bezier(0.55, 0, 0.45, 1) 120ms forwards; }
+@keyframes cr-word-out { to { opacity: 0; transform: scale(1.45); } }
+
+#hero-cover.opening .chroma.cr { animation: cr-split-r 560ms cubic-bezier(0.5, 0, 0.2, 1) forwards; }
+#hero-cover.opening .chroma.cb { animation: cr-split-b 560ms cubic-bezier(0.5, 0, 0.2, 1) forwards; }
+@keyframes cr-split-r {
+  0% { opacity: 0; transform: translateX(0) scale(1); }
+  30% { opacity: 0.9; transform: translateX(-15px) scale(1.04); }
+  100% { opacity: 0; transform: translateX(-48px) scale(1.5); }
+}
+@keyframes cr-split-b {
+  0% { opacity: 0; transform: translateX(0) scale(1); }
+  30% { opacity: 0.9; transform: translateX(15px) scale(1.04); }
+  100% { opacity: 0; transform: translateX(48px) scale(1.5); }
+}
+#hero-cover.opening .bloom { animation: cr-bloom-flare 720ms cubic-bezier(0.5, 0, 0.3, 1) forwards; }
+@keyframes cr-bloom-flare {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  40% { opacity: 1; transform: translate(-50%, -50%) scale(1.7); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.6); }
+}
+#hero-cover.opening .cue { opacity: 0; transition: opacity 200ms; }
+
+#hero-iris {
+  position: absolute; z-index: 4; left: 50%; top: 44%;
+  width: 10px; height: 10px; border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0); opacity: 0; pointer-events: none;
+  box-shadow:
+    0 0 0 2px rgba(var(--sol-glow), 0.9),
+    0 0 40px 6px rgba(var(--sol-glow), 0.55),
+    0 0 90px 18px rgba(var(--sol-glow), 0.22);
+}
+#hero-cover.opening #hero-iris { animation: cr-blade 1150ms cubic-bezier(0.7, 0, 0.3, 1) 150ms forwards; }
+@keyframes cr-blade {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+  10% { opacity: 1; }
+  85% { opacity: 0.5; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(440); }
+}
+
+/* ================================================================
+   reduced motion
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  #hero-stars { animation: none; opacity: 1; }
+  #solar-mark .word, #solar-mark .bloom { animation: none; opacity: 1; transform: none; }
+  #solar-mark .bloom { transform: translate(-50%, -50%); }
+  #solar-mark .cue { color: rgba(var(--sol-glow), 0.5); transform: none; }
+  #hero-cover.opening { animation: none; opacity: 0; -webkit-mask: none; mask: none; }
+  #hero-cover.opening .base, #hero-cover.opening .chroma,
+  #hero-cover.opening .bloom, #hero-cover.opening #hero-iris { animation: none; }
+  #brand:hover .brand-line { animation-duration: 0.01s; }
+}
+
+@media (max-width: 600px) {
+  #solar-mark { padding: 40px 44px 32px; }
+}

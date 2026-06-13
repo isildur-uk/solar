@@ -1,0 +1,245 @@
+/* SOLAR — mobile.css
+ * Phone-responsive + native-shell adaptations. Desktop/tablet (>760px) are
+ * unaffected: every rule here is inside a max-width media query or keyed on a
+ * class the bridge adds (.is-native) / the mobile module adds (.mobile-mode).
+ * Colours reuse the existing SOLAR tokens — no new palette.
+ */
+
+/* ---- safe-area insets (notch / status bar / home indicator) ---- */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bottom-nav-h: 56px;
+}
+
+/* On a native device, lift fixed chrome clear of the system bars. */
+.is-native #class-banner { padding-top: var(--safe-top); }
+.is-native.plat-android #topbar,
+.is-native.plat-ios #topbar { /* topbar sits below the class banner already */ }
+
+/* Larger hit targets everywhere on touch builds (WCAG 2.5.5). */
+@media (max-width: 760px) {
+  .btn { min-height: 44px; padding: 8px 12px; }
+  #topbar .btn { min-height: 44px; }
+  select.btn, input#search, input#case-name { min-height: 44px; }
+}
+
+/* ===================== phone layout ===================== */
+@media (max-width: 760px) {
+
+  /* Toolbar becomes a single scrollable strip of primary actions. */
+  #topbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    padding: 6px 8px;
+    padding-top: calc(6px + var(--safe-top));
+  }
+  #topbar::-webkit-scrollbar { display: none; }
+  #brand .sub { display: none; }            /* tagline off; keep the wordmark */
+  #case-name { width: 120px; flex: 0 0 auto; }
+  #search { width: 150px; flex: 0 0 auto; }
+  #topbar .btn { flex: 0 0 auto; white-space: nowrap; }
+
+  /* One pane at a time, driven by body[data-mview]. */
+  body.mobile-mode #main { display: block; position: relative; }
+  body.mobile-mode #chart-wrap,
+  body.mobile-mode #side,
+  body.mobile-mode #map-pane,
+  body.mobile-mode #inspector,
+  body.mobile-mode #timeline-wrap { display: none; }
+
+  body.mobile-mode #side { flex: none; width: auto; border: 0; }
+
+  body.mobile-mode[data-mview="chart"] #chart-wrap { display: block; height: 100%; }
+  body.mobile-mode[data-mview="map"] #side,
+  body.mobile-mode[data-mview="map"] #map-pane { display: block; height: 100%; }
+  body.mobile-mode[data-mview="inspector"] #side,
+  body.mobile-mode[data-mview="inspector"] #inspector { display: block; height: 100%; }
+  body.mobile-mode[data-mview="timeline"] #timeline-wrap {
+    display: flex; flex: 1; height: 100%;
+  }
+  body.mobile-mode[data-mview="timeline"] #timeline-wrap.collapsed { flex-basis: auto; }
+  body.mobile-mode[data-mview="timeline"] #timeline-wrap.collapsed #timeline { display: block; }
+
+  /* #main needs explicit height since panes are absolutely-ish filled. */
+  body.mobile-mode #main { height: auto; }
+  body.mobile-mode #chart, body.mobile-mode #map { height: 100%; min-height: 60vh; }
+
+  /* Inspector full-width and scrollable on its own tab. */
+  body.mobile-mode[data-mview="inspector"] #inspector {
+    width: 100%; max-width: none; overflow: auto;
+    padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 12px);
+  }
+
+  /* Keep clear of the fixed bottom nav. */
+  body.mobile-mode #main,
+  body.mobile-mode #timeline-wrap { padding-bottom: 0; }
+  body.mobile-mode { padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom)); }
+
+  /* Bottom status bar (autosave / marking / date-fmt): removed on phones. */
+  body.mobile-mode #statusbar { display: none !important; }
+  /* Inspector empty-state helper text: drop the verbose placeholder. */
+  body.mobile-mode #inspector .placeholder { display: none; }
+
+  /* Modals go (near) full-screen for thumb reach. */
+  .modal-veil { padding: 0; align-items: stretch; }
+  .modal, .modal.narrow {
+    width: 100%; max-width: none; max-height: 100%;
+    border-radius: 0; display: flex; flex-direction: column;
+    padding-top: var(--safe-top);
+  }
+  .modal-body { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; }
+  .modal-foot { padding-bottom: calc(10px + var(--safe-bottom)); flex-wrap: wrap; gap: 8px; }
+  /* Review screen: stack source over cards instead of side-by-side. */
+  #review-body { flex-direction: column; }
+  #review-src, #review-cards { width: auto; max-height: 42vh; }
+  #paste-text { min-height: 40vh; }
+}
+
+/* ===================== bottom view nav ===================== */
+#bottom-nav { display: none; }
+
+@media (max-width: 760px) {
+  body.mobile-mode #bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+    height: calc(var(--bottom-nav-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--panel, #0b1018);
+    border-top: 1px solid var(--line, #1f2a38);
+  }
+  #bottom-nav button {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; background: none; border: 0; color: var(--muted, #76879b);
+    font: 500 10px var(--mono, Consolas, monospace); cursor: pointer;
+  }
+  #bottom-nav button .bn-ico { font-size: 18px; line-height: 1; }
+  #bottom-nav button[aria-pressed="true"] { color: var(--accent, #e8b34b); }
+}
+
+/* ===================== "More" drawer ===================== */
+#more-drawer { display: none; }
+
+@media (max-width: 760px) {
+  body.mobile-mode #more-drawer {
+    position: fixed; right: 8px; left: 8px;
+    top: calc(var(--safe-top) + 54px);
+    z-index: 70;
+    background: var(--panel, #0b1018);
+    border: 1px solid var(--line, #1f2a38);
+    border-radius: 12px; padding: 8px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.55);
+    display: none;
+    grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  body.mobile-mode #more-drawer.open { display: grid; }
+  body.mobile-mode #more-drawer .btn { width: 100%; justify-content: center; }
+}
+
+/* ===================== OCR overlay ===================== */
+#ocr-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  align-items: center; justify-content: center;
+  background: rgba(5,6,10,.72); backdrop-filter: blur(3px);
+}
+#ocr-overlay .ocr-card {
+  background: var(--panel, #0b1018); border: 1px solid var(--line, #1f2a38);
+  border-radius: 14px; padding: 22px 26px; text-align: center;
+  color: var(--ink, #c9d4e0); font: 13px var(--mono, Consolas, monospace);
+  min-width: 220px;
+}
+#ocr-overlay .ocr-spin {
+  width: 34px; height: 34px; margin: 0 auto 12px;
+  border: 3px solid var(--line, #1f2a38); border-top-color: var(--accent, #e8b34b);
+  border-radius: 50%; animation: ocr-spin 0.9s linear infinite;
+}
+@keyframes ocr-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  #ocr-overlay .ocr-spin { animation: none; }
+}
+
+
+/* ===================== analysis tools (netpanel) ===================== */
+#map-tools {
+  position: absolute; top: 8px; left: 8px; z-index: 600;
+  display: flex; gap: 6px;
+}
+#map-tools .btn { font-size: 11px; padding: 5px 9px; }
+.btn.active {
+  border-color: var(--accent, #e8b34b) !important;
+  color: var(--accent, #e8b34b) !important;
+  box-shadow: 0 0 0 1px var(--accent, #e8b34b) inset;
+}
+.kp-note { font: 11px var(--mono, Consolas, monospace); color: var(--muted, #76879b); margin: 0 0 12px; }
+.kp-grid { display: flex; gap: 18px; flex-wrap: wrap; }
+.kp-col { flex: 1; min-width: 220px; }
+.kp-h {
+  font: 600 10px var(--mono, Consolas, monospace); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted, #76879b); border-bottom: 1px solid var(--line, #1f2a38);
+  padding-bottom: 4px; margin-bottom: 6px;
+}
+.kp-row {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  background: none; border: 0; border-radius: 6px; padding: 6px 8px; cursor: pointer;
+  color: var(--ink, #c9d4e0); font: 12px var(--mono, Consolas, monospace);
+}
+.kp-row:hover { background: rgba(232,179,75,0.08); }
+.kp-rank { color: var(--muted, #76879b); width: 18px; }
+.kp-lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kp-score { color: var(--accent, #e8b34b); font-weight: 600; }
+@media (max-width: 760px) { .kp-grid { flex-direction: column; } }
+
+/* ===================== iOS Safari robustness ===================== */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+@media (max-width: 760px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+  /* dynamic viewport height so the URL bar doesn't crop panes */
+  body.mobile-mode[data-mview="chart"] #chart-wrap,
+  body.mobile-mode[data-mview="map"] #map-pane,
+  body.mobile-mode[data-mview="inspector"] #inspector { height: 100dvh; }
+  body.mobile-mode #chart, body.mobile-mode #map { min-height: 70dvh; }
+}
+
+/* ===================== phone: consistent type + less clutter ===================== */
+@media (max-width: 760px) {
+  /* ONE UI typeface across the workbench chrome (overrides the mixed
+     Consolas / Bahnschrift / Segoe inline fonts that read inconsistently). */
+  #topbar, #topbar .btn, #case-name, #search,
+  #more-drawer, #more-drawer .btn, select.btn,
+  #bottom-nav, #map-tools .btn, #legend-panel, #legend-panel *,
+  #chart-empty, #statusbar, #statusbar *, #inspector, #inspector * {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+    letter-spacing: normal !important;
+  }
+  /* monospace ONLY where it's actually tabular data */
+  .num, .an-kpi-v, .kp-score, #status-counts { font-family: "Geist Mono", ui-monospace, monospace !important; }
+
+  /* consistent control sizing */
+  #topbar .btn, #more-drawer .btn, select.btn { font-size: 13px !important; }
+  #case-name, #search { font-size: 13px !important; }
+  #statusbar, #statusbar * { font-size: 11px !important; }
+
+  /* chart-tools row is now empty (folded into More) — hide its chrome */
+  #chart-tools:empty { display: none; }
+
+  /* the More menu can hold a lot now — let it scroll, single tidy column */
+  body.mobile-mode #more-drawer { max-height: 68vh; overflow: auto; grid-template-columns: 1fr 1fr; }
+
+  /* empty-chart guidance: calmer, smaller, centred */
+  #chart-empty .big { font-size: 16px; }
+  #chart-empty .hint { font-size: 12px; line-height: 1.4; opacity: .75; max-width: 32ch; margin: 6px auto 0; }
+
+  /* legend/filters: cap height + scroll so it never blankets the chart */
+  #legend-panel { max-height: 50vh; overflow: auto; font-size: 12px; }
+
+  /* status bar: keep only the essentials visible, hide the chattier bits */
+  #statusbar #status-fmt, #statusbar span[title] { display: none; }
+}
+
+/* toast clears the bottom nav on phones */
+@media (max-width: 760px) {
+  body.mobile-mode #status-msg { bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 12px); }
+}

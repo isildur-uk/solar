@@ -1,0 +1,45 @@
+OFFICIAL-SENSITIVE
+**********************************************************************************
+   CyComms  |  COMMUNICATIONS DATA DISCLOSURE  |  SUBSCRIBER CHECK RETURN
+   Investigatory Powers Act 2016  -  Part 3  (s.60A authorisation)
+**********************************************************************************
+DISCLOSURE REF ....: CD/2026/GMP/004812
+SPoC ..............: GMP CD INVESTIGATIONS UNIT  (DSU 70112 WALSH)
+APPLICANT .........: DC 70219 PATEL  -  OP GANNET
+AUTHORISING OFFICER: SUPT 9904 OKORO  (Designated Senior Officer)
+UNIQUE REF (URN) ..: IPA-60A-2026-004812
+NECESSITY .........: s.61(7)(b) preventing/detecting crime
+PROPORTIONALITY ...: GRANTED 09/06/2026
+CSP / OPERATOR ....: EE LIMITED
+REQUIREMENT .......: SUBSCRIBER + INSTALLATION DATA for MSISDN below
+DISCLOSURE DATE ...: 10/06/2026 16:05
+
+----------------------------- TARGET IDENTIFIER ----------------------------------
+MSISDN ............: 07700 900342      (+447700900342)
+----------------------------------------------------------------------------------
+
+------------------------------ SUBSCRIBER RETURN ---------------------------------
+ACCOUNT TYPE ......: PAY MONTHLY (CONTRACT, 24M)
+ACCOUNT STATUS ....: ACTIVE
+SUBSCRIBER NAME ...: MR DARREN COLE
+DATE OF BIRTH .....: 14/03/1987   (as held by CSP)
+BILLING ADDRESS ...: 14 BRACKENFIELD ROAD, STOCKPORT, SK4 2RH
+INSTALLATION ADDR .: AS BILLING
+CONTACT EMAIL .....: northgate.logistics@outlook.com
+ALT CONTACT No ....: 07700 900118
+CONNECTION DATE ...: 03/10/2025
+CONTRACT END ......: 02/10/2027
+PAYMENT METHOD ....: DIRECT DEBIT  -  BARCLAYS s/c 20-00-00  a/c 30021847
+IMEI (CURRENT) ....: IMEI 359872041256683     MAKE/MODEL: APPLE iPHONE 14 PRO
+IMSI ..............: 234300912776541
+ICCID (SIM) .......: 8944300000912776541
+SIM SWAP / PORT ...: NONE IN PERIOD
+HANDSET 1ST USE ...: 04/10/2025
+----------------------------------------------------------------------------------
+NOTE: subscriber DARREN COLE on this number also holds MSISDN 07700 900118 (same
+      billing account). Number 07700 900342 referred to in source reporting as the
+      'graft' / dirty handset.  Linked device IMEI 359872041256683.
+**********************************************************************************
+  FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+  OFFICIAL-SENSITIVE
+**********************************************************************************

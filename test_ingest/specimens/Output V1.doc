@@ -1,0 +1,2396 @@
+===== 01_CM_Atlas_3x5x2_Intel_Report.docx =====
+OFFICIAL-SENSITIVE
+ATLAS - CRIME MANAGEMENT (CM) INTELLIGENCE REPORT
+3x5x2 GRADED . IR (Intelligence Report)
+IR / URN
+	GMP/OG/IR/2026/0291
+
+Originating Unit
+	GMP Serious & Organised Crime - OP GANNET MIR
+
+Reporting Officer
+	DC 70219 PATEL (handler ref H/441)
+
+Date / Time Reported
+	08/06/2026 14:12
+
+Protective Marking
+	OFFICIAL-SENSITIVE - POLICE
+
+3x5x2 Grading
+	[2 A P] (Source 2 Untested . Intelligence A Confirmed . Handling P)
+
+Sanitised
+	YES - handler sanitised for dissemination
+
+OCG / CG
+	CG NORTHSIDE (OCG-GM-2291)
+
+INTELLIGENCE
+DARREN COLE (DOB 14/03/1987, PNCID 2005/0456231K) is the principal of the NORTHSIDE organised crime group and controls the importation and onward supply of Class A controlled drugs across Greater Manchester. COLE uses NORTHGATE LOGISTICS LTD (Co. No. 11428876) as a front to launder cash proceeds.
+COLE contactable on 07700 900118. He uses a second handset 07700 900342 (IMEI 359872041256683) for criminal liaison. On 12/02/2026 COLE flew from Manchester to Malaga with Sofia DRAGOMIR to meet a Spanish supplier; the trip was booked under PNR K7T2QL. COLE drives a black Audi Q7, registration LD18 KPN.
+LEE FOSTER (DOB 02/11/1991, PNCID 2010/0782145M) acts as transport and uses the white Ford Transit VK69 RNZ, registered to NORTHGATE LOGISTICS LTD, to move consignments. NADIA ANSARI (DOB 27/06/1994) launders cash through book-keeping for the front company and moves money via account 81226740. ANPR shows LD18 KPN and VK69 RNZ travelling in convoy on the M60 on 04/06/2026.
+ANALYST / RISK
+Assessment: COLE directs; FOSTER transports; ANSARI launders. Firearms access indicated (WEA marker on PNC). Cash deposits inconsistent with declared turnover - refer to SAR cross-ref and HMRC return.
+DISSEMINATION
+Handling Code
+	P - may be disseminated to other law-enforcement
+
+Conditions
+	None
+
+Review Date
+	08/12/2026
+
+FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+OFFICIAL-SENSITIVE
+⚠ DOB 02/11/1991 read as 1991-11-02 (DD/MM). Confirm format.
+⚠ 08/06/2026 read as 2026-06-08 (DD/MM assumed). Confirm format.
+⚠ 12/02/2026 read as 2026-02-12 (DD/MM assumed). Confirm format.
+⚠ 04/06/2026 read as 2026-06-04 (DD/MM assumed). Confirm format.
+⚠ 08/12/2026 read as 2026-12-08 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Telephone
+HIGH
+IMEI 359872041256683
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Telephone
+HIGH
++447700900342
+as written: 07700 900342
+
+Address
+MED
+CRIME MANAGEMENT (CM) INTELLIGENCE REPORT
+
+Address
+MED
+COLE uses NORTHGATE LOGISTICS LTD (Co
+
+Address
+HIGH
+COLE flew from Manchester to Malaga with Sofia DRAGOMIR to meet a Spanish supplier; the trip w
+in Sofia
+
+Address
+MED
+COLE drives a black Audi Q7, registration LD18 KPN
+
+Address
+MED
+COLE directs; FOSTER transports; ANSARI launders
+
+Location
+HIGH
+Manchester
+53.481, -2.243
+
+Vehicle
+HIGH
+VK69 RNZ
+
+Vehicle
+HIGH
+LD18 KPN
+
+Organization
+HIGH
+CG NORTHSIDE
+
+Person
+HIGH
+Originating Unit GMP
+
+Person
+HIGH
+Protective Marking OFFICIAL-SENSITIVE
+
+Person
+HIGH
+Sanitised YES
+DOB 27/06/1994
+
+Organization
+HIGH
+NORTHGATE LOGISTICS LTD
+
+Date
+MED
+08/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+MED
+12/02/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+MED
+04/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+MED
+08/12/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Location
+HIGH
+Sofia
+42.698, 23.322
+Inferred relationships — opt in
+
+LINK
+LOW
+Sanitised YES
+
+LINKED TO
+Manchester
+“DARREN COLE (DOB 14/03/1987, PNCID 2005/0456231K) is the principal of the NORTHSIDE organised crime group and controls the importation and onward supply of Clas”
+
+LINK
+LOW
+Sanitised YES
+
+LINKED TO
+COLE uses NORTHGATE LOGISTICS LTD (Co
+“COLE uses NORTHGATE LOGISTICS LTD (Co.”
+
+LINK
+MED
+Sanitised YES
+
+USES
++447700900342
+“He uses a second handset 07700 900342 (IMEI 359872041256683) for criminal liaison.”
+
+LINK
+MED
+Sanitised YES
+
+USES
+IMEI 359872041256683
+“He uses a second handset 07700 900342 (IMEI 359872041256683) for criminal liaison.”
+
+LINK
+LOW
+Sanitised YES
+
+LINKED TO
+COLE flew from Manchester to Malaga with Sofia DRAGOMIR to meet a Spanish supplier; the trip w
+“On 12/02/2026 COLE flew from Manchester to Malaga with Sofia DRAGOMIR to meet a Spanish supplier; the trip was booked under PNR K7T2QL.”
+
+LINK
+HIGH
+Sanitised YES
+
+USES
+VK69 RNZ
+“LEE FOSTER (DOB 02/11/1991, PNCID 2010/0782145M) acts as transport and uses the white Ford Transit VK69 RNZ, registered to NORTHGATE LOGISTICS LTD, to move cons”
+
+LINK
+HIGH
+COLE flew from Manchester to Malaga with Sofia DRAGOMIR to meet a Spanish supplier; the trip w
+
+LOCATED IN
+Sofia
+“address parent”
+17 new entities · 0 matched · 4 links · 0 timeline events · 11 auto-linked to subject
+link orphans to subject
+Add to chart
+
+Extraction review — approve before charting
+✕
+===== 02_Discover_SAR.docx =====
+OFFICIAL-SENSITIVE
+SUSPICIOUS ACTIVITY REPORT (SAR)
+UK Financial Intelligence Unit (UKFIU), National Crime Agency . via SAR Online / 'Discover'
+SAR Reference
+	SAR-2026-0337841
+
+Submission Route
+	SAR Online (Discover)
+
+Report Type
+	DAML - Defence Against Money Laundering (s.335 POCA 2002)
+
+Date Submitted
+	05/06/2026
+
+Reporter (Institution)
+	BARCLAYS BANK UK PLC
+
+Nominated Officer / MLRO
+	J. HARGREAVES, Financial Crime
+
+Reporter Contact
+	020 7946 0114 . mlro.referrals@barclays-example.co.uk
+
+Glossary Codes
+	XX-NEX (no consent sought) . XX-CASH (cash-intensive) . XX-INTL (overseas funds)
+
+MAIN SUBJECT
+Name
+	Darren Michael COLE
+
+DOB
+	14/03/1987
+
+Address
+	14 Brackenfield Road, Stockport, SK4 2RH
+
+Nationality
+	British
+
+NINO
+	JT 60 12 04 C
+
+Telephone
+	07700 900118
+
+Account (personal)
+	Barclays s/c 20-00-00 a/c 30021847
+
+Account (business)
+	NORTHGATE LOGISTICS LTD s/c 20-32-06 a/c 40918256
+
+ASSOCIATED SUBJECTS
+Subject 2
+	NADIA ANSARI, DOB 27/06/1994 - bookkeeper, Monzo a/c 81226740
+
+Subject 3
+	NORTHGATE LOGISTICS LTD (Co. No. 11428876) - corporate
+
+REASON FOR SUSPICION
+[XX-CASH][XX-NEX] Over a six-week period (21/04/2026-02/06/2026) the personal account of Darren COLE (a/c 30021847) received 14 cash deposits totalling GBP 148,750, each below the GBP 10,000 reporting threshold, paid in at branches across Greater Manchester. Within 48 hours funds were transferred to the business account of NORTHGATE LOGISTICS LTD (a/c 40918256) and described as 'haulage invoices'. No corresponding trade activity is evident. On 27/05/2026 EUR 60,000 was sent by international transfer to a beneficiary in Malaga, Spain.
+The cash turnover is wholly inconsistent with the customer's declared income. The bookkeeper, Nadia ANSARI, instructed several of the transfers. The reporter seeks a DAML (no consent) before processing a pending GBP 24,000 outbound payment.
+TRANSACTIONS (SAMPLE)
+Date
+	Type
+	Amount
+	Counterparty
+
+21/04/2026
+	Cash in
+	GBP 9,400
+	Branch - Manchester Arndale
+
+29/04/2026
+	Cash in
+	GBP 9,850
+	Branch - Stockport
+
+08/05/2026
+	Transfer out
+	GBP 18,000
+	Northgate Logistics Ltd 40918256
+
+27/05/2026
+	Intl transfer
+	EUR 60,000
+	Beneficiary ES (Malaga)
+
+02/06/2026
+	Cash in
+	GBP 9,975
+	Branch - Trafford Centre
+
+FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+OFFICIAL-SENSITIVE
+⚠ Phone 2026-0337841 — no country prefix
+⚠ 05/06/2026 read as 2026-06-05 (DD/MM assumed). Confirm format.
+⚠ 02/06/2026 read as 2026-06-02 (DD/MM assumed). Confirm format.
+⚠ 08/05/2026 read as 2026-05-08 (DD/MM assumed). Confirm format.
+⚠ 02/06/2026 read as 2026-06-02 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Email Address
+HIGH
+mlro.referrals@barclays-example.co.uk
+
+Bank Account
+MED
+Monzo a/c 81226740
+
+Telephone
+MED
+20260337841
+as written: 2026-0337841
+⚠ no country prefix
+
+Telephone
+HIGH
++442079460114
+as written: 020 7946 0114
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Address
+MED
+CASH (cash-intensive)
+
+Address
+MED
+COLE
+
+Address
+HIGH
+14 Brackenfield Road, Stockport, SK4 2RH
+postcode SK4 2RH
+
+Location
+HIGH
+Manchester
+53.481, -2.243
+
+Location
+HIGH
+Malaga
+36.721, -4.421
+
+Location
+HIGH
+Spain
+40.200, -3.700
+
+Person
+HIGH
+Reference SAR-
+
+Person
+HIGH
+Submission Route SAR
+
+Person
+HIGH
+Report Type DAML
+
+Person
+HIGH
+Glossary Codes XX-NEX
+
+Person
+HIGH
+Darren COLE
+
+Person
+HIGH
+Nadia ANSARI
+
+Person
+HIGH
+Trafford Centre FICTITIOUS
+
+Organization
+HIGH
+BARCLAYS BANK UK PLC
+
+Organization
+HIGH
+NORTHGATE LOGISTICS LTD
+
+Person
+MED
+Name	Darren
+DOB 27/06/1994
+⚠ title-case heuristic
+
+Date
+MED
+05/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+21/04/2026
+carried by the timeline — chart node optional
+
+Date
+MED
+02/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+27/05/2026
+carried by the timeline — chart node optional
+
+Date
+HIGH
+29/04/2026
+carried by the timeline — chart node optional
+
+Date
+MED
+08/05/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+Inferred relationships — opt in
+
+LINK
+LOW
+Reference SAR-
+
+USES
+20260337841
+“SAR Reference SAR-2026-0337841”
+
+LINK
+LOW
+Name Darren
+
+LINKED TO
+COLE
+“Name Darren Michael COLE”
+
+LINK
+LOW
+Darren COLE
+
+LINKED TO
+Manchester
+“[XX-CASH][XX-NEX] Over a six-week period (21/04/2026-02/06/2026) the personal account of Darren COLE (a/c 30021847) received 14 cash deposits totalling GBP 148,”
+
+LINK
+HIGH
+Darren COLE
+
+TRANSACTED WITH
+NORTHGATE LOGISTICS LTD
+“Within 48 hours funds were transferred to the business account of NORTHGATE LOGISTICS LTD (a/c 40918256) and described as 'haulage invoices'.”
+
+===== 03_PNC_Print.txt =====
+OFFICIAL-SENSITIVE
+==================================================================================
+            P O L I C E   N A T I O N A L   C O M P U T E R  -  PERSON RECORD
+                          PNC NOMINAL PRINT (ANTECEDENT HISTORY)
+==================================================================================
+ENQUIRY BY ......: PC 70421 SHARMA          FORCE/STN ...: GMP / OP GANNET MIR
+DATE/TIME .......: 11/06/2026 08:42         REASON CODE .: CRIMINT / OPERATION
+PRINT REF .......: GMP-OG-PNC-0007          HANDLING ....: POLICE ONLY
+
+----------------------------------- NOMINAL --------------------------------------
+PNCID ...........: 2005/0456231K
+CRO .............: 124356/05G
+SURNAME .........: COLE
+FORENAME(S) .....: DARREN MICHAEL
+SEX .............: MALE
+DOB .............: 14/03/1987    (AGE 39)
+POB .............: STOCKPORT, UK
+NATIONALITY .....: BRITISH
+NINO ............: JT 60 12 04 C
+PASSPORT ........: PPT 533201984
+SELF DEFINED ETH : W1 / IC1
+HEIGHT ..........: 1.83m   BUILD: MEDIUM   HAIR: BROWN   EYES: BLUE
+
+ALIAS / AKA .....: COLE, Daz  /  "GANNET"  /  Darren COLLINS (false)
+
+-------------------------- ADDRESS (LAST KNOWN / VERIFIED) ------------------------
+ADDRESS 1 (HOME) : 14 BRACKENFIELD ROAD, STOCKPORT, SK4 2RH      [VERIFIED 02/2026]
+ADDRESS 2 (ASSOC): UNIT 4, TRAFFORD TRADE PARK, MANCHESTER, M17 1WA
+CONTACT .........: MOB 07700 900118 ; MOB 07700 900342
+
+------------------------------ WARNING SIGNALS -----------------------------------
+  VI - VIOLENT
+  DR - DRUGS
+  WEA- WEAPONS (intelligence: access to firearms)
+  ES - ESCAPER (failed to appear 2014)
+  CON- CONCEALS (cash / contraband in vehicle voids)
+
+------------------------------ INFORMATION MARKERS -------------------------------
+  OCG NOMINAL  - mapped, GMP OCG ref OCG-GM-2291  (ATLAS: CG NORTHSIDE)
+  LOCATE/TRACE - intelligence interest, OP GANNET (do NOT alert, contact MIR)
+
+------------------------------- VEHICLES (LINKED) --------------------------------
+  VRM LD18 KPN   AUDI Q7    BLACK   KEEPER: COLE, Darren (this nominal)
+  VRM VK69 RNZ   FORD TRANSIT WHITE KEEPER: FOSTER, Lee A (assoc) / NORTHGATE LOGISTICS LTD
+
+-------------------------- CONVICTION / DISPOSAL HISTORY -------------------------
+ 1) 19/05/2007  Manchester Magistrates'   Possession Class B cannabis
+                -> Fine GBP 200
+ 2) 03/11/2010  Manchester Crown Court     Possession with intent to supply (Class A)
+                -> 30 months imprisonment
+ 3) 22/07/2014  Bolton Magistrates'        Failed to surrender to custody
+                -> Bench warrant / ES signal raised
+ 4) 14/09/2018  Minshull St Crown Court    Acquire/use/possess criminal property (POCA s.329)
+                -> 12 months suspended, Confiscation order GBP 38,000
+
+-------------------------------- IMPENDING / BAIL --------------------------------
+  NONE CURRENT.  Prev. bail conditions (2018, now spent): reside Brackenfield Rd;
+  no contact with FOSTER, Lee.
+
+-------------------------------- ASSOCIATES (PNC) --------------------------------
+  FOSTER, Lee Anthony   DOB 02/11/1991   PNCID 2010/0782145M   (co-defendant 2010)
+  COLE, Ryan            DOB 19/08/1990   PNCID 2008/0339480F   (sibling)
+
+==================================================================================
+  END OF RECORD.  FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+  OFFICIAL-SENSITIVE
+==================================================================================
+⚠ DOB 02/11/1991 read as 1991-11-02 (DD/MM). Confirm format.
+⚠ 11/06/2026 read as 2026-06-11 (DD/MM assumed). Confirm format.
+⚠ 03/11/2010 read as 2010-11-03 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Telephone
+HIGH
++447700900342
+as written: 07700 900342
+
+Address
+MED
+CODE
+
+Address
+MED
+CRIMINT / OPERATION
+
+Address
+MED
+CRO
+
+Address
+MED
+COLE
+
+Address
+MED
+CPASSPORT
+
+Address
+MED
+COLE, Daz  /  "GANNET"  /  Darren COLLINS (false)
+
+Address
+MED
+CONTACT
+
+Address
+MED
+CON- CONCEALS (cash / contraband in vehicle voids)
+
+Address
+MED
+COLE, Darren (this nominal)
+
+Address
+MED
+CONVICTION / DISPOSAL HISTORY -------------------------
+
+Address
+MED
+Crown Court     Possession with intent to supply (Class A)
+
+Address
+MED
+CURRENT
+
+Address
+MED
+Brackenfield Rd
+
+Location
+HIGH
+Manchester
+53.481, -2.243
+
+Location
+HIGH
+Bolton
+53.577, -2.428
+
+Vehicle
+HIGH
+LD18 KPN
+
+Vehicle
+HIGH
+VK69 RNZ
+
+Organization
+HIGH
+NORTHSIDE
+
+Person
+HIGH
+Fine GBP
+
+Organization
+HIGH
+NORTHGATE LOGISTICS LTD
+
+Person
+MED
+Lee Anthony
+DOB 19/08/1990
+⚠ title-case heuristic
+
+Date
+MED
+11/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+14/03/1987
+carried by the timeline — chart node optional
+
+Date
+HIGH
+19/05/2007
+carried by the timeline — chart node optional
+
+Date
+MED
+03/11/2010
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+22/07/2014
+carried by the timeline — chart node optional
+
+Date
+HIGH
+14/09/2018
+carried by the timeline — chart node optional
+Inferred relationships — opt in
+
+LINK
+HIGH
+Fine GBP
+
+STAYS AT
+Brackenfield Rd
+“bail conditions (2018, now spent): reside Brackenfield Rd;”
+
+Extraction review — approve before charting
+✕
+===== 04_Experian_Report.pdf =====
+OFFICIAL-SENSITIVE
+
+Experian - Consumer Credit Report (Bureau Extract)
+Provided under data-sharing for fraud/financial-crime investigation. CAIS = Credit Account Information Sharing.
+Report reference
+Subject
+Date generated
+EXP-CR-77412-26
+COLE, Darren Michael
+06/06/2026
+Personal Details
+Field
+Value
+Full name
+Darren Michael COLE
+Date of birth
+14/03/1987
+Current address
+14 Brackenfield Road, Stockport, SK4 2RH
+Previous address
+22 Edgeley Court, Stockport, SK3 9LP (to 2021)
+Email on file
+darren.cole87@gmail.com
+Mobile on file
+07700 900118
+Electoral Roll
+Address
+Registered
+Period
+14 Brackenfield Road, Stockport, SK4 2RH
+Yes
+2021 - present
+22 Edgeley Court, Stockport, SK3 9LP
+Yes
+2016 - 2021
+CAIS - Credit Accounts
+Lender / type
+Acc no (masked)
+Opened
+Status
+Balance
+Limit
+Barclays - Current a/c
+****1847
+03/2016
+Active
+GBP 2,140
+-
+Barclaycard - Credit card
+****6620
+07/2019
+Active
+GBP 4,980
+GBP 5,000
+MotoNovo - Motor finance (Audi Q7)
+****3391
+04/2023
+Active
+GBP 31,200
+GBP 44,000
+Lendable - Loan
+****7714
+11/2024
+Default
+GBP 8,650
+GBP 10,000
+Public Information (CCJ / Insolvency)
+Type
+Date
+Amount
+Court / Source
+Status
+CCJ
+14/08/2023
+GBP 3,420
+Manchester County Court
+Unsatisfied
+Confiscation (POCA)
+14/09/2018
+GBP 38,000
+Minshull St Crown Court
+Per PNC
+Financial Associations
+Associated name
+Link
+Since
+ANSARI, Nadia
+Joint current account (closed 2024)
+2022
+NORTHGATE LOGISTICS LTD
+Director / business lending
+2019
+Recent Searches
+Date
+Searcher
+Type
+18/03/2026
+MotoNovo Finance
+Credit application
+02/05/2026
+Quick Cash Ltd
+Quotation
+FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+
+OFFICIAL-SENSITIVE
+⚠ 02/05/2026 read as 2026-05-02 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Email Address
+HIGH
+darren.cole87@gmail.com
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Address
+MED
+CAIS = Credit Account Information Sharing
+
+Address
+MED
+CR-77412-26
+
+Address
+MED
+COLE, Darren Michael
+
+Address
+MED
+COLE
+
+Address
+HIGH
+14 Brackenfield Road, Stockport, SK4 2RH
+postcode SK4 2RH
+
+Address
+HIGH
+22 Edgeley Court, Stockport, SK3 9LP (to 2021)
+postcode SK3 9LP
+
+Address
+HIGH
+22 Edgeley Court, Stockport, SK3 9LP
+postcode SK3 9LP
+
+Address
+MED
+CAIS - Credit Accounts
+
+Address
+MED
+CCJ / Insolvency)
+
+Address
+MED
+AmountCourt / Source
+
+Address
+MED
+CCJ
+
+Address
+MED
+County Court
+
+Address
+MED
+000Minshull St Crown Court
+
+Location
+HIGH
+Manchester
+53.481, -2.243
+
+Cash
+HIGH
+4,980GBP
+
+Cash
+HIGH
+31,200GBP
+
+Cash
+HIGH
+8,650GBP
+
+Person
+HIGH
+Active GBP
+
+Person
+HIGH
+Default GBP
+
+Person
+HIGH
+LinkSince ANSARI
+
+Person
+HIGH
+LtdQuotation FICTITIOUS
+
+Organization
+HIGH
+NORTHGATE LOGISTICS LTD
+
+Date
+HIGH
+06/06/2026
+carried by the timeline — chart node optional
+
+Date
+HIGH
+14/03/1987
+carried by the timeline — chart node optional
+
+Date
+HIGH
+14/08/2023
+carried by the timeline — chart node optional
+
+Date
+HIGH
+14/09/2018
+carried by the timeline — chart node optional
+
+Date
+HIGH
+18/03/2026
+carried by the timeline — chart node optional
+
+Date
+MED
+02/05/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+24 new entities · 0 matched · 0 links · 0 timeline events · 24 auto-linked to subject
+link orphans to subject
+Add to chart
+⚠ 02/05/2026 read as 2026-05-02 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Email Address
+HIGH
+darren.cole87@gmail.com
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Address
+MED
+CAIS = Credit Account Information Sharing
+
+Address
+MED
+CR-77412-26
+
+Address
+MED
+COLE, Darren Michael
+
+Address
+MED
+COLE
+
+Address
+HIGH
+14 Brackenfield Road, Stockport, SK4 2RH
+postcode SK4 2RH
+
+Address
+HIGH
+22 Edgeley Court, Stockport, SK3 9LP (to 2021)
+postcode SK3 9LP
+
+Address
+HIGH
+22 Edgeley Court, Stockport, SK3 9LP
+postcode SK3 9LP
+
+Address
+MED
+CAIS - Credit Accounts
+
+Address
+MED
+CCJ / Insolvency)
+
+Address
+MED
+AmountCourt / Source
+
+Address
+MED
+CCJ
+
+Address
+MED
+County Court
+
+Address
+MED
+000Minshull St Crown Court
+
+Location
+HIGH
+Manchester
+53.481, -2.243
+
+Cash
+HIGH
+4,980GBP
+
+Cash
+HIGH
+31,200GBP
+
+Cash
+HIGH
+8,650GBP
+
+Person
+HIGH
+Active GBP
+
+Person
+HIGH
+Default GBP
+
+Person
+HIGH
+LinkSince ANSARI
+
+Person
+HIGH
+LtdQuotation FICTITIOUS
+
+Organization
+HIGH
+NORTHGATE LOGISTICS LTD
+
+Date
+HIGH
+06/06/2026
+carried by the timeline — chart node optional
+
+Date
+HIGH
+14/03/1987
+carried by the timeline — chart node optional
+
+Date
+HIGH
+14/08/2023
+carried by the timeline — chart node optional
+
+Date
+HIGH
+14/09/2018
+carried by the timeline — chart node optional
+
+Date
+HIGH
+18/03/2026
+carried by the timeline — chart node optional
+
+Date
+MED
+02/05/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Extraction review — approve before charting
+✕
+===== 05_GBIQ_Connexus_Report.pdf =====
+OFFICIAL-SENSITIVE
+
+GBG | GBIQ - Connexus Investigation Report
+Identity, address-history and associate tracing. Bureau / open + closed data blend.
+Search ref
+Subject
+Operator
+Date
+CNX-2026-55218
+COLE, Darren M (DOB 14/03/1987)
+Analyst 8841
+06/06/2026
+Best Match - Identity Confidence: 96%
+Field
+Value
+Name
+Darren Michael COLE
+DOB
+14/03/1987
+NINO (matched)
+JT 60 12 04 C
+Current address
+14 Brackenfield Road, Stockport, SK4 2RH
+Telephone (matched)
+07700 900118 ; 07700 900342
+Email
+darren.cole87@gmail.com
+Deceased flag
+No
+Address History
+Address
+From
+To
+Source
+14 Brackenfield Road, Stockport, SK4 2RH
+2021
+present
+Electoral / CAIS
+22 Edgeley Court, Stockport, SK3 9LP
+2016
+2021
+Electoral
+Unit 4, Trafford Trade Park, M17 1WA
+2019
+present
+Companies House (business)
+Linked / Associated Individuals
+Name
+DOB
+Link basis
+Shared
+ANSARI, Nadia
+27/06/1994
+Co-occupant / fin. assoc.
+Account, address 2022
+COLE, Ryan
+19/08/1990
+Same surname / relative
+Sibling
+FOSTER, Lee Anthony
+02/11/1991
+Co-director history
+Northgate vehicles
+Directorships (Companies House)
+Company
+Co. number
+Role
+Status
+NORTHGATE LOGISTICS LTD
+11428876
+Director (appt 04/06/2019)
+Active
+AMBERLINE DETAILING LTD
+12993641
+Person of significant control
+Active
+Vehicles Linked
+VRM
+Make / model
+Colour
+Keeper
+LD18 KPN
+Audi Q7
+Black
+COLE, Darren
+VK69 RNZ
+Ford Transit
+White
+Northgate Logistics Ltd
+FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+
+OFFICIAL-SENSITIVE
+⚠ Phone 2026-55218 — no country prefix
+⚠ 02/11/1991 read as 1991-11-02 (DD/MM assumed). Confirm format.
+⚠ 04/06/2019 read as 2019-06-04 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Email Address
+HIGH
+darren.cole87@gmail.com
+
+Telephone
+MED
+202655218
+as written: 2026-55218
+⚠ no country prefix
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Telephone
+HIGH
++447700900342
+as written: 07700 900342
+
+Address
+MED
+COLE
+
+Address
+MED
+CCurrent address
+
+Address
+HIGH
+14 Brackenfield Road, Stockport, SK4 2RH
+postcode SK4 2RH
+
+Address
+MED
+CAIS
+
+Address
+HIGH
+22 Edgeley Court, Stockport, SK3 9LP
+postcode SK3 9LP
+
+Address
+MED
+COLE, Ryan
+
+Address
+MED
+COLE, Darren
+
+Vehicle
+HIGH
+LD18 KPN
+
+Vehicle
+HIGH
+VK69 RNZ
+
+Person
+HIGH
+OperatorDate CNX-
+DOB 14/03/1987
+
+Person
+HIGH
+Shared ANSARI
+
+Person
+HIGH
+Sibling FOSTER
+
+Person
+HIGH
+RoleStatus NORTHGATE
+
+Person
+HIGH
+Active AMBERLINE
+
+Person
+HIGH
+Vehicles Linked VRM
+
+Person
+HIGH
+Logistics Ltd FICTITIOUS
+
+Person
+MED
+NameDarren
+DOB 14/03/1987
+⚠ title-case heuristic
+
+Person
+MED
+Associated Individuals
+⚠ title-case heuristic
+
+Date
+HIGH
+06/06/2026
+carried by the timeline — chart node optional
+
+Date
+HIGH
+27/06/1994
+carried by the timeline — chart node optional
+
+Date
+HIGH
+19/08/1990
+carried by the timeline — chart node optional
+
+Date
+MED
+02/11/1991
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+MED
+04/06/2019
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+Inferred relationships — opt in
+
+LINK
+LOW
+Operator Date CNX-
+
+USES
+202655218
+“Operator Date CNX-2026-55218”
+
+LINK
+LOW
+Name Darren
+
+LINKED TO
+COLE
+“Name Darren Michael COLE”
+
+Extraction review — approve before charting
+✕
+===== 06_OpenSource_OSINT_Report.docx =====
+OFFICIAL-SENSITIVE
+OPEN SOURCE INTELLIGENCE (OSINT) RESEARCH REPORT
+Social Media / Internet Research . 3x5x2 graded
+Reference
+	GMP/OG/OSINT/2026/014
+
+Researcher
+	Intel Researcher 8841 (OSINT cell)
+
+Capture Date
+	07/06/2026
+
+Tooling
+	Manual + managed attribution browser; no engagement
+
+3x5x2 Grading
+	[2 B P] (Source 2 . Intelligence B . Handling P)
+
+Subject
+	Darren COLE / Nadia ANSARI
+
+ACCOUNTS IDENTIFIED
+Platform
+	Handle / URL
+	Attributed To
+	Notes
+
+Instagram
+	@d_cole_mcr (instagram.com/d_cole_mcr)
+	Darren COLE
+	Audi Q7 LD18 KPN pictured; watches
+
+TikTok
+	@colezy87
+	Darren COLE
+	Marbella clips Feb 2026
+
+Facebook
+	facebook.com/nadia.ansari.books
+	Nadia ANSARI
+	Lists 'Northgate Logistics' as employer
+
+Instagram
+	@sofia.drag96
+	Sofia DRAGOMIR
+	Tagged with COLE in Marbella 14/02/2026
+
+KEY FINDINGS
+1. On 14/02/2026 @d_cole_mcr posted an image geotagged Puerto Banus, Marbella, Spain, captioned 'business trip'. Corroborates travel under PNR K7T2QL (see flight record).
+2. @d_cole_mcr profile lists contact 'WhatsApp 07700 900118' and email darren.cole87@gmail.com.
+3. Image dated 02/2026 shows black Audi Q7, plate partially visible consistent with LD18 KPN. Watches displayed inconsistent with declared income.
+4. Nadia ANSARI's Facebook openly associates her with NORTHGATE LOGISTICS LTD.
+FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+OFFICIAL-SENSITIVE
+⚠ 07/06/2026 read as 2026-06-07 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Email Address
+HIGH
+darren.cole87@gmail.com
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Address
+MED
+COLE / Nadia ANSARI
+
+Address
+MED
+COLE
+
+Location
+HIGH
+Marbella
+36.510, -4.883
+
+Location
+HIGH
+Sofia
+42.698, 23.322
+
+Location
+HIGH
+Spain
+40.200, -3.700
+
+Vehicle
+HIGH
+LD18 KPN
+
+Person
+HIGH
+Reference GMP
+
+Person
+HIGH
+Nadia ANSARI
+
+Organization
+HIGH
+Northgate Logistics
+
+Organization
+HIGH
+NORTHGATE LOGISTICS LTD
+
+Date
+MED
+07/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+14/02/2026
+carried by the timeline — chart node optional
+Inferred relationships — opt in
+
+LINK
+HIGH
+Nadia ANSARI
+
+COMMUNICATED WITH
++447700900118
+“@d_cole_mcr profile lists contact 'WhatsApp 07700 900118' and email darren.cole87@gmail.com.”
+
+LINK
+HIGH
+Nadia ANSARI
+
+ASSOCIATE OF
+NORTHGATE LOGISTICS LTD
+“Nadia ANSARI's Facebook openly associates her with NORTHGATE LOGISTICS LTD.”
+
+SOLAR
+link analysis · smart matching
+Untitled case
+Paste Text
+Import CSV
+Deconflict
+Note
+Undo
+
+search names, numbers, emails…
+Save
+Open
+PNG
+Export
+Clear
+?
+No file chosen
+Fit
+Physics: on
+Demo
+Empty chart
+Paste Text — or Import CSV — to begin. Try the Demo button.
++
+−
+ Leaflet | © OpenStreetMap © CARTO
+Fit pins
+Select an entity or link on the chart.
+
+Paste Text or Import CSV to populate the chart; everything you add passes through analyst review first.
+No dated events. Travel and booking dates extracted from text will appear here.
+0 entities · 0 links · 0 events
+dates DD/MM
+fmt
+DD/MM
+marking
+OFFICIAL
+Extracted from 1 file - review before adding
+autosaved 09:20
+local-only ●
+Extraction review — approve before charting
+✕
+===== 07_PND_Report.pdf =====
+OFFICIAL-SENSITIVE
+
+Police National Database (PND) - Nominal Report
+POLE model: Person . Object . Location . Event. Aggregated multi-force records. Weeding/retention applies.
+PND nominal ID
+Name
+Generated by
+Date
+PND-N-4471902
+COLE, Darren Michael
+DC 70219 PATEL
+08/06/2026
+Person
+Field
+Value
+DOB
+14/03/1987
+PNCID
+2005/0456231K
+Linked NINO
+JT 60 12 04 C
+Addresses
+14 Brackenfield Road, Stockport SK4 2RH; Unit 4 Trafford Trade Park M17 1WA
+Phones
+07700 900118; 07700 900342
+Intelligence / Occurrences (Events)
+Date
+Force
+Type
+Summary
+12/03/2024
+GMP
+Intelligence log
+Named controlling supply, OCG NORTHSIDE
+09/09/2025
+Cheshire
+Stop-search (neg.)
+M6 J19, passenger FOSTER, Lee; GBP 4,300 cash
+04/06/2026
+GMP
+ANPR
+LD18 KPN + VK69 RNZ convoy, M60 J12
+21/05/2026
+Merseyside
+Cash seizure
+GBP 22,000 from VK69 RNZ; POCA referral
+Objects (Vehicles / Items)
+Object
+Identifier
+Linked event
+Vehicle - Audi Q7 (black)
+LD18 KPN
+ANPR 04/06/2026
+Vehicle - Ford Transit (white)
+VK69 RNZ
+Cash seizure 21/05/2026
+Handset
+IMEI 359872041256683
+Comms data OP GANNET
+Locations
+Location
+Type
+Relevance
+Unit 4, Trafford Trade Park, M17 1WA
+Premises
+Northgate operating base
+M60 J12 / M6 J19
+Route
+ANPR / stop-search
+Associations (Network)
+Nominal
+DOB
+Relationship
+FOSTER, Lee Anthony
+02/11/1991
+Transport / co-offender
+ANSARI, Nadia
+27/06/1994
+Money management
+COLE, Ryan
+19/08/1990
+Sibling / Amberline Detailing
+FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+
+OFFICIAL-SENSITIVE
+⚠ 08/06/2026 read as 2026-06-08 (DD/MM assumed). Confirm format.
+⚠ 12/03/2024 read as 2024-03-12 (DD/MM assumed). Confirm format.
+⚠ 04/06/2026 read as 2026-06-04 (DD/MM assumed). Confirm format.
+⚠ 04/06/2026 read as 2026-06-04 (DD/MM assumed). Confirm format.
+⚠ 02/11/1991 read as 1991-11-02 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Telephone
+HIGH
+IMEI 359872041256683
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Telephone
+HIGH
++447700900342
+as written: 07700 900342
+
+Address
+MED
+COLE, Darren Michael
+
+Address
+HIGH
+14 Brackenfield Road, Stockport SK4 2RH; Unit 4 Trafford Trade Park M17 1WA
+postcode SK4 2RH
+
+Address
+MED
+COLE, Ryan
+
+Vehicle
+HIGH
+LD18 KPN
+
+Vehicle
+HIGH
+VK69 RNZ
+
+Person
+HIGH
+Nominal Report POLE
+
+Person
+HIGH
+Date PND-N-
+
+Person
+HIGH
+Relationship FOSTER
+
+Person
+HIGH
+Amberline Detailing FICTITIOUS
+
+Person
+MED
+PersonField
+DOB 14/03/1987
+⚠ title-case heuristic
+
+Date
+MED
+08/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+MED
+12/03/2024
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+09/09/2025
+carried by the timeline — chart node optional
+
+Date
+MED
+04/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+21/05/2026
+carried by the timeline — chart node optional
+
+Date
+MED
+02/11/1991
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+27/06/1994
+carried by the timeline — chart node optional
+
+Date
+HIGH
+19/08/1990
+carried by the timeline — chart node optional
+13 new entities · 0 matched · 0 links · 0 timeline events · 13 auto-linked to subject
+link orphans to subject
+Add to chart
+
+SOLAR
+link analysis · smart matching
+Untitled case
+Paste Text
+Import CSV
+Deconflict
+Note
+Undo
+
+search names, numbers, emails…
+Save
+Open
+PNG
+Export
+Clear
+?
+No file chosen
+Fit
+Physics: on
+Demo
+Empty chart
+Paste Text — or Import CSV — to begin. Try the Demo button.
++
+−
+ Leaflet | © OpenStreetMap © CARTO
+Fit pins
+Select an entity or link on the chart.
+
+Paste Text or Import CSV to populate the chart; everything you add passes through analyst review first.
+No dated events. Travel and booking dates extracted from text will appear here.
+0 entities · 0 links · 0 events
+dates DD/MM
+fmt
+DD/MM
+marking
+OFFICIAL
+Extracted from 1 file - review before adding
+autosaved 09:20
+local-only ●
+Extraction review — approve before charting
+✕
+===== 08_Subscriber_Details_CyComms.txt =====
+OFFICIAL-SENSITIVE
+**********************************************************************************
+   CyComms  |  COMMUNICATIONS DATA DISCLOSURE  |  SUBSCRIBER CHECK RETURN
+   Investigatory Powers Act 2016  -  Part 3  (s.60A authorisation)
+**********************************************************************************
+DISCLOSURE REF ....: CD/2026/GMP/004812
+SPoC ..............: GMP CD INVESTIGATIONS UNIT  (DSU 70112 WALSH)
+APPLICANT .........: DC 70219 PATEL  -  OP GANNET
+AUTHORISING OFFICER: SUPT 9904 OKORO  (Designated Senior Officer)
+UNIQUE REF (URN) ..: IPA-60A-2026-004812
+NECESSITY .........: s.61(7)(b) preventing/detecting crime
+PROPORTIONALITY ...: GRANTED 09/06/2026
+CSP / OPERATOR ....: EE LIMITED
+REQUIREMENT .......: SUBSCRIBER + INSTALLATION DATA for MSISDN below
+DISCLOSURE DATE ...: 10/06/2026 16:05
+
+----------------------------- TARGET IDENTIFIER ----------------------------------
+MSISDN ............: 07700 900342      (+447700900342)
+----------------------------------------------------------------------------------
+
+------------------------------ SUBSCRIBER RETURN ---------------------------------
+ACCOUNT TYPE ......: PAY MONTHLY (CONTRACT, 24M)
+ACCOUNT STATUS ....: ACTIVE
+SUBSCRIBER NAME ...: MR DARREN COLE
+DATE OF BIRTH .....: 14/03/1987   (as held by CSP)
+BILLING ADDRESS ...: 14 BRACKENFIELD ROAD, STOCKPORT, SK4 2RH
+INSTALLATION ADDR .: AS BILLING
+CONTACT EMAIL .....: northgate.logistics@outlook.com
+ALT CONTACT No ....: 07700 900118
+CONNECTION DATE ...: 03/10/2025
+CONTRACT END ......: 02/10/2027
+PAYMENT METHOD ....: DIRECT DEBIT  -  BARCLAYS s/c 20-00-00  a/c 30021847
+IMEI (CURRENT) ....: IMEI 359872041256683     MAKE/MODEL: APPLE iPHONE 14 PRO
+IMSI ..............: 234300912776541
+ICCID (SIM) .......: 8944300000912776541
+SIM SWAP / PORT ...: NONE IN PERIOD
+HANDSET 1ST USE ...: 04/10/2025
+----------------------------------------------------------------------------------
+NOTE: subscriber DARREN COLE on this number also holds MSISDN 07700 900118 (same
+      billing account). Number 07700 900342 referred to in source reporting as the
+      'graft' / dirty handset.  Linked device IMEI 359872041256683.
+**********************************************************************************
+  FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+  OFFICIAL-SENSITIVE
+**********************************************************************************
+⚠ Phone 2026-004812 — no country prefix
+⚠ Phone 234300912776541 — no country prefix
+⚠ 09/06/2026 read as 2026-06-09 (DD/MM assumed). Confirm format.
+⚠ 10/06/2026 read as 2026-06-10 (DD/MM assumed). Confirm format.
+⚠ 03/10/2025 read as 2025-10-03 (DD/MM assumed). Confirm format.
+⚠ 02/10/2027 read as 2027-10-02 (DD/MM assumed). Confirm format.
+⚠ 04/10/2025 read as 2025-10-04 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Email Address
+HIGH
+northgate.logistics@outlook.com
+
+Telephone
+HIGH
+IMEI 359872041256683
+
+Telephone
+MED
+2026004812
+as written: 2026-004812
+⚠ no country prefix
+
+Telephone
+HIGH
++447700900342
+as written: 07700 900342
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Telephone
+MED
+234300912776541
+⚠ no country prefix
+
+Address
+MED
+COMMUNICATIONS DATA DISCLOSURE  |  SUBSCRIBER CHECK RETURN
+
+Address
+MED
+CSP / OPERATOR
+
+Address
+MED
+CONTRACT, 24M)
+
+Address
+MED
+COLE
+
+Address
+MED
+CSP)
+
+Address
+MED
+CONTACT EMAIL
+
+Address
+MED
+CONTACT No
+
+Address
+MED
+CONNECTION DATE
+
+Address
+MED
+CONTRACT END
+
+Address
+MED
+CURRENT)
+
+Organization
+HIGH
+EE LIMITED
+
+Date
+MED
+09/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+MED
+10/06/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+14/03/1987
+carried by the timeline — chart node optional
+
+Date
+MED
+03/10/2025
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+MED
+02/10/2027
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+MED
+04/10/2025
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+17 new entities · 0 matched · 0 links · 0 timeline events · 17 auto-linked to subject
+link orphans to subject
+Add to chart
+
+SOLAR
+link analysis · smart matching
+Untitled case
+Paste Text
+Import CSV
+Deconflict
+Note
+Undo
+
+search names, numbers, emails…
+Save
+Open
+PNG
+Export
+Clear
+?
+No file chosen
+Fit
+Physics: on
+Demo
+Empty chart
+Paste Text — or Import CSV — to begin. Try the Demo button.
++
+−
+ Leaflet | © OpenStreetMap © CARTO
+Fit pins
+Select an entity or link on the chart.
+
+Paste Text or Import CSV to populate the chart; everything you add passes through analyst review first.
+No dated events. Travel and booking dates extracted from text will appear here.
+0 entities · 0 links · 0 events
+dates DD/MM
+fmt
+DD/MM
+marking
+OFFICIAL
+Extracted from 1 file - review before adding
+autosaved 09:20
+local-only ●
+Extraction review — approve before charting
+✕
+===== 09_HMRC_Reporting.pdf =====
+OFFICIAL-SENSITIVE
+
+HM Revenue & Customs - Disclosure to Law Enforcement
+Disclosed under CRCA 2005 s.20 gateway for OP GANNET. Employment (RTI/PAYE), Self-Assessment & VAT summary.
+Disclosure ref
+Requesting unit
+Date
+HMRC-DISC-2026-118842
+GMP FIU / OP GANNET
+06/06/2026
+Individual - COLE, Darren Michael
+Field
+Value
+NINO
+JT 60 12 04 C
+UTR (Self-Assessment)
+2847109365
+DOB
+14/03/1987
+Address held
+14 Brackenfield Road, Stockport, SK4 2RH
+Employments / Directorships (RTI)
+Employer
+PAYE ref
+Role
+From
+Annual pay
+Tax
+NORTHGATE LOGISTICS LTD
+120/NG44821
+Director
+06/2019
+GBP 12,570
+GBP 0
+AMBERLINE DETAILING LTD
+120/AM77140
+-
+-
+GBP 0
+GBP 0
+Self-Assessment Summary
+Tax year
+Declared income
+Tax due
+Filed
+2023/24
+GBP 14,100
+GBP 306
+On time
+2024/25
+GBP 15,250
+GBP 540
+Late (08/2025)
+Company - NORTHGATE LOGISTICS LTD (VAT/CT)
+Item
+Value
+Company number
+11428876
+VAT number
+GB 384 1129 55
+Declared turnover 2024/25
+GBP 41,200
+VAT status
+Registered 01/2020; returns nil/low since 04/2025
+Note (analyst)
+Declared turnover GBP 41,200 vs SAR cash credits GBP 148,750 - material mismatch
+Associated party - ANSARI, Nadia
+Field
+Value
+NINO
+SJ 88 41 60 A
+Status
+Self-employed bookkeeper (Sole trader)
+UTR
+6135092874
+Declared income 2024/25
+GBP 18,900
+FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+
+OFFICIAL-SENSITIVE
+⚠ Phone 2026-118842 — no country prefix
+⚠ Phone 2847109365 — no country prefix
+⚠ Phone 384 1129 55 — no country prefix
+⚠ Phone 6135092874 — no country prefix
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Telephone
+MED
+2026118842
+as written: 2026-118842
+⚠ no country prefix
+
+Telephone
+MED
+2847109365
+⚠ no country prefix
+
+Telephone
+MED
+384112955
+as written: 384 1129 55
+⚠ no country prefix
+
+Telephone
+MED
+6135092874
+⚠ no country prefix
+
+Address
+MED
+CRCA 2005 s
+
+Address
+MED
+COLE, Darren Michael
+
+Address
+HIGH
+14 Brackenfield Road, Stockport, SK4 2RH
+postcode SK4 2RH
+
+Cash
+HIGH
+2019GBP
+
+Cash
+HIGH
+12,570GBP
+
+Cash
+HIGH
+0GBP
+
+Cash
+HIGH
+24GBP
+
+Cash
+HIGH
+14,100GBP
+
+Cash
+HIGH
+25GBP
+
+Cash
+HIGH
+15,250GBP
+
+Person
+HIGH
+Date HMRC-DISC-
+DOB 14/03/1987
+
+Person
+HIGH
+Employer PAYE
+
+Person
+HIGH
+Tax NORTHGATE
+
+Organization
+HIGH
+AMBERLINE DETAILING LTD
+
+Organization
+HIGH
+NORTHGATE LOGISTICS LTD
+
+Date
+HIGH
+06/06/2026
+carried by the timeline — chart node optional
+Inferred relationships — opt in
+
+LINK
+LOW
+Date HMRC-DISC-
+
+USES
+2026118842
+“Date HMRC-DISC-2026-118842”
+19 new entities · 0 matched · 0 links · 0 timeline events · 19 auto-linked to subject
+link orphans to subject
+Add to chart
+
+SOLAR
+link analysis · smart matching
+Untitled case
+Paste Text
+Import CSV
+Deconflict
+Note
+Undo
+
+search names, numbers, emails…
+Save
+Open
+PNG
+Export
+Clear
+?
+No file chosen
+Fit
+Physics: on
+Demo
+Empty chart
+Paste Text — or Import CSV — to begin. Try the Demo button.
++
+−
+ Leaflet | © OpenStreetMap © CARTO
+Fit pins
+Select an entity or link on the chart.
+
+Paste Text or Import CSV to populate the chart; everything you add passes through analyst review first.
+No dated events. Travel and booking dates extracted from text will appear here.
+0 entities · 0 links · 0 events
+dates DD/MM
+fmt
+DD/MM
+marking
+OFFICIAL
+Extracted from 1 file - review before adding
+autosaved 09:20
+local-only ●
+Extraction review — approve before charting
+✕
+===== 10_NBTC_Flight_Records.pdf =====
+OFFICIAL-SENSITIVE
+
+National Border Targeting Centre (NBTC) - Travel Record
+API (Advance Passenger Information) + PNR (Passenger Name Record) extract. Carrier-supplied; for OP GANNET.
+NBTC ref
+Subject
+Requested by
+Date
+NBTC-TR-2026-30197
+COLE, Darren Michael
+GMP OP GANNET
+06/06/2026
+Subject API (from travel document)
+Field
+Value
+Surname / Given
+COLE / DARREN MICHAEL
+DOB / Sex / Nationality
+14/03/1987 / M / GBR
+Document type / number
+Passport / PPT 533201984
+Doc issue / expiry
+GBR 2019 / 2029
+Movements (API)
+Date
+Carrier
+Flight
+Route
+Dir
+Seat
+PNR
+12/02/2026
+VY (Vueling)
+VY7821
+MAN - AGP
+OUT
+14C
+K7T2QL
+19/02/2026
+VY (Vueling)
+VY7822
+AGP - MAN
+IN
+14C
+K7T2QL
+28/11/2025
+KL (KLM)
+KL1086
+MAN - AMS
+OUT
+-
+QH22LP
+PNR Detail - Locator K7T2QL
+Field
+Value
+Booking made
+02/02/2026, agent: lastminute (web)
+Booking contact
+07700 900118 ; darren.cole87@gmail.com
+Payment
+VISA debit ****1847 (Barclays a/c 30021847)
+Passengers on PNR
+1) COLE, Darren Michael 2) DRAGOMIR, Sofia (DOB 05/01/1996, ROU, PPT 521049883)
+Itinerary
+MAN-AGP 12/02 / AGP-MAN 19/02
+Baggage
+2 x 23kg hold
+Frequent flyer
+None
+Co-Traveller Cross-Reference
+Name
+Relationship
+Other PNRs
+DRAGOMIR, Sofia
+Co-traveller (same PNR K7T2QL)
+4RB9XM MAN-OTP 03/01/2026
+FOSTER, Lee Anthony
+Separate booking, overlapping dates
+QH22LP MAN-AMS 28/11/2025
+FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.
+
+OFFICIAL-SENSITIVE
+⚠ Phone 2026-30197 — no country prefix
+⚠ DOB 05/01/1996 read as 1996-01-05 (DD/MM). Confirm format.
+⚠ 12/02/2026 read as 2026-02-12 (DD/MM assumed). Confirm format.
+⚠ 03/01/2026 read as 2026-01-03 (DD/MM assumed). Confirm format.
+Accept all HIGH
++ MED
+Reject all LOW
+Include all links
+
+Email Address
+HIGH
+darren.cole87@gmail.com
+
+Bank Account
+MED
+Barclays a/c 30021847
+
+Telephone
+MED
+202630197
+as written: 2026-30197
+⚠ no country prefix
+
+Telephone
+HIGH
++447700900118
+as written: 07700 900118
+
+Address
+MED
+COLE, Darren Michael
+
+Location
+HIGH
+Sofia
+42.698, 23.322
+
+Person
+HIGH
+Travel Record API
+
+Person
+HIGH
+Date NBTC-TR-
+
+Person
+HIGH
+Subject API
+
+Person
+HIGH
+DirSeat PNR
+
+Person
+HIGH
+Payment VISA
+DOB 05/01/1996
+
+Person
+HIGH
+Itinerary MAN-AGP
+
+Date
+HIGH
+06/06/2026
+carried by the timeline — chart node optional
+
+Date
+HIGH
+14/03/1987
+carried by the timeline — chart node optional
+
+Date
+MED
+12/02/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+
+Date
+HIGH
+19/02/2026
+carried by the timeline — chart node optional
+
+Date
+HIGH
+28/11/2025
+carried by the timeline — chart node optional
+
+Date
+HIGH
+02/02/2026
+carried by the timeline — chart node optional
+
+Date
+MED
+03/01/2026
+carried by the timeline — chart node optional
+⚠ DD/MM assumed — ambiguous
+Inferred relationships — opt in
+
+LINK
+LOW
+Date NBTC-TR-
+
+USES
+202630197
+“Date NBTC-TR-2026-30197”
+
+LINK
+LOW
+Payment VISA
+
+LINKED TO
+Sofia
+“1) COLE, Darren Michael 2) DRAGOMIR, Sofia (DOB 05/01/1996, ROU, PPT 521049883)”
+12 new entities · 0 matched · 0 links · 2 timeline events · 12 auto-linked to subject
+link orphans to subject
+Add to chart

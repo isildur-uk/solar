@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Solar</title>
+<link rel="stylesheet" href="css/lib/leaflet.css?v=20260610a">
+<link rel="stylesheet" href="css/app.css?v=20260612d">
+<link rel="preload" href="css/fonts/inter-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="css/fonts/geist-mono-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/tokens.css?v=20260612a">
+<link rel="stylesheet" href="css/hero.css?v=20260612d">
+<link rel="stylesheet" href="css/solar.css?v=20260611c">
+<link rel="stylesheet" href="css/mobile.css?v=20260613e">
+<link rel="stylesheet" href="css/enhance.css?v=20260613f">
+<style id="solar-intro-style">
+  /* arrival from the SOLAR hero — fades the cosmic dark + a breath of the
+     nebula out, so the chart screen eases in rather than snapping on */
+  #solar-intro {
+    position: fixed; inset: 0; z-index: 99999; pointer-events: none;
+    background:
+      radial-gradient(58% 50% at 50% 42%,
+        rgba(120,96,214,0.22) 0%, rgba(84,74,184,0.10) 34%, rgba(11,16,23,0) 70%),
+      #0b1017;
+    animation: solarIntro 0.85s ease-out 0.04s forwards;
+  }
+  @keyframes solarIntro {
+    0%   { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #solar-intro { animation: none; opacity: 0; visibility: hidden; }
+  }
+</style>
+</head>
+<body>
+<div id="solar-intro" aria-hidden="true"></div>
+<div id="drop-overlay" aria-hidden="true">
+  <div class="drop-card">
+    <div class="drop-icon" aria-hidden="true">⤓</div>
+    <div class="drop-title">Drop intelligence files to ingest</div>
+    <div class="drop-sub">.txt · .docx · .pdf · .csv · .json case &mdash; multiple files combine into one review</div>
+  </div>
+</div>
+
+<div id="class-banner" role="banner" aria-label="protective marking">OFFICIAL</div>
+
+<header id="topbar">
+  <div id="brand" role="button" tabindex="0" aria-label="show cover"><span class="brand-line">SOL<span class="accent">AR</span></span>
+    <span class="sub">link analysis · smart matching</span>
+  </div>
+  <input id="case-name" type="text" value="Untitled case" aria-label="case name" title="Case name">
+  <button class="btn primary" id="btn-paste" title="Extract entities from pasted text">Paste Text</button>
+  <button class="btn" id="btn-csv">Import CSV</button>
+  <button class="btn primary" id="btn-scan" title="Scan a photo or screenshot — text is read out and dropped into the paste panel for extraction">Scan</button>
+  <button class="btn primary" id="btn-files" title="Add documents (PDF, Word, .txt, .md) or a CSV / case .json — you can also drag files anywhere onto the window">Add Files</button>
+  <button class="btn" id="btn-dedup" title="Scan the chart for potential duplicate entities">Deconflict</button>
+  <button class="btn" id="btn-note" title="Pin an analyst note to the chart">Note</button>
+  <button class="btn" id="btn-undo" title="Undo last destructive change">Undo</button>
+  <input id="search" type="search" placeholder="search names, numbers, emails…" aria-label="search entities">
+  <button class="btn" id="btn-save" title="Download case as JSON">Save</button>
+  <button class="btn" id="btn-open" title="Open a saved case">Open</button>
+  <button class="btn" id="btn-png" title="Export chart as PNG">PNG</button>
+  <button class="btn" id="btn-anx" title="Operational exports: intel logs, profiles, IR draft, i2">Export</button>
+  <button class="btn danger" id="btn-clear" title="Clear chart">Clear</button>
+  <select id="datefmt" class="btn" title="Date format" aria-label="date format"><option value="DMY">DD/MM</option><option value="MDY">MM/DD</option></select>
+  <select id="class-select" class="btn" title="Protective marking" aria-label="protective marking"><option>OFFICIAL</option><option>OFFICIAL — SENSITIVE</option><option>UNCLASSIFIED — DEMO</option></select>
+  <button class="btn" id="btn-help" aria-label="help">?</button>
+  <input type="file" id="case-file" accept=".json,application/json" class="visually-hidden" aria-hidden="true" tabindex="-1">
+  <input type="file" id="files-input" accept=".txt,.md,.log,.csv,.json,.docx,.pdf" multiple class="visually-hidden" aria-hidden="true" tabindex="-1">
+</header>
+
+<main id="main">
+  <section id="chart-wrap" aria-label="link chart">
+    <div id="chart"></div>
+    <div id="chart-tools">
+      <button class="btn" id="btn-fit" title="Fit chart to view">Fit</button>
+      <button class="btn" id="btn-physics" title="Toggle force layout">Physics: on</button>
+      <select id="layout-select" class="btn" title="Arrange the chart — dragged nodes stay where you put them" aria-label="layout preset">
+        <option value="" selected>Layout…</option>
+        <option value="organic">Organic (live)</option>
+        <option value="grouped">Grouped by type</option>
+        <option value="circle">Circle</option>
+        <option value="hierarchy">Hierarchy</option>
+      </select>
+      <button class="btn" id="btn-legend" title="Legend and filters — hide by type, confidence or source; colour links">Legend</button>
+      <button class="btn" id="btn-demo" title="Load the demonstration passage">Demo</button>
+      <button class="btn" id="btn-geo" title="Show or hide geographic containment links (city → country)">Geo: on</button>
+    </div>
+    <div id="legend-panel" aria-label="legend and filters"></div>
+    <div id="chart-empty">
+      <div class="big">Empty chart</div>
+      <div class="hint">Paste Text — or Import CSV — to begin. Try the Demo button.</div>
+    </div>
+  </section>
+
+  <aside id="side">
+    <div id="map-pane" aria-label="map">
+      <div id="map"></div>
+      <div id="map-offline">Basemap unreachable — working offline.<br>Markers remain accurate; tiles will return when the network does.</div>
+      <button class="btn" id="btn-mapfit" style="position:absolute;bottom:8px;right:8px;z-index:600;font-size:10px;padding:3px 7px">Fit pins</button>
+    </div>
+    <div id="inspector" aria-label="inspector" aria-live="polite"></div>
+  </aside>
+</main>
+
+<div id="timeline-wrap" class="collapsed">
+  <div id="timeline-head" role="button" tabindex="0" aria-label="toggle timeline">TIMELINE <span style="letter-spacing:0">▸</span></div>
+  <div id="timeline"></div>
+</div>
+
+<footer id="statusbar">
+  <span id="status-counts">0 entities</span>
+  <span id="status-fmt">dates DD/MM</span>
+  <span class="spacer"></span>
+  <span id="status-save"></span>
+  <span title="All case data stays in this browser. The only network call is the basemap.">local-only ●</span>
+</footer>
+<div id="status-msg" class="ok" role="status" aria-live="polite"></div>
+
+<!-- paste modal -->
+<div class="modal-veil" id="paste-veil" role="dialog" aria-modal="true" aria-label="paste text">
+  <div class="modal narrow">
+    <div class="modal-head"><h2>Paste intelligence text</h2>
+      <button class="btn x" id="paste-cancel" aria-label="close">✕</button></div>
+    <div class="modal-body">
+      <p style="font:11px Consolas,monospace;color:#8593a3;margin:0 0 8px">
+        Names, phones, emails, dates, addresses, places and relationships will be
+        extracted for your review — nothing reaches the chart unapproved.</p>
+      <textarea id="paste-text" aria-label="intelligence text" spellcheck="false"></textarea>
+    </div>
+    <div class="modal-foot">
+      <span class="note">Date format: per the status-bar setting (DD/MM default)</span>
+      <div class="right"><button class="btn primary" id="paste-run">Extract →</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- review modal -->
+<div class="modal-veil" id="review-veil" role="dialog" aria-modal="true" aria-label="extraction review">
+  <div class="modal">
+    <div class="modal-head"><h2>Extraction review — approve before charting</h2>
+      <button class="btn x" id="review-cancel" aria-label="close">✕</button></div>
+    <div class="modal-body" id="review-body">
+      <div id="review-src" aria-label="source text with highlighted extractions"></div>
+      <div id="review-cards" aria-label="extracted items"></div>
+    </div>
+    <div class="modal-foot">
+      <span class="note" id="review-summary"></span>
+      <div class="right" style="align-items:center">
+        <label class="note" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="Anything left unconnected ties to the primary subject as a low-confidence dashed link">
+          <input type="checkbox" id="rv-link-orphans" checked style="accent-color:#e8b34b"> link orphans to subject
+        </label>
+        <button class="btn primary" id="review-commit">Add to chart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- csv modal -->
+<div class="modal-veil" id="csv-veil" role="dialog" aria-modal="true" aria-label="CSV import">
+  <div class="modal">
+    <div class="modal-head"><h2>CSV import</h2>
+      <button class="btn x" id="csv-cancel" aria-label="close">✕</button></div>
+    <div class="modal-body">
+      <div id="csv-stage-pick">
+        <p style="font:12px Consolas,monospace;color:#8593a3">Choose a CSV file. Column types
+          (names, phone numbers, emails, locations…) are detected automatically; you confirm the mapping.</p>
+        <input type="file" id="csv-file" accept=".csv,text/csv" aria-label="choose CSV file">
+      </div>
+      <div id="csv-stage-map" style="display:none">
+        <p id="csv-info" style="font:11px Consolas,monospace;color:#8593a3;margin:0 0 8px"></p>
+        <div id="csv-table-wrap"><table id="csv-table"></table></div>
+        <div class="csv-opts">
+          <label>Link row entities to
+            <select id="csv-hub" aria-label="hub column"></select>
+          </label>
+          <label>link type
+            <select id="csv-linktype" aria-label="link type for rows">
+              <option>LINKED_TO</option><option>USES</option><option>ASSOCIATE_OF</option>
+              <option>COMMUNICATED_WITH</option><option>STAYS_AT</option><option>TRAVELS_TO</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <p id="csv-info2" style="font:11px Consolas,monospace;color:#5a6878">
+        Exact identifier matches (same E.164 phone, same canonical email) reuse existing entities automatically.
+        Fuzzy candidates are never auto-merged — run <b>Deconflict</b> afterwards.</p>
+    </div>
+    <div class="modal-foot">
+      <div class="right"><button class="btn primary" id="csv-commit" disabled>Import →</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- dedup modal -->
+<div class="modal-veil" id="dedup-veil" role="dialog" aria-modal="true" aria-label="deconfliction">
+  <div class="modal narrow">
+    <div class="modal-head"><h2>Deconfliction — potential duplicates</h2>
+      <button class="btn x" id="dedup-close" aria-label="close">✕</button></div>
+    <div class="modal-body" id="dedup-body"></div>
+    <div class="modal-foot"><span class="note">Suggestions only — nothing merges without your decision. Merges are audited and undoable.</span></div>
+  </div>
+</div>
+
+<!-- export hub modal -->
+<div class="modal-veil" id="export-veil" role="dialog" aria-modal="true" aria-label="operational exports">
+  <div class="modal narrow">
+    <div class="modal-head"><h2>Operational exports</h2>
+      <button class="btn x" id="export-close" aria-label="close">✕</button></div>
+    <div class="modal-body">
+      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#76879b;text-transform:uppercase;border-bottom:1px solid #1f2a38;padding-bottom:3px;margin-bottom:8px">Case metadata (used in every export)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <label style="font:10px Consolas,monospace;color:#76879b">Officer / staff no.<br>
+          <input type="text" id="exp-meta-officer" style="background:#131c28;border:1px solid #1f2a38;color:#c9d4e0;font:11px Consolas,monospace;padding:4px 6px"></label>
+        <label style="font:10px Consolas,monospace;color:#76879b">Case reference<br>
+          <input type="text" id="exp-meta-caseref" style="background:#131c28;border:1px solid #1f2a38;color:#c9d4e0;font:11px Consolas,monospace;padding:4px 6px"></label>
+        <label style="font:10px Consolas,monospace;color:#76879b">Operation name<br>
+          <input type="text" id="exp-meta-op" style="background:#131c28;border:1px solid #1f2a38;color:#c9d4e0;font:11px Consolas,monospace;padding:4px 6px"></label>
+      </div>
+      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#76879b;text-transform:uppercase;border-bottom:1px solid #1f2a38;padding-bottom:3px;margin-bottom:8px">Intelligence logs</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn" id="exp-logv1">Logging Tool v1 (Subjects + Log CSVs)</button>
+        <button class="btn" id="exp-log2">Intel Log 2 (Enquiry CSV)</button>
+        <button class="btn" id="exp-ir">Intelligence Report draft (.txt)</button>
+      </div>
+      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#76879b;text-transform:uppercase;border-bottom:1px solid #1f2a38;padding-bottom:3px;margin-bottom:8px">Subject profiles (selected person, or first on chart)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn" id="exp-profile-short">Short profile (.docx)</button>
+        <button class="btn" id="exp-profile-long">Long profile (.docx)</button>
+        <button class="btn" id="exp-profile-html">Print profile (.html)</button>
+      </div>
+      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#76879b;text-transform:uppercase;border-bottom:1px solid #1f2a38;padding-bottom:3px;margin-bottom:8px">i2 Analyst's Notebook</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="exp-i2">Import pack (entities + links CSV)</button>
+        <button class="btn" id="exp-anx">ANX XML</button>
+      </div>
+      <p style="font:10px Consolas,monospace;color:#76879b;margin-top:12px">
+        Everything is generated locally to ATLAS data standards (SURNAME caps, DOB DD/MM/CCYY,
+        VRM prefix, 3×5×2 written [2CP]). Review before dissemination.</p>
+    </div>
+  </div>
+</div>
+
+<!-- help modal -->
+<div class="modal-veil" id="help-veil" role="dialog" aria-modal="true" aria-label="help">
+  <div class="modal narrow">
+    <div class="modal-head"><h2>Solar — how it works</h2>
+      <button class="btn x" id="help-close" aria-label="close">✕</button></div>
+    <div class="modal-body" id="help-body">
+      <h4>Smart matching (the point of the tool)</h4>
+      <p>Entities arrive two ways: <b>Paste Text</b> (free-text intelligence passages) and
+        <b>Import CSV</b>. Phones are normalised to E.164 (<code>07… ⇄ +447…</code>), emails canonicalised
+        (gmail dot/plus rules), names fuzzy-matched with a nickname table (<code>Geoff ⇄ Geoffrey</code>).
+        Matches are <i>suggested, never auto-merged</i> — you decide on the review screen or in Deconflict.</p>
+      <h4>Review screen</h4>
+      <p>Left: your text with colour-coded extractions. Right: one card per entity — edit labels,
+        choose match-vs-new, opt in to inferred relationships (⇄ swaps direction). Confidence is
+        tiered HIGH / MED / LOW, never a fake percentage. Ambiguous DD/MM dates are flagged, not guessed.</p>
+      <h4>Views</h4>
+      <p>Chart (vis-network: drag, double-click to focus), Map (gazetteer-located entities; addresses pin
+        to their locality), Timeline (dated events; click to select). All three select together.</p>
+      <h4>Provenance</h4>
+      <p>Every entity carries an NCA 3×5×2 grading (A–C / 1–5 / P–C), source reference and a full audit
+        trail — see the inspector.</p>
+      <h4>Data</h4>
+      <p>Everything stays in this browser (localStorage + JSON save/load). The basemap tile request is
+        the only network call. Exports: case JSON, chart PNG with protective marking, i2 ANX XML.</p>
+    </div>
+  </div>
+</div>
+
+<script src="js/ui/native.js?v=20260613a"></script>
+<script src="js/lib/vis-network.min.js?v=20260610a"></script>
+<script src="js/lib/leaflet.js?v=20260610a"></script>
+<script src="js/lib/papaparse.min.js?v=20260610a"></script>
+<script src="js/core/match.js?v=20260610b"></script>
+<script src="js/core/format.js?v=20260611a"></script>
+<script src="js/core/docxzip.js?v=20260613b"></script>
+<script src="js/core/geo.js?v=20260610a"></script>
+<script src="js/core/exif.js?v=20260613a"></script>
+<script src="js/core/netanalysis.js?v=20260613a"></script>
+<script src="js/core/analytics.js?v=20260613a"></script>
+<script src="js/core/lang.js?v=20260613e"></script>
+<script src="js/core/extract.js?v=20260613h"></script>
+<script src="js/core/model.js?v=20260613a"></script>
+<script src="js/core/fileread.js?v=20260612e"></script>
+<script src="js/ui/util.js?v=20260610b"></script>
+<script src="js/ui/icons.js?v=20260610a"></script>
+<script src="js/ui/graph.js?v=20260613g"></script>
+<script src="js/ui/legend.js?v=20260612g"></script>
+<script src="js/ui/chartmenu.js?v=20260612g"></script>
+<script src="js/ui/mappane.js?v=20260613a"></script>
+<script src="js/ui/timeline.js?v=20260613a"></script>
+<script src="js/ui/review.js?v=20260613a"></script>
+<script src="js/ui/importer.js?v=20260612d"></script>
+<script src="js/ui/dragdrop.js?v=20260612g"></script>
+<script src="js/ui/inspector.js?v=20260613d"></script>
+<script src="js/ui/profiles.js?v=20260613b"></script>
+<script src="js/ui/intelexport.js?v=20260613c"></script>
+<script src="js/ui/app.js?v=20260613a"></script>
+<script src="js/ui/solar.js?v=20260611b"></script>
+<script src="js/ui/hero.js?v=20260612d"></script>
+<script src="js/lib/tesseract/tesseract.min.js?v=20260613a"></script>
+<script src="js/ui/ocr.js?v=20260613a"></script>
+<script src="js/ui/mobileui.js?v=20260613c"></script>
+<script src="js/ui/charttools.js?v=20260613d"></script>
+<script src="js/ui/netpanel.js?v=20260613a"></script>
+<script src="js/ui/analytics.js?v=20260613a"></script>
+</body>
+</html>

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>try{if(matchMedia("(max-width:768px)").matches||matchMedia("(pointer:coarse)").matches){location.replace("index.html");}}catch(e){}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>SOLAR</title>
+<style>
+@font-face {
+  font-family: "Inter Var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("css/fonts/inter-latin-var.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono Var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("css/fonts/geist-mono-latin-var.woff2") format("woff2");
+}
+
+:root {
+  --bg:   #000000;
+  --text: #f4f3e8;
+  --accent: #ebfc72;
+  --sans: "Inter Var", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono Var", "Geist Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; background: var(--bg); overflow: hidden; }
+
+body {
+  font-family: var(--sans);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: rgba(235, 252, 114, 0.22); }
+
+/* layer 0 — the starfield */
+#stars  { position: fixed; inset: 0; z-index: 0; display: block; }
+/* layer 1 — the living nebula bloom, additive over the stars */
+#nebula { position: fixed; inset: 0; z-index: 1; display: block; pointer-events: none; }
+/* layer 1 — the shooting-star cursor trail, above the nebula */
+#trail  { position: fixed; inset: 0; z-index: 1; display: block; pointer-events: none; }
+/* layer 5 — the ENTER explosion overlay, above everything */
+#burst  { position: fixed; inset: 0; z-index: 5; display: block; pointer-events: none; opacity: 0; }
+
+/* layer 2 — SOLAR + ENTER */
+.content {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+/* the scene falls away as ENTER detonates */
+body.warping .content {
+  transition: opacity 0.5s ease, transform 0.95s cubic-bezier(0.4,0,0.2,1);
+  opacity: 0;
+  transform: scale(1.07);
+}
+
+.wordmark {
+  --hx: 50%; --hy: 50%; --glow: 0;            /* driven by the shooting star */
+  font-weight: 500;
+  font-size: clamp(96px, 19vw, 300px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  user-select: none;
+  /* refined silver→cream fill, with a cool light-spot that tracks the star */
+  background:
+    radial-gradient(circle 30vw at var(--hx) var(--hy),
+        rgba(255,255,255,0.92) 0%, rgba(206,222,255,0.55) 15%, rgba(255,255,255,0) 38%),
+    linear-gradient(176deg, #ffffff 0%, #f4f3e8 46%, #c5c3b6 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+          color: transparent;
+  /* the halo swells as the star passes over the word */
+  filter:
+    drop-shadow(0 1px 30px rgba(0,0,0,0.45))
+    drop-shadow(0 0 calc(22px + var(--glow) * 48px) rgba(198,212,255, calc(0.12 + var(--glow) * 0.55)));
+  opacity: 0;
+  animation: fade 1.2s ease 0.1s forwards;
+  transition: filter 0.28s ease;
+}
+
+
+/* ENTER — liquid glass: refracts the nebula behind it, bevelled rim,
+   lime kept only as a faint hover glow + focus ring (brand thread) */
+.enter {
+  position: relative;
+  isolation: isolate;
+  pointer-events: auto;
+  margin-top: 54px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 14px;
+  padding: 17px 52px;
+  cursor: pointer;
+  opacity: 0;
+  animation: fade 1.1s ease 0.6s forwards;
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+}
+.enter:hover  { transform: scale(1.05); }
+.enter:active { transform: scale(0.985); }
+.enter:focus-visible { outline: none; }
+
+/* the refraction layer — distorts the cosmos seen through the glass */
+.enter-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: url(#liquid-glass) blur(1.5px);
+}
+
+/* the glass body — faint tint + bevelled highlight rim */
+.enter-rim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: rgba(244, 243, 232, 0.05);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.20),
+    inset 3px 3px 0.5px -3.5px rgba(255, 255, 255, 0.55),
+    inset -3px -3px 0.5px -3.5px rgba(255, 255, 255, 0.55),
+    inset 1px 1px 1px -0.5px rgba(255, 255, 255, 0.45),
+    inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.45),
+    inset 0 0 6px 6px rgba(255, 255, 255, 0.10),
+    inset 0 0 2px 2px rgba(255, 255, 255, 0.05);
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+.enter:hover .enter-rim {
+  background: rgba(244, 243, 232, 0.085);
+  box-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.22),
+    inset 3px 3px 0.5px -3.5px rgba(255, 255, 255, 0.65),
+    inset -3px -3px 0.5px -3.5px rgba(255, 255, 255, 0.65),
+    inset 1px 1px 1px -0.5px rgba(255, 255, 255, 0.5),
+    inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.5),
+    inset 0 0 6px 6px rgba(255, 255, 255, 0.12),
+    inset 0 0 2px 2px rgba(255, 255, 255, 0.06),
+    0 0 22px rgba(235, 252, 114, 0.20);          /* a breath of brand lime */
+}
+.enter:focus-visible .enter-rim {
+  box-shadow:
+    inset 3px 3px 0.5px -3.5px rgba(255, 255, 255, 0.6),
+    inset -3px -3px 0.5px -3.5px rgba(255, 255, 255, 0.6),
+    0 0 0 2px rgba(235, 252, 114, 0.85);
+}
+.enter-label {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.55);
+}
+
+@keyframes fade { to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmark, .enter { animation: none; opacity: 1; }
+}
+</style>
+</head>
+<body>
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <canvas id="nebula" aria-label="Living nebula background" aria-hidden="true"></canvas>
+  <canvas id="trail" aria-hidden="true"></canvas>
+
+  <div class="content">
+    <div class="wordmark" id="wordmark" aria-label="SOLAR">SOLAR</div>
+    <button class="enter" id="enter" type="button">
+      <span class="enter-fx" aria-hidden="true"></span>
+      <span class="enter-rim" aria-hidden="true"></span>
+      <span class="enter-label">Enter</span>
+    </button>
+  </div>
+
+  <canvas id="burst" aria-hidden="true"></canvas>
+
+  <!-- liquid-glass refraction filter (ported from the React LiquidButton) -->
+  <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+    <defs>
+      <filter id="liquid-glass" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.05 0.05" numOctaves="1" seed="1" result="turb"/>
+        <feGaussianBlur in="turb" stdDeviation="2" result="blurNoise"/>
+        <feDisplacementMap in="SourceGraphic" in2="blurNoise" scale="55" xChannelSelector="R" yChannelSelector="B" result="disp"/>
+        <feGaussianBlur in="disp" stdDeviation="0.6"/>
+      </filter>
+    </defs>
+  </svg>
+
+<!-- ====================================================== -->
+<!-- STARFIELD — ported from the React <Starfield> component  -->
+<!-- ====================================================== -->
+<script>
+(function () {
+  "use strict";
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var STAR_COLOR = "rgba(255,255,255,1)";
+  var BG_COLOR   = "rgba(0,0,0,1)";
+  var QUANTITY   = 512;
+  var SPEED      = 1;
+  var EASING     = 1;
+  var MOUSE_ADJUST = false;
+  var ratio = QUANTITY / 2;
+
+  var canvas = document.getElementById("stars");
+  var ctx = canvas.getContext("2d");
+  var w = 0, h = 0, cx = 0, cy = 0, z = 0, colorRatio = 0;
+  var stars = [];
+  var cursor = { x: 0, y: 0 };
+  var mouse = { x: 0, y: 0 };
+
+  function measure() {
+    w = window.innerWidth; h = window.innerHeight;
+    cx = Math.round(w / 2); cy = Math.round(h / 2);
+    z = (w + h) / 2; colorRatio = 1 / z;
+    if (cursor.x === 0 || cursor.y === 0) { cursor.x = cx; cursor.y = cy; }
+  }
+  function setup() {
+    measure();
+    canvas.width = w; canvas.height = h;
+    ctx.fillStyle = BG_COLOR; ctx.strokeStyle = STAR_COLOR;
+  }
+  function bigBang() {
+    stars = new Array(QUANTITY).fill(0).map(function () {
+      return { x: Math.random()*w*2 - cx*2, y: Math.random()*h*2 - cy*2,
+               z: Math.round(Math.random()*z), sx:0, sy:0, psx:0, psy:0, vis:true };
+    });
+  }
+  function update() {
+    mouse.x = MOUSE_ADJUST ? (cursor.x - cx) / EASING : 0;
+    mouse.y = MOUSE_ADJUST ? (cursor.y - cy) / EASING : 0;
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i];
+      s.vis = true; s.psx = s.sx; s.psy = s.sy;
+      s.x += mouse.x >> 4;
+      if (s.x >  cx << 1) { s.x -= w << 1; s.vis = false; }
+      if (s.x < -cx << 1) { s.x += w << 1; s.vis = false; }
+      s.y += mouse.y >> 4;
+      if (s.y >  cy << 1) { s.y -= h << 1; s.vis = false; }
+      if (s.y < -cy << 1) { s.y += h << 1; s.vis = false; }
+      s.z -= SPEED;
+      if (s.z > z) { s.z -= z; s.vis = false; }
+      if (s.z < 0) { s.z += z; s.vis = false; }
+      s.sx = cx + (s.x / s.z) * ratio;
+      s.sy = cy + (s.y / s.z) * ratio;
+    }
+  }
+  function draw() {
+    ctx.fillStyle = BG_COLOR; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = STAR_COLOR;
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i];
+      if (s.psx > 0 && s.psx < w && s.psy > 0 && s.psy < h && s.vis) {
+        ctx.lineWidth = (1 - colorRatio * s.z) * 2;
+        ctx.beginPath(); ctx.moveTo(s.psx, s.psy); ctx.lineTo(s.sx, s.sy); ctx.stroke(); ctx.closePath();
+      }
+    }
+  }
+  function animate() { update(); draw(); requestAnimationFrame(animate); }
+
+  var resizeT;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(function () {
+      var ow = w, oh = h;
+      measure(); canvas.width = w; canvas.height = h;
+      var rw = w / ow, rh = h / oh;
+      for (var i = 0; i < stars.length; i++) { stars[i].x *= rw; stars[i].y *= rh; }
+      ctx.fillStyle = BG_COLOR; ctx.strokeStyle = STAR_COLOR;
+      if (reduceMotion) { update(); draw(); }
+    }, 150);
+  });
+
+  setup(); bigBang();
+  if (reduceMotion) { update(); draw(); } else { animate(); }
+})();
+</script>
+
+<!-- ====================================================== -->
+<!-- LIVING NEBULA — the React <LivingNebulaShader> GLSL,     -->
+<!-- ported to raw WebGL and masked into a bloom around SOLAR -->
+<!-- ====================================================== -->
+<script>
+(function () {
+  "use strict";
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var cv = document.getElementById("nebula");
+  var wordmark = document.getElementById("wordmark");
+  var gl = cv.getContext("webgl", { alpha: true, premultipliedAlpha: false, antialias: true })
+        || cv.getContext("experimental-webgl", { alpha: true, premultipliedAlpha: false, antialias: true });
+  if (!gl) { cv.style.display = "none"; return; }   /* graceful fallback: stars only */
+
+  var DPR = Math.min(window.devicePixelRatio || 1, 1.5);  /* soft bloom — render lean */
+
+  var vert =
+    "attribute vec2 aPos;" +
+    "void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }";
+
+  /* the shader: same fbm/cloud body as the source component, re-centred
+     on the wordmark and faded to transparent so it reads as a bloom */
+  var frag =
+    "precision highp float;" +
+    "uniform vec2 iResolution;" +
+    "uniform float iTime;" +
+    "uniform vec2 iMouse;" +
+    "uniform vec2 iCenter;" +
+    "uniform float iRadius;" +
+    "uniform float iBoost;" +
+    "float random(vec2 st){ return fract(sin(dot(st.xy, vec2(12.9898,78.233)))*43758.5453123); }" +
+    "float noise(vec2 p){ vec2 i=floor(p), f=fract(p); vec2 u=f*f*(3.0-2.0*f);" +
+    "  return mix(mix(random(i),random(i+vec2(1.0,0.0)),u.x), mix(random(i+vec2(0.0,1.0)),random(i+vec2(1.0,1.0)),u.x), u.y); }" +
+    "float fbm(vec2 p){ float v=0.0, a=0.5; for(int i=0;i<6;i++){ v+=a*noise(p); p*=2.0; a*=0.5; } return v; }" +
+    "void main(){" +
+    "  vec2 uv    = (gl_FragCoord.xy - iCenter) / iResolution.y;" +
+    "  vec2 mouse = (iMouse        - iCenter) / iResolution.y;" +
+    "  float t = iTime * 0.1;" +
+    /* gentle autonomous drift — the gas is no longer dragged by the cursor */
+    "  uv += vec2(sin(t * 0.6), cos(t * 0.5)) * 0.012;" +
+    /* rotating flow */
+    "  float angle = t * 0.3;" +
+    "  mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));" +
+    "  vec2 p = rot * uv;" +
+    "  float c1 = fbm(p * 2.0 + vec2(t, -t));" +
+    "  float c2 = fbm(p * 4.0 - vec2(-t, t));" +
+    /* milky-way palette: violet/magenta + cool blue + warm core */
+    "  vec3 gas1 = vec3(0.70, 0.32, 0.85);" +
+    "  vec3 gas2 = vec3(0.28, 0.42, 0.95);" +
+    "  vec3 warm = vec3(1.00, 0.84, 0.62);" +
+    "  float d1 = smoothstep(0.42, 0.72, c1);" +
+    "  float d2 = smoothstep(0.50, 0.82, c2);" +
+    "  vec3 color = gas1 * d1 + gas2 * d2 * 0.75;" +
+    "  float density = max(d1, d2 * 0.8);" +
+    /* warm luminous core directly behind the letters */
+    "  float dist = length(uv);" +
+    "  float core = smoothstep(0.55, 0.0, dist);" +
+    "  color += warm * core * 0.45;" +
+    "  density = max(density, core * 0.6);" +
+    /* radial bloom mask — dense at the wordmark, gone by iRadius */
+    "  float bloom = smoothstep(iRadius, 0.0, dist);" +
+    "  float alpha = density * bloom;" +
+    "  gl_FragColor = vec4(color * 1.15 * iBoost, min(alpha * iBoost, 1.0));" +
+    "}";
+
+  function compile(type, src) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      console.error("nebula shader:", gl.getShaderInfoLog(s));
+      return null;
+    }
+    return s;
+  }
+  var vs = compile(gl.VERTEX_SHADER, vert);
+  var fs = compile(gl.FRAGMENT_SHADER, frag);
+  if (!vs || !fs) { cv.style.display = "none"; return; }
+
+  var prog = gl.createProgram();
+  gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    console.error("nebula link:", gl.getProgramInfoLog(prog));
+    cv.style.display = "none"; return;
+  }
+  gl.useProgram(prog);
+
+  /* fullscreen triangle */
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(prog, "aPos");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  var uRes    = gl.getUniformLocation(prog, "iResolution");
+  var uTime   = gl.getUniformLocation(prog, "iTime");
+  var uMouse  = gl.getUniformLocation(prog, "iMouse");
+  var uCenter = gl.getUniformLocation(prog, "iCenter");
+  var uRadius = gl.getUniformLocation(prog, "iRadius");
+  var uBoost  = gl.getUniformLocation(prog, "iBoost");
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE);     /* additive — celestial bloom */
+  gl.clearColor(0, 0, 0, 0);
+
+  var W = 0, H = 0;
+  var mouseX = -9999, mouseY = -9999;     /* gl_FragCoord space (y up) */
+  var center = { x: 0, y: 0 };
+
+  function computeCenter() {
+    var r = wordmark.getBoundingClientRect();
+    center.x = (r.left + r.width / 2) * DPR;
+    center.y = (H - (r.top + r.height / 2) * DPR);   /* flip y */
+  }
+  function resize() {
+    var cw = window.innerWidth, ch = window.innerHeight;
+    cv.style.width = cw + "px"; cv.style.height = ch + "px";
+    W = Math.round(cw * DPR); H = Math.round(ch * DPR);
+    cv.width = W; cv.height = H;
+    gl.viewport(0, 0, W, H);
+    computeCenter();
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  window.addEventListener("mousemove", function (e) {
+    mouseX = e.clientX * DPR;
+    mouseY = H - e.clientY * DPR;
+  });
+
+  /* the nebula can erupt on ENTER: its bloom expands to fill the frame
+     and brightens — the same gas exploding outward */
+  var curRadius = 0.95, curBoost = 1.0;
+  var booming = false, boomStart = 0, BOOM_MS = 1100;
+  window.__solarNebulaBoom = function () { booming = true; boomStart = performance.now(); };
+
+  var start = performance.now();
+  function render(now) {
+    computeCenter();                       /* track the word through its fade-in */
+    if (booming) {
+      var e = (now - boomStart) / BOOM_MS; if (e > 1) e = 1;
+      var ease = e * e;                    /* accelerate outward */
+      curRadius = 0.95 + ease * 2.7;       /* bloom grows past the screen edges */
+      curBoost  = 1.0 + ease * 2.2;        /* and brightens into a whiteout */
+    }
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform2f(uRes, W, H);
+    gl.uniform1f(uTime, (now - start) / 1000 + (booming ? (now - boomStart) / 260 : 0));
+    gl.uniform2f(uMouse, mouseX, mouseY);
+    gl.uniform2f(uCenter, center.x, center.y);
+    gl.uniform1f(uRadius, curRadius);
+    gl.uniform1f(uBoost, curBoost);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if (!reduceMotion) requestAnimationFrame(render);
+  }
+  if (reduceMotion) {
+    /* one still frame of the cloud */
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform2f(uRes, W, H);
+    gl.uniform1f(uTime, 12.0);
+    gl.uniform2f(uMouse, -9999, -9999);
+    gl.uniform2f(uCenter, center.x, center.y);
+    gl.uniform1f(uRadius, 0.95);
+    gl.uniform1f(uBoost, 1.0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  } else {
+    requestAnimationFrame(render);
+  }
+})();
+</script>
+
+<!-- ====================================================== -->
+<!-- SHOOTING-STAR cursor trail  +  ENTER nebula explosion   -->
+<!-- ====================================================== -->
+<script>
+(function () {
+  "use strict";
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  /* ---------- shooting-star that trails the cursor ---------- */
+  var trail = document.getElementById("trail");
+  var tx = trail.getContext("2d");
+  var TW = 0, TH = 0;
+  function sizeTrail() {
+    TW = window.innerWidth; TH = window.innerHeight;
+    trail.width = TW * dpr; trail.height = TH * dpr;
+    trail.style.width = TW + "px"; trail.style.height = TH + "px";
+    tx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  sizeTrail();
+
+  var pts = [];        /* recent cursor positions {x,y,t} */
+  var sparks = [];
+  var lastX = 0, lastY = 0, haveLast = false;
+  var TAIL_MS = 340;
+
+  /* the shooting star lights the wordmark as it passes over it */
+  var wm = document.getElementById("wordmark");
+  function lightWordmark() {
+    if (!haveLast) return;
+    var r = wm.getBoundingClientRect();
+    if (!r.width) return;
+    wm.style.setProperty("--hx", (((lastX - r.left) / r.width) * 100).toFixed(1) + "%");
+    wm.style.setProperty("--hy", (((lastY - r.top) / r.height) * 100).toFixed(1) + "%");
+    var dx = Math.max(r.left - lastX, 0, lastX - r.right);
+    var dy = Math.max(r.top - lastY, 0, lastY - r.bottom);
+    var d = Math.sqrt(dx * dx + dy * dy);
+    wm.style.setProperty("--glow", Math.max(0, 1 - d / 240).toFixed(3));
+  }
+
+  window.addEventListener("mousemove", function (e) {
+    var now = performance.now();
+    var x = e.clientX, y = e.clientY;
+    pts.push({ x: x, y: y, t: now });
+    if (haveLast) {
+      var dx = x - lastX, dy = y - lastY;
+      var sp = Math.sqrt(dx * dx + dy * dy);
+      var n = Math.min(4, Math.floor(sp / 14));
+      for (var i = 0; i < n; i++) {
+        sparks.push({
+          x: x, y: y,
+          vx: (Math.random() - 0.5) * 1.2 - dx * 0.04,
+          vy: (Math.random() - 0.5) * 1.2 - dy * 0.04,
+          life: 0, max: 34 + Math.random() * 28,
+          r: 0.6 + Math.random() * 1.3,
+          violet: Math.random() < 0.3
+        });
+      }
+    }
+    lastX = x; lastY = y; haveLast = true;
+  });
+
+  function drawTrail(now) {
+    lightWordmark();
+    tx.clearRect(0, 0, TW, TH);
+    while (pts.length && now - pts[0].t > TAIL_MS) pts.shift();
+    tx.globalCompositeOperation = "lighter";
+
+    if (pts.length > 1) {
+      tx.lineCap = "round";
+      for (var i = 1; i < pts.length; i++) {
+        var p0 = pts[i - 1], p1 = pts[i];
+        var age = (now - p1.t) / TAIL_MS; if (age > 1) age = 1;
+        var a = 1 - age;
+        tx.strokeStyle = "rgba(228,236,255," + (0.5 * a * a).toFixed(3) + ")";
+        tx.lineWidth = a * 3.2;
+        tx.beginPath(); tx.moveTo(p0.x, p0.y); tx.lineTo(p1.x, p1.y); tx.stroke();
+      }
+      /* glowing head — fades out when the cursor goes idle */
+      var head = pts[pts.length - 1];
+      var ha = Math.max(0, 1 - (now - head.t) / TAIL_MS);
+      if (ha > 0) {
+        var g = tx.createRadialGradient(head.x, head.y, 0, head.x, head.y, 17);
+        g.addColorStop(0,   "rgba(255,255,255," + (0.9 * ha).toFixed(3) + ")");
+        g.addColorStop(0.4, "rgba(220,228,255," + (0.32 * ha).toFixed(3) + ")");
+        g.addColorStop(1,   "rgba(180,170,240,0)");
+        tx.fillStyle = g; tx.beginPath(); tx.arc(head.x, head.y, 17, 0, Math.PI * 2); tx.fill();
+        tx.fillStyle = "rgba(255,255,255," + (0.95 * ha).toFixed(3) + ")";
+        tx.beginPath(); tx.arc(head.x, head.y, 1.7, 0, Math.PI * 2); tx.fill();
+      }
+    }
+
+    for (var j = sparks.length - 1; j >= 0; j--) {
+      var s = sparks[j];
+      s.x += s.vx; s.y += s.vy; s.vx *= 0.96; s.vy *= 0.96; s.vy += 0.015; s.life++;
+      if (s.life > s.max) { sparks.splice(j, 1); continue; }
+      var f = 1 - s.life / s.max;
+      var col = s.violet ? "190,170,245" : "235,240,255";
+      tx.fillStyle = "rgba(" + col + "," + (0.8 * f).toFixed(3) + ")";
+      tx.beginPath(); tx.arc(s.x, s.y, s.r * f + 0.3, 0, Math.PI * 2); tx.fill();
+    }
+    tx.globalCompositeOperation = "source-over";
+  }
+
+  /* ---------- ENTER → nebula explosion → charting page ---------- */
+  var burst = document.getElementById("burst");
+  var bx = burst.getContext("2d");
+  var BW = 0, BH = 0;
+  function sizeBurst() {
+    BW = window.innerWidth; BH = window.innerHeight;
+    burst.width = BW * dpr; burst.height = BH * dpr;
+    burst.style.width = BW + "px"; burst.style.height = BH + "px";
+    bx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  sizeBurst();
+
+  window.addEventListener("resize", function () { sizeTrail(); sizeBurst(); });
+
+  var launched = false;
+  function detonate() {
+    if (launched) return;
+    launched = true;
+    document.body.classList.add("warping");
+    /* the ONLY effect: the nebula's own bloom erupts to engulf the frame */
+    if (typeof window.__solarNebulaBoom === "function") window.__solarNebulaBoom();
+
+    /* reduced-motion: skip the animation, just go */
+    if (reduceMotion) { setTimeout(function () { window.location.href = "index.html"; }, 400); return; }
+
+    burst.style.opacity = 1;
+    var start = performance.now();
+    (function veil(now) {
+      var k = Math.min((now - start) / 1250, 1);
+      bx.clearRect(0, 0, BW, BH);
+      /* no particles — the nebula engulfs, then settles to obsidian so the
+         hand-off to the (dark) chart screen is dark-to-dark, not a flash */
+      if (k > 0.5) {
+        var wv = (k - 0.5) / 0.5; wv = wv * wv;
+        bx.fillStyle = "rgba(11,16,23," + Math.min(wv, 1).toFixed(3) + ")";   /* = chart screen --bg #0b1017 */
+        bx.fillRect(0, 0, BW, BH);
+      }
+      if (k < 1) requestAnimationFrame(veil);
+      else window.location.href = "index.html";
+    })(start);
+  }
+
+  var enterBtn = document.getElementById("enter");
+  enterBtn.addEventListener("click", detonate);
+  document.addEventListener("keydown", function (e) { if (e.key === "Enter") detonate(); });
+
+  /* trail loop */
+  function loop(now) { drawTrail(now); requestAnimationFrame(loop); }
+  if (!reduceMotion) requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

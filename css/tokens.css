@@ -1,0 +1,50 @@
+/* SOLAR — design tokens (cover / brand surface)
+ * Derived from the xAI "cosmic void" reference + the project amber accent.
+ * Namespaced --sol-* so it never collides with the workbench tokens in app.css.
+ * Fonts are vendored (offline; no CDN) — Inter for display, Geist Mono for labels.
+ */
+
+@font-face {
+  font-family: "Inter Var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/inter-latin-var.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono Var";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/geist-mono-latin-var.woff2") format("woff2");
+}
+
+:root {
+  /* ---- palette: the void emits light; colour is a rare atmospheric event ---- */
+  --sol-void:        #0c0c0b;   /* canvas — the space everything floats on */
+  --sol-void-deep:   #050506;   /* outer falloff */
+  --sol-charcoal:    #141619;   /* deep structural edges */
+  --sol-graphite:    #1f2228;   /* hairline borders */
+  --sol-smoke:       #474747;   /* elevated outlines */
+  --sol-ash:         #7d8187;   /* muted helper / metadata text */
+  --sol-bone:        #b8c2d0;   /* secondary luminance */
+  --sol-white:       #ffffff;   /* emitted light — wordmark, primary text */
+  --sol-signal:      #2563eb;   /* functional accent — focus only */
+  --sol-amber:       #e8b34b;   /* the horizon glow — our brand accent */
+  --sol-glow:        232, 179, 75;
+
+  /* ---- type ---- */
+  --sol-font-display: "Inter Var", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sol-font-mono:    "Geist Mono Var", "Geist Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --sol-weight-thin:    300;    /* the wordmark — light, luminous */
+  --sol-weight-regular: 400;
+  --sol-tracking-display: -0.03em;   /* tight: letters become one luminous mass */
+  --sol-tracking-mono:     0.32em;   /* tracked-out metadata */
+
+  /* ---- shape & space ---- */
+  --sol-radius-pill: 9999px;
+  --sol-radius-input: 24px;
+  --sol-hairline: 1px solid var(--sol-graphite);
+  --sol-space-1: 4px;  --sol-space-2: 8px;  --sol-space-3: 12px;
+  --sol-space-4: 16px; --sol-space-6: 24px; --sol-space-8: 32px;
+}

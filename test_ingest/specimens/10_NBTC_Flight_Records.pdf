@@ -1,0 +1,394 @@
+%PDF-1.4
+%“Œ‹ž ReportLab Generated PDF document (opensource)
+1 0 obj
+<<
+/F1 2 0 R /F2 3 0 R
+>>
+endobj
+2 0 obj
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
+endobj
+3 0 obj
+<<
+/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+>>
+endobj
+4 0 obj
+<<
+/Contents 8 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 7 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+5 0 obj
+<<
+/PageMode /UseNone /Pages 7 0 R /Type /Catalog
+>>
+endobj
+6 0 obj
+<<
+/Author (\(anonymous\)) /CreationDate (D:20260612083814+00'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260612083814+00'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+  /Subject (\(unspecified\)) /Title (10_NBTC_Flight_Records.pdf) /Trapped /False
+>>
+endobj
+7 0 obj
+<<
+/Count 1 /Kids [ 4 0 R ] /Type /Pages
+>>
+endobj
+8 0 obj
+<<
+/Length 8255
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 51.35433 784.2047 cm
+q
+.6 .2 0 rg
+BT 1 0 0 1 0 3 Tm /F2 9 Tf 12 TL 200.5275 0 Td (OFFICIAL-SENSITIVE) Tj T* -200.5275 0 Td ET
+Q
+Q
+q
+1 0 0 1 51.35433 756.2047 cm
+q
+.062745 .141176 .243137 rg
+BT 1 0 0 1 0 8 Tm /F2 14 Tf 22 TL (National Border Targeting Centre \(NBTC\) - Travel Record) Tj T* ET
+Q
+Q
+q
+1 0 0 1 51.35433 740.2047 cm
+q
+.501961 .501961 .501961 rg
+BT 1 0 0 1 0 4.8 Tm /F1 7.2 Tf 12 TL (API \(Advance Passenger Information\) + PNR \(Passenger Name Record\) extract. Carrier-supplied; for OP GANNET.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 51.35433 734.2047 cm
+Q
+q
+1 0 0 1 62.3622 702.2047 cm
+q
+1 1 1 rg
+n 0 16 470.5512 -16 re f*
+.121569 .305882 .47451 rg
+n 0 32 470.5512 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 21.8 Tm (NBTC ref) Tj T* ET
+BT 1 0 0 1 123.0551 21.8 Tm (Subject) Tj T* ET
+BT 1 0 0 1 287.4646 21.8 Tm (Requested by) Tj T* ET
+BT 1 0 0 1 400.8504 21.8 Tm (Date) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 5.8 Tm (NBTC-TR-2026-30197) Tj T* ET
+BT 1 0 0 1 123.0551 5.8 Tm (COLE, Darren Michael) Tj T* ET
+BT 1 0 0 1 287.4646 5.8 Tm (GMP OP GANNET) Tj T* ET
+BT 1 0 0 1 400.8504 5.8 Tm (06/06/2026) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 32 m 470.5512 32 l S
+n 0 0 m 470.5512 0 l S
+n 0 0 m 0 32 l S
+n 470.5512 0 m 470.5512 32 l S
+n 0 16 m 470.5512 16 l S
+n 119.0551 0 m 119.0551 32 l S
+n 283.4646 0 m 283.4646 32 l S
+n 396.8504 0 m 396.8504 32 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 676.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (Subject API \(from travel document\)) Tj T* ET
+Q
+Q
+q
+1 0 0 1 56.69291 593.2047 cm
+q
+1 1 1 rg
+n 0 64 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 48 481.8898 -16 re f*
+1 1 1 rg
+n 0 32 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 16 481.8898 -16 re f*
+.121569 .305882 .47451 rg
+n 0 80 481.8898 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 69.8 Tm (Field) Tj T* ET
+BT 1 0 0 1 145.7323 69.8 Tm (Value) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 53.8 Tm (Surname / Given) Tj T* ET
+BT 1 0 0 1 145.7323 53.8 Tm (COLE / DARREN MICHAEL) Tj T* ET
+BT 1 0 0 1 4 37.8 Tm (DOB / Sex / Nationality) Tj T* ET
+BT 1 0 0 1 145.7323 37.8 Tm (14/03/1987 / M / GBR) Tj T* ET
+BT 1 0 0 1 4 21.8 Tm (Document type / number) Tj T* ET
+BT 1 0 0 1 145.7323 21.8 Tm (Passport / PPT 533201984) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (Doc issue / expiry) Tj T* ET
+BT 1 0 0 1 145.7323 5.8 Tm (GBR 2019 / 2029) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 80 m 481.8898 80 l S
+n 0 0 m 481.8898 0 l S
+n 0 0 m 0 80 l S
+n 481.8898 0 m 481.8898 80 l S
+n 0 64 m 481.8898 64 l S
+n 0 48 m 481.8898 48 l S
+n 0 32 m 481.8898 32 l S
+n 0 16 m 481.8898 16 l S
+n 141.7323 0 m 141.7323 80 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 567.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (Movements \(API\)) Tj T* ET
+Q
+Q
+q
+1 0 0 1 82.20472 500.2047 cm
+q
+1 1 1 rg
+n 0 48 430.8661 -16 re f*
+.933333 .952941 .972549 rg
+n 0 32 430.8661 -16 re f*
+1 1 1 rg
+n 0 16 430.8661 -16 re f*
+.121569 .305882 .47451 rg
+n 0 64 430.8661 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 53.8 Tm (Date) Tj T* ET
+BT 1 0 0 1 66.3622 53.8 Tm (Carrier) Tj T* ET
+BT 1 0 0 1 145.7323 53.8 Tm (Flight) Tj T* ET
+BT 1 0 0 1 202.4252 53.8 Tm (Route) Tj T* ET
+BT 1 0 0 1 293.1339 53.8 Tm (Dir) Tj T* ET
+BT 1 0 0 1 327.1496 53.8 Tm (Seat) Tj T* ET
+BT 1 0 0 1 366.8346 53.8 Tm (PNR) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 37.8 Tm (12/02/2026) Tj T* ET
+BT 1 0 0 1 66.3622 37.8 Tm (VY \(Vueling\)) Tj T* ET
+BT 1 0 0 1 145.7323 37.8 Tm (VY7821) Tj T* ET
+BT 1 0 0 1 202.4252 37.8 Tm (MAN - AGP) Tj T* ET
+BT 1 0 0 1 293.1339 37.8 Tm (OUT) Tj T* ET
+BT 1 0 0 1 327.1496 37.8 Tm (14C) Tj T* ET
+BT 1 0 0 1 366.8346 37.8 Tm (K7T2QL) Tj T* ET
+BT 1 0 0 1 4 21.8 Tm (19/02/2026) Tj T* ET
+BT 1 0 0 1 66.3622 21.8 Tm (VY \(Vueling\)) Tj T* ET
+BT 1 0 0 1 145.7323 21.8 Tm (VY7822) Tj T* ET
+BT 1 0 0 1 202.4252 21.8 Tm (AGP - MAN) Tj T* ET
+BT 1 0 0 1 293.1339 21.8 Tm (IN) Tj T* ET
+BT 1 0 0 1 327.1496 21.8 Tm (14C) Tj T* ET
+BT 1 0 0 1 366.8346 21.8 Tm (K7T2QL) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (28/11/2025) Tj T* ET
+BT 1 0 0 1 66.3622 5.8 Tm (KL \(KLM\)) Tj T* ET
+BT 1 0 0 1 145.7323 5.8 Tm (KL1086) Tj T* ET
+BT 1 0 0 1 202.4252 5.8 Tm (MAN - AMS) Tj T* ET
+BT 1 0 0 1 293.1339 5.8 Tm (OUT) Tj T* ET
+BT 1 0 0 1 327.1496 5.8 Tm (-) Tj T* ET
+BT 1 0 0 1 366.8346 5.8 Tm (QH22LP) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 64 m 430.8661 64 l S
+n 0 0 m 430.8661 0 l S
+n 0 0 m 0 64 l S
+n 430.8661 0 m 430.8661 64 l S
+n 0 48 m 430.8661 48 l S
+n 0 32 m 430.8661 32 l S
+n 0 16 m 430.8661 16 l S
+n 62.3622 0 m 62.3622 64 l S
+n 141.7323 0 m 141.7323 64 l S
+n 198.4252 0 m 198.4252 64 l S
+n 289.1339 0 m 289.1339 64 l S
+n 323.1496 0 m 323.1496 64 l S
+n 362.8346 0 m 362.8346 64 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 474.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (PNR Detail - Locator K7T2QL) Tj T* ET
+Q
+Q
+q
+1 0 0 1 56.69291 343.2047 cm
+q
+1 1 1 rg
+n 0 112 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 96 481.8898 -16 re f*
+1 1 1 rg
+n 0 80 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 64 481.8898 -16 re f*
+1 1 1 rg
+n 0 48 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 32 481.8898 -16 re f*
+1 1 1 rg
+n 0 16 481.8898 -16 re f*
+.121569 .305882 .47451 rg
+n 0 128 481.8898 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 117.8 Tm (Field) Tj T* ET
+BT 1 0 0 1 131.5591 117.8 Tm (Value) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 101.8 Tm (Booking made) Tj T* ET
+BT 1 0 0 1 131.5591 101.8 Tm (02/02/2026, agent: lastminute \(web\)) Tj T* ET
+BT 1 0 0 1 4 85.8 Tm (Booking contact) Tj T* ET
+BT 1 0 0 1 131.5591 85.8 Tm (07700 900118 ; darren.cole87@gmail.com) Tj T* ET
+BT 1 0 0 1 4 69.8 Tm (Payment) Tj T* ET
+BT 1 0 0 1 131.5591 69.8 Tm (VISA debit ****1847 \(Barclays a/c 30021847\)) Tj T* ET
+BT 1 0 0 1 4 53.8 Tm (Passengers on PNR) Tj T* ET
+BT 1 0 0 1 131.5591 53.8 Tm (1\) COLE, Darren Michael  2\) DRAGOMIR, Sofia \(DOB 05/01/1996, ROU, PPT 521049883\)) Tj T* ET
+BT 1 0 0 1 4 37.8 Tm (Itinerary) Tj T* ET
+BT 1 0 0 1 131.5591 37.8 Tm (MAN-AGP 12/02 / AGP-MAN 19/02) Tj T* ET
+BT 1 0 0 1 4 21.8 Tm (Baggage) Tj T* ET
+BT 1 0 0 1 131.5591 21.8 Tm (2 x 23kg hold) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (Frequent flyer) Tj T* ET
+BT 1 0 0 1 131.5591 5.8 Tm (None) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 128 m 481.8898 128 l S
+n 0 0 m 481.8898 0 l S
+n 0 0 m 0 128 l S
+n 481.8898 0 m 481.8898 128 l S
+n 0 112 m 481.8898 112 l S
+n 0 96 m 481.8898 96 l S
+n 0 80 m 481.8898 80 l S
+n 0 64 m 481.8898 64 l S
+n 0 48 m 481.8898 48 l S
+n 0 32 m 481.8898 32 l S
+n 0 16 m 481.8898 16 l S
+n 127.5591 0 m 127.5591 128 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 317.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (Co-Traveller Cross-Reference) Tj T* ET
+Q
+Q
+q
+1 0 0 1 56.69291 266.2047 cm
+q
+1 1 1 rg
+n 0 32 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 16 481.8898 -16 re f*
+.121569 .305882 .47451 rg
+n 0 48 481.8898 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 37.8 Tm (Name) Tj T* ET
+BT 1 0 0 1 159.9055 37.8 Tm (Relationship) Tj T* ET
+BT 1 0 0 1 329.9843 37.8 Tm (Other PNRs) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 21.8 Tm (DRAGOMIR, Sofia) Tj T* ET
+BT 1 0 0 1 159.9055 21.8 Tm (Co-traveller \(same PNR K7T2QL\)) Tj T* ET
+BT 1 0 0 1 329.9843 21.8 Tm (4RB9XM MAN-OTP 03/01/2026) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (FOSTER, Lee Anthony) Tj T* ET
+BT 1 0 0 1 159.9055 5.8 Tm (Separate booking, overlapping dates) Tj T* ET
+BT 1 0 0 1 329.9843 5.8 Tm (QH22LP MAN-AMS 28/11/2025) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 48 m 481.8898 48 l S
+n 0 0 m 481.8898 0 l S
+n 0 0 m 0 48 l S
+n 481.8898 0 m 481.8898 48 l S
+n 0 32 m 481.8898 32 l S
+n 0 16 m 481.8898 16 l S
+n 155.9055 0 m 155.9055 48 l S
+n 325.9843 0 m 325.9843 48 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 260.2047 cm
+Q
+q
+1 0 0 1 51.35433 258.2047 cm
+q
+1 w
+1 J
+.827451 .827451 .827451 RG
+n 0 0 m 492.5669 0 l S
+Q
+Q
+q
+1 0 0 1 51.35433 245.2047 cm
+q
+.501961 .501961 .501961 rg
+BT 1 0 0 1 0 4.8 Tm /F1 7.2 Tf 12 TL (FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 51.35433 233.2047 cm
+q
+.6 .2 0 rg
+BT 1 0 0 1 0 3 Tm /F2 9 Tf 12 TL 200.5275 0 Td (OFFICIAL-SENSITIVE) Tj T* -200.5275 0 Td ET
+Q
+Q
+ 
+endstream
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000061 00000 n 
+0000000102 00000 n 
+0000000209 00000 n 
+0000000321 00000 n 
+0000000524 00000 n 
+0000000592 00000 n 
+0000000885 00000 n 
+0000000944 00000 n 
+trailer
+<<
+/ID 
+[<71637474f6e09d25003f14ded063118c><71637474f6e09d25003f14ded063118c>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 6 0 R
+/Root 5 0 R
+/Size 9
+>>
+startxref
+9250
+%%EOF

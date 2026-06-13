@@ -1,0 +1,403 @@
+/* SOLAR — motion.css
+ * Motion-site layer for the landing cover: eclipse preloader, custom cursor,
+ * display typography with word-mask reveals, scroll scenes (orrery, cards,
+ * outro), ghost type, grain, scroll cue, giant magnetic ENTER.
+ * Original work in the house style.
+ */
+
+/* ---------- film grain ---------- */
+#solar-grain {
+  position: fixed;
+  inset: -60px;
+  z-index: 950;
+  pointer-events: none;
+  opacity: 0.045;
+  animation: solar-grain-jitter 0.6s steps(4) infinite;
+}
+@keyframes solar-grain-jitter {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-18px, 12px); }
+  50% { transform: translate(12px, -16px); }
+  75% { transform: translate(-10px, -8px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ---------- eclipse preloader ---------- */
+#solar-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: #04060a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  cursor: pointer;
+  clip-path: circle(150% at 50% 50%);
+}
+#solar-preloader.eclipse {
+  animation: solar-eclipse 0.72s cubic-bezier(0.83, 0, 0.17, 1) forwards;
+}
+@keyframes solar-eclipse {
+  to { clip-path: circle(0% at 50% 50%); }
+}
+#solar-preloader .pl-word {
+  display: flex;
+  gap: 0.08em;
+  font: 700 clamp(3rem, 10vw, 7rem)/1 var(--sans);
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+#solar-preloader .pl-l {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.35em);
+  animation: solar-pl-l 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--i) * 90ms + 120ms);
+}
+#solar-preloader .pl-l:nth-child(4),
+#solar-preloader .pl-l:nth-child(5) { color: var(--accent); }
+@keyframes solar-pl-l {
+  to { opacity: 1; transform: translateY(0); }
+}
+#solar-preloader .pl-sub {
+  font: 500 10px var(--mono);
+  letter-spacing: 0.34em;
+  color: rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  animation: solar-pl-l 0.6s ease 0.7s forwards;
+}
+#solar-preloader .pl-count {
+  position: fixed;
+  right: 28px;
+  bottom: 22px;
+  font: 600 13px var(--mono);
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+#solar-preloader .pl-count::after { content: " %"; color: rgba(255,255,255,0.35); }
+
+/* ---------- custom cursor ---------- */
+#solar-cursor-dot, #solar-cursor-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 2100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+#solar-cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+#solar-cursor-ring {
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  mix-blend-mode: difference;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 240ms ease, width 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              height 260ms cubic-bezier(0.34, 1.56, 0.64, 1), margin 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#solar-cursor-ring .lbl {
+  font: 600 8px var(--mono);
+  letter-spacing: 0.18em;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+#solar-cursor-ring.hot {
+  width: 76px;
+  height: 76px;
+  margin: -38px 0 0 -38px;
+  border-color: rgba(255, 255, 255, 0.85);
+}
+#solar-cursor-ring.hot .lbl { opacity: 1; }
+body.solar-cursor-on #hero-cover,
+body.solar-cursor-on #hero-cover * { cursor: none !important; }
+
+/* ---------- display headline: word-mask reveals ---------- */
+#hero-h1 {
+  font-size: clamp(2.9rem, 8.6vw, 7.6rem);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 0.99;
+  text-transform: uppercase;
+  /* override the old single gradient: lines handle their own colour */
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #f2f5f9;
+  animation: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.04em;
+}
+#hero-h1 .line { display: block; white-space: nowrap; }
+#hero-h1 .accent-line .wi {
+  background-image: linear-gradient(92deg, var(--accent) 0%, #fff3d6 55%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+#hero-h1 .w {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.06em;
+  margin-bottom: -0.06em;
+}
+#hero-h1 .wi {
+  display: inline-block;
+  transform: translateY(115%) rotate(2.2deg);
+  opacity: 0;
+}
+#hero-cover.loaded #hero-h1 .wi {
+  animation: solar-word-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--wi) * 95ms + 60ms);
+}
+@keyframes solar-word-in {
+  to { transform: translateY(0) rotate(0deg); opacity: 1; }
+}
+#hero-sub {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 700ms ease 650ms, transform 700ms cubic-bezier(0.22, 1, 0.36, 1) 650ms;
+}
+#hero-cover.loaded #hero-sub.in, #hero-cover.loaded #hero-sub {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* scroll cue */
+#hero-scrollcue {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  font: 600 9px var(--mono);
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+}
+#hero-scrollcue span {
+  width: 1px;
+  height: 34px;
+  background: linear-gradient(180deg, var(--accent), transparent);
+  animation: solar-cue 1.8s ease-in-out infinite;
+  transform-origin: top;
+}
+@keyframes solar-cue {
+  0%, 100% { transform: scaleY(0.35); opacity: 0.5; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+/* eyebrow labels + ghost type */
+.eyebrow {
+  font: 600 10px var(--mono);
+  letter-spacing: 0.32em;
+  color: var(--accent);
+}
+.ghost {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  font: 800 clamp(8rem, 26vw, 22rem)/1 var(--sans);
+  letter-spacing: 0.02em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ---------- scene 2: orrery ---------- */
+#solar-scene-orrery {
+  position: relative;
+  z-index: 2;
+  height: 260vh;
+  width: 100%;
+}
+#solar-scene-orrery .orr-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#solar-scene-orrery .orr-head {
+  position: absolute;
+  top: 7vh;
+  text-align: center;
+}
+#orrery-canvas {
+  width: min(92vw, 980px);
+  height: min(66vh, 640px);
+  display: block;
+}
+#solar-scene-orrery .orr-caps {
+  position: absolute;
+  bottom: 7vh;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.orr-cap {
+  position: absolute;
+  bottom: 0;
+  max-width: 520px;
+  text-align: center;
+  font: 400 14.5px/1.55 var(--sans);
+  color: rgba(220, 228, 238, 0.85);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 450ms ease, transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+  padding: 0 22px;
+}
+.orr-cap b { color: var(--accent); font-weight: 650; letter-spacing: 0.04em; }
+.orr-cap.on { opacity: 1; transform: translateY(0); }
+
+/* ---------- scene 3: cards (upgrades) ---------- */
+#solar-cards { padding-top: 8vh; padding-bottom: 14vh; }
+#solar-cards-head { padding: 0 0 34px; }
+.solar-card .face-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.solar-card .cnum {
+  font: 700 12px var(--mono);
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.35);
+}
+.solar-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 800ms ease, transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.solar-reveal.on { opacity: 1; transform: translateY(0); }
+
+/* ---------- scene 4: outro ---------- */
+#solar-outro {
+  position: relative;
+  z-index: 2;
+  min-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7vh;
+  padding: 8vh 24px 16vh;
+}
+#solar-outro .stats {
+  display: flex;
+  gap: clamp(28px, 6vw, 80px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+#solar-outro .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+#solar-outro .stat-num {
+  font: 700 clamp(2.2rem, 5vw, 4rem)/1 var(--sans);
+  letter-spacing: -0.03em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+#solar-outro .stat-lbl {
+  font: 500 10px var(--mono);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+#solar-enter-big {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.94;
+  transition: transform 160ms ease-out;  /* magnetic */
+  will-change: transform;
+}
+#solar-enter-big .big-line {
+  font: 800 clamp(3.6rem, 11vw, 9rem)/0.94 var(--sans);
+  letter-spacing: 0.01em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.8);
+  transition: color 350ms ease, -webkit-text-stroke-color 350ms ease;
+}
+#solar-enter-big .big-line.fill {
+  -webkit-text-stroke: 1.5px var(--accent);
+}
+#solar-enter-big:hover .big-line { color: rgba(255, 255, 255, 0.95); }
+#solar-enter-big:hover .big-line.fill {
+  color: var(--accent);
+  text-shadow: 0 0 60px var(--accent-soft);
+}
+#solar-enter-big:focus-visible { outline: 2px solid var(--accent); outline-offset: 8px; }
+#solar-outro .outro-note {
+  font: 500 9.5px var(--mono);
+  letter-spacing: 0.26em;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* bigger, juicier bloom petals */
+.petal { width: 36px; height: 52px; left: -18px; top: -66px; }
+.petal::before {
+  content: "";
+  position: absolute;
+  left: 18%;
+  top: 8%;
+  width: 30%;
+  height: 42%;
+  border-radius: 50%;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.75), transparent 70%);
+  filter: blur(1px);
+  pointer-events: none;
+}
+#bloom-halo { width: 196px; height: 196px; margin: -98px 0 0 -98px; }
+
+/* the old hero "ENTER THE WORKBENCH" link becomes a quiet skip */
+#hero-enter { display: none; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 720px) {
+  #hero-h1 .line { white-space: normal; }
+  #solar-scene-orrery { height: 220vh; }
+  #solar-cursor-dot, #solar-cursor-ring { display: none; }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #solar-grain, #hero-scrollcue span { animation: none !important; }
+  #hero-prompt-wrap { animation: none !important; opacity: 1; transform: none; filter: none; }
+  #solar-preloader { display: none !important; }
+  #hero-h1 .wi { transform: none; opacity: 1; animation: none !important; }
+  #hero-sub { opacity: 1; transform: none; transition: none; }
+  .solar-reveal { opacity: 1; transform: none; transition: none; }
+  .orr-cap { transition-duration: 0.01s; }
+  #solar-cursor-dot, #solar-cursor-ring { display: none !important; }
+}

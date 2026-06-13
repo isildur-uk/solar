@@ -1,0 +1,415 @@
+/* SOLAR — solar.css
+ * Solar-system design layer: accent system, bloom colour picker, glowing
+ * feature cards (gradient-border + blurred glow technique), constellation
+ * chart backdrop, comet sweeps, premium micro-interactions.
+ * Original artwork/effects in the house style. Design pass — engine untouched.
+ */
+
+:root {
+  /* the live accent set by the bloom picker; everything warms from this */
+  --accent-dim: #9c7a36;                       /* fallback pre-color-mix */
+  --accent-soft: rgba(232, 179, 75, 0.24);     /* fallback pre-color-mix */
+  --accent-dim: color-mix(in srgb, var(--accent) 60%, #1a1408);
+  --accent-soft: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+/* ---------- premium button feel ---------- */
+.btn {
+  transition: border-color 180ms ease, color 180ms ease,
+              box-shadow 240ms ease, transform 120ms ease;
+}
+.btn:hover { box-shadow: 0 0 14px -4px var(--accent-soft); }
+.btn:active { transform: translateY(1px) scale(0.985); }
+.btn.primary:hover { box-shadow: 0 0 18px -3px var(--accent-soft); }
+
+/* ---------- comet sweep along the topbar ---------- */
+#topbar { position: relative; /* no overflow:hidden — the bloom flower must escape */ }
+#topbar::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: -160px;
+  width: 160px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), #fff, transparent);
+  opacity: 0.85;
+  animation: solar-comet 13s linear infinite;
+  pointer-events: none;
+}
+@keyframes solar-comet {
+  0%, 78% { transform: translateX(0); opacity: 0; }
+  80% { opacity: 0.9; }
+  98%, 100% { transform: translateX(calc(100vw + 200px)); opacity: 0; }
+}
+
+/* ---------- constellation backdrop behind the chart ---------- */
+#chart-wrap {
+  background:
+    radial-gradient(ellipse 90% 80% at 50% 45%, rgba(20, 30, 48, 0.35), transparent 70%),
+    var(--bg);
+}
+#chart-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgba(255,255,255,0.55) 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 14%, rgba(255,255,255,0.4) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 33% 68%, rgba(200,220,255,0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 61% 41%, rgba(255,255,255,0.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 77%, rgba(255,235,200,0.4) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 45% 12%, rgba(255,255,255,0.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 84%, rgba(200,220,255,0.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 70% 90%, rgba(255,255,255,0.3) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 24% 45%, rgba(255,255,255,0.25) 50%, transparent 51%),
+    radial-gradient(1px 1px at 93% 35%, rgba(255,235,200,0.3) 50%, transparent 51%);
+  animation: solar-twinkle 7s ease-in-out infinite alternate;
+}
+@keyframes solar-twinkle {
+  from { opacity: 0.55; }
+  to   { opacity: 1; }
+}
+
+/* status dot pulses like a star */
+#statusbar span[title] { animation: solar-pulse 3.2s ease-in-out infinite; }
+@keyframes solar-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; text-shadow: 0 0 8px var(--accent-soft); }
+}
+
+/* ---------- modal entrances ---------- */
+.modal-veil { transition: backdrop-filter 240ms ease; }
+.modal-veil.open { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.modal-veil.open .modal {
+  animation: solar-modal-in 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes solar-modal-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); filter: blur(5px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+/* ---------- timeline events as little planets ---------- */
+#timeline .tl-dot { transition: box-shadow 200ms ease, transform 200ms ease; }
+#timeline .tl-event:hover .tl-dot {
+  box-shadow: 0 0 10px var(--accent-soft);
+  transform: scale(1.25);
+}
+
+/* ================= hero: orbital ornament ================= */
+
+#hero-orbits {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 900px;
+}
+#hero-orbits .ring {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  transform: rotateX(72deg);
+}
+#hero-orbits .ring.r1 { width: 560px; height: 560px; animation: solar-orbit 38s linear infinite; }
+#hero-orbits .ring.r2 { width: 860px; height: 860px; animation: solar-orbit 64s linear infinite reverse; }
+#hero-orbits .ring.r3 { width: 1180px; height: 1180px; animation: solar-orbit 96s linear infinite; }
+@keyframes solar-orbit {
+  from { transform: rotateX(72deg) rotateZ(0deg); }
+  to   { transform: rotateX(72deg) rotateZ(360deg); }
+}
+#hero-orbits .planet {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px 2px var(--accent-soft);
+}
+#hero-orbits .ring.r2 .planet { background: #82bcff; box-shadow: 0 0 10px 2px rgba(130, 188, 255, 0.4); width: 5px; height: 5px; }
+#hero-orbits .ring.r3 .planet { background: #c9d4e0; box-shadow: 0 0 8px 2px rgba(201, 212, 224, 0.35); width: 4px; height: 4px; }
+
+/* (legacy scrolling-cover overrides removed — the cover is now a single
+   centred wordmark; layout lives in hero.css) */
+
+/* ================= feature cards (guide technique) ================= */
+
+#solar-cards {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px 24px 120px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 860px) { #solar-cards { grid-template-columns: 1fr; max-width: 340px; } }
+
+.solar-card {
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px);
+}
+.solar-card.revealed {
+  animation: solar-card-in 0.8s ease-out forwards;
+  animation-delay: var(--d, 0.1s);
+}
+@keyframes solar-card-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+/* blurred glow behind (guide: crucial) */
+.solar-card .glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 40px;
+  background: var(--grad);
+  filter: blur(45px);
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+.solar-card:hover .glow { opacity: 0.7; }
+/* foreground with gradient border via background-clip (guide: crucial) */
+.solar-card .face {
+  position: relative;
+  z-index: 1;
+  height: 280px;
+  border-radius: 40px;
+  border: 6px solid transparent;
+  background:
+    linear-gradient(#11161f, #11161f) padding-box,
+    var(--grad) border-box;
+  overflow: hidden;
+  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 200ms ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.solar-card .face .icon { width: 36px; height: 36px; opacity: 0.95; }
+.solar-card .face .icon svg { width: 36px; height: 36px; }
+.solar-card .face h3 {
+  margin: 0 0 10px;
+  color: #fff;
+  font: 500 20px var(--sans);
+  letter-spacing: -0.01em;
+}
+.solar-card .face p {
+  margin: 0;
+  color: #97a3b2;
+  font: 400 13.5px/1.6 var(--sans);
+}
+.solar-card .face p ::selection { background: rgba(255, 255, 255, 0.2); }
+
+#solar-cards-head {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+  font: 400 15px var(--sans);
+  letter-spacing: 0.04em;
+  padding: 56px 0 22px;
+}
+
+/* ================= bloom colour picker ================= */
+
+#bloom-root {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+#bloom-core {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  padding: 0;
+  background:
+    radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.85) 0%, transparent 28%),
+    radial-gradient(circle at 50% 50%, var(--accent) 0%, color-mix(in srgb, var(--accent) 55%, #000) 78%);
+  box-shadow:
+    0 0 14px -2px var(--accent-soft),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.45);
+  transition: transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 240ms ease;
+}
+#bloom-core:hover { transform: scale(1.12); box-shadow: 0 0 22px 0 var(--accent-soft), inset 0 -3px 6px rgba(0,0,0,0.45); }
+#bloom-root.open #bloom-core { transform: scale(0.86); }
+
+#bloom-petals {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  z-index: 1200;
+  pointer-events: none;
+}
+#bloom-root.open #bloom-petals { pointer-events: auto; }
+
+.petal-arm {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: rotate(var(--ang));
+}
+.petal {
+  position: absolute;
+  left: -16px;
+  top: -58px;
+  width: 32px;
+  height: 46px;
+  padding: 0;
+  cursor: pointer;
+  /* liquid-glass petal: teardrop, translucent colour, inner light */
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  background:
+    radial-gradient(ellipse at 50% 24%, rgba(255, 255, 255, 0.55) 0%, transparent 42%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--pc) 80%, white) 0%,
+      color-mix(in srgb, var(--pc) 88%, transparent) 55%,
+      color-mix(in srgb, var(--pc) 55%, transparent) 100%);
+  backdrop-filter: blur(8px) saturate(1.4);
+  -webkit-backdrop-filter: blur(8px) saturate(1.4);
+  box-shadow:
+    0 4px 18px -4px color-mix(in srgb, var(--pc) 60%, transparent),
+    inset 0 1px 2px rgba(255, 255, 255, 0.6),
+    inset 0 -4px 8px color-mix(in srgb, var(--pc) 45%, #000);
+  /* closed: folded into the core */
+  transform: translateY(52px) scale(0.12);
+  opacity: 0;
+  transition:
+    transform 460ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 260ms ease,
+    box-shadow 220ms ease;
+  transition-delay: calc(var(--i) * 38ms);
+}
+#bloom-root.open .petal {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+.petal:hover, .petal:focus-visible {
+  transform: translateY(-7px) scale(1.16) !important;
+  box-shadow:
+    0 0 22px 2px color-mix(in srgb, var(--pc) 70%, transparent),
+    inset 0 1px 2px rgba(255, 255, 255, 0.7),
+    inset 0 -4px 8px color-mix(in srgb, var(--pc) 45%, #000);
+  outline: none;
+  z-index: 2;
+}
+.petal.current {
+  border-color: #fff;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.8),
+    0 0 22px 2px color-mix(in srgb, var(--pc) 70%, transparent);
+}
+/* a soft glass disc behind the open flower */
+#bloom-halo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 168px;
+  height: 168px;
+  margin: -84px 0 0 -84px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(13, 17, 24, 0.66) 30%, transparent 72%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 300ms ease, transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: -1;
+}
+#bloom-root.open #bloom-halo { opacity: 1; transform: scale(1); }
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #topbar::after, #chart-wrap::before,
+  #hero-orbits .ring, #statusbar span[title] { animation: none !important; }
+  .solar-card.revealed { animation-duration: 0.01s; }
+  .petal, #bloom-halo, .modal-veil.open .modal { transition-duration: 0.01s; animation-duration: 0.01s; }
+}
+
+/* ================= workbench uplift: the console joins the theme ========= */
+
+/* richer nebula behind the chart — clearly visible, accent-aware */
+#chart-wrap {
+  background:
+    radial-gradient(60% 70% at 24% 30%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
+    radial-gradient(55% 65% at 78% 72%, rgba(36, 92, 180, 0.10), transparent 72%),
+    radial-gradient(ellipse 95% 85% at 50% 45%, rgba(18, 28, 46, 0.55), transparent 75%),
+    #070b12;
+}
+#chart-wrap::before { opacity: 0.9; }
+
+/* glass side panel, timeline and status bar floating over the starfield */
+#side {
+  background: color-mix(in srgb, #0f1620 84%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-left: 1px solid color-mix(in srgb, var(--accent) 16%, #1f2a38);
+}
+#timeline-wrap {
+  background: color-mix(in srgb, #0f1620 86%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 14%, #1f2a38);
+}
+#statusbar {
+  background: color-mix(in srgb, #0c1117 88%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* inspector: accent-lit section rules, glass identity */
+#inspector .sec {
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, #1f2a38);
+  color: color-mix(in srgb, var(--accent) 55%, #8593a3);
+}
+#inspector .type-chip {
+  border-color: currentColor;
+  box-shadow: 0 0 12px -6px currentColor;
+}
+#inspector .srctext { border-left-color: var(--accent); }
+
+/* toolbar: quiet uppercase mono identity + live accent underline on hover */
+#topbar .btn {
+  font: 600 10.5px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, #131c28 80%, transparent);
+}
+#topbar .btn.primary {
+  background: color-mix(in srgb, var(--accent) 12%, #131c28);
+}
+#case-name { letter-spacing: 0.04em; }
+
+/* chart tool buttons float as glass chips */
+#chart-tools .btn {
+  background: color-mix(in srgb, #0f1620 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: color-mix(in srgb, var(--accent) 20%, #1f2a38);
+}
+
+/* timeline dots inherit the accent glow language */
+#timeline .tl-dot { border-color: color-mix(in srgb, var(--accent) 60%, #8d99ae); }
+
+/* search field glows on focus like an instrument */
+#search:focus {
+  border-color: var(--accent-dim);
+  box-shadow: 0 0 18px -6px var(--accent-soft);
+}

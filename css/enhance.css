@@ -1,0 +1,118 @@
+/* SOLAR — enhance.css
+ * Design-discipline layer, loaded last. Two parts:
+ *   1. Case Analytics view (NYT/Upshot charting chrome, dark palette).
+ *   2. Vignelli UI tightening (two-size type scale, spacing) — see end of file.
+ * Reuses the cosmic-void tokens; introduces no new brand colours.
+ */
+
+/* ===================== 1. Analytics view ===================== */
+#an-veil .modal { max-width: 760px; width: 92%; }
+#an-body { padding: 18px 22px 26px; }
+
+.an-kpis {
+  display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 22px;
+  border-bottom: 1px solid var(--sol-graphite, #1f2228); padding-bottom: 16px;
+}
+.an-kpi {
+  flex: 1 1 84px; min-width: 84px;
+  background: rgba(255,255,255,0.02); border: 1px solid var(--sol-graphite, #1f2228);
+  border-radius: 8px; padding: 10px 12px;
+}
+.an-kpi-v {
+  font: 600 22px 'Geist Mono', Consolas, monospace; color: var(--sol-white, #fff);
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.an-kpi-l {
+  font: 500 10px 'Geist Mono', Consolas, monospace; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--sol-ash, #7d8187); margin-top: 5px;
+}
+
+.an-panel { margin: 0 0 26px; }
+.an-head {
+  font: 600 16px/1.25 'Inter', 'Segoe UI', sans-serif; color: var(--sol-bone, #b8c2d0);
+  margin: 0 0 2px; letter-spacing: -0.01em; max-width: 56ch;
+}
+.an-sub {
+  font: 400 12px/1.4 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #7d8187);
+  margin: 0 0 10px;
+}
+.an-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.an-hit:hover { fill: rgba(232,179,75,0.06); }
+.an-source {
+  font: italic 400 10.5px 'Geist Mono', Consolas, monospace; color: #8b93a0;
+  margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--sol-graphite, #1f2228);
+}
+.an-empty {
+  font: 12px 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #7d8187);
+  padding: 14px 0;
+}
+
+@media (max-width: 760px) {
+  #an-body { padding: 12px 14px calc(20px + var(--safe-bottom, 0px)); }
+  .an-head { font-size: 15px; }
+}
+
+/* ===================== 2. Vignelli UI discipline ===================== */
+/* Massimo Vignelli: few typefaces, a tight two-size scale, hierarchy through
+ * scale + weight + white space (not colour), flush-left, generous rhythm.
+ * Conservative layer — refines typographic voice, never touches layout geometry. */
+:root {
+  --type-display: 18px;   /* modal / section titles */
+  --type-body: 13px;
+  --type-label: 10px;     /* mono caps kickers */
+}
+/* one display size for every modal title, flush-left grotesque */
+.modal-head h2 {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-weight: 700; font-size: var(--type-display);
+  letter-spacing: -0.01em; line-height: 24px;
+}
+/* kicker / label register — mono caps, disciplined tracking */
+.modal-foot .note, .an-sub, .an-kpi-l, .kp-h, .kp-note { letter-spacing: .06em; }
+/* tabular figures wherever the UI shows numbers (no jitter, aligned columns) */
+#status-counts, #statusbar, .an-kpi-v, .kp-score, .kp-rank { font-variant-numeric: tabular-nums; }
+/* brand wordmark + tagline discipline */
+#brand .brand-line { letter-spacing: .04em; }
+#brand .sub { letter-spacing: .14em; text-transform: uppercase; }
+/* baseline-aligned modal rhythm */
+.modal-body { line-height: 1.5; }
+/* consistent hairline + spacing on the analytics/key-player sections */
+.an-panel + .an-panel, .kp-col { margin-top: 8px; }
+
+/* ===================== 3. Decluttered chrome (desktop + mobile) ===================== */
+#statusbar { display: none !important; }     /* bottom autosave/marking bar removed */
+#brand .sub { display: none; }               /* drop "link analysis · smart matching" tagline */
+#inspector .placeholder { display: none; }   /* drop the verbose empty-state helper text */
+
+/* transient status toast — replaces the old bottom-bar status text */
+#status-msg {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  max-width: 80vw; z-index: 400; pointer-events: none; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  background: rgba(12,12,11,.94); border: 1px solid var(--sol-graphite,#1f2228);
+  color: var(--sol-bone,#b8c2d0); font: 12px/1.4 Inter, system-ui, sans-serif;
+  padding: 8px 14px; border-radius: 999px; box-shadow: 0 10px 34px rgba(0,0,0,.5);
+  opacity: 1; transition: opacity .35s ease;
+}
+#status-msg:empty { opacity: 0; }
+
+/* chart controls collapsed into one Tools ▾ dropdown (all viewports) */
+#ct-pop {
+  display: none; position: absolute; top: 38px; left: 0; z-index: 660;
+  grid-template-columns: 1fr 1fr; gap: 6px; min-width: 240px; padding: 8px;
+  background: var(--sol-void,#0b1018); border: 1px solid var(--sol-graphite,#1f2228);
+  border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.55);
+}
+#ct-pop.open { display: grid; }
+#ct-pop .btn, #ct-pop select { width: 100%; justify-content: flex-start; }
+
+/* source extract: clipped by default, click/tap to expand and read in full */
+#inspector .srctext { cursor: pointer; }
+#inspector .srctext.expanded { max-height: none; }
+
+/* review: collapsed geographic-containment group (declutter) */
+.geo-group { margin-top: 10px; border-top: 1px dashed var(--sol-graphite,#1f2228); padding-top: 8px; }
+.geo-group summary { cursor: pointer; font: 600 10px 'Geist Mono', Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--sol-ash,#7d8187); }
+.geo-group[open] summary { margin-bottom: 6px; }
+.geo-row { display: flex; align-items: center; gap: 6px; font: 11px 'Geist Mono', Consolas, monospace; color: var(--sol-bone,#b8c2d0); padding: 3px 0 3px 8px; }
+.geo-row .geo-rel { color: var(--sol-ash,#7d8187); }

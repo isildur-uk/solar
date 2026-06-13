@@ -1,0 +1,482 @@
+%PDF-1.4
+%“Œ‹ž ReportLab Generated PDF document (opensource)
+1 0 obj
+<<
+/F1 2 0 R /F2 3 0 R
+>>
+endobj
+2 0 obj
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
+endobj
+3 0 obj
+<<
+/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+>>
+endobj
+4 0 obj
+<<
+/Contents 8 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 7 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+5 0 obj
+<<
+/PageMode /UseNone /Pages 7 0 R /Type /Catalog
+>>
+endobj
+6 0 obj
+<<
+/Author (\(anonymous\)) /CreationDate (D:20260612083814+00'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260612083814+00'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+  /Subject (\(unspecified\)) /Title (04_Experian_Report.pdf) /Trapped /False
+>>
+endobj
+7 0 obj
+<<
+/Count 1 /Kids [ 4 0 R ] /Type /Pages
+>>
+endobj
+8 0 obj
+<<
+/Length 10380
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+1 0 0 1 51.35433 784.2047 cm
+q
+.6 .2 0 rg
+BT 1 0 0 1 0 3 Tm /F2 9 Tf 12 TL 200.5275 0 Td (OFFICIAL-SENSITIVE) Tj T* -200.5275 0 Td ET
+Q
+Q
+q
+1 0 0 1 51.35433 756.2047 cm
+q
+.062745 .141176 .243137 rg
+BT 1 0 0 1 0 8 Tm /F2 14 Tf 22 TL (Experian - Consumer Credit Report \(Bureau Extract\)) Tj T* ET
+Q
+Q
+q
+1 0 0 1 51.35433 740.2047 cm
+q
+.501961 .501961 .501961 rg
+BT 1 0 0 1 0 4.8 Tm /F1 7.2 Tf 12 TL (Provided under data-sharing for fraud/financial-crime investigation. CAIS = Credit Account Information Sharing.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 51.35433 734.2047 cm
+Q
+q
+1 0 0 1 56.69291 702.2047 cm
+q
+1 1 1 rg
+n 0 16 481.8898 -16 re f*
+.121569 .305882 .47451 rg
+n 0 32 481.8898 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 21.8 Tm (Report reference) Tj T* ET
+BT 1 0 0 1 174.0787 21.8 Tm (Subject) Tj T* ET
+BT 1 0 0 1 372.5039 21.8 Tm (Date generated) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 5.8 Tm (EXP-CR-77412-26) Tj T* ET
+BT 1 0 0 1 174.0787 5.8 Tm (COLE, Darren Michael) Tj T* ET
+BT 1 0 0 1 372.5039 5.8 Tm (06/06/2026) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 32 m 481.8898 32 l S
+n 0 0 m 481.8898 0 l S
+n 0 0 m 0 32 l S
+n 481.8898 0 m 481.8898 32 l S
+n 0 16 m 481.8898 16 l S
+n 170.0787 0 m 170.0787 32 l S
+n 368.5039 0 m 368.5039 32 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 676.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (Personal Details) Tj T* ET
+Q
+Q
+q
+1 0 0 1 56.69291 561.2047 cm
+q
+1 1 1 rg
+n 0 96 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 80 481.8898 -16 re f*
+1 1 1 rg
+n 0 64 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 48 481.8898 -16 re f*
+1 1 1 rg
+n 0 32 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 16 481.8898 -16 re f*
+.121569 .305882 .47451 rg
+n 0 112 481.8898 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 101.8 Tm (Field) Tj T* ET
+BT 1 0 0 1 159.9055 101.8 Tm (Value) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 85.8 Tm (Full name) Tj T* ET
+BT 1 0 0 1 159.9055 85.8 Tm (Darren Michael COLE) Tj T* ET
+BT 1 0 0 1 4 69.8 Tm (Date of birth) Tj T* ET
+BT 1 0 0 1 159.9055 69.8 Tm (14/03/1987) Tj T* ET
+BT 1 0 0 1 4 53.8 Tm (Current address) Tj T* ET
+BT 1 0 0 1 159.9055 53.8 Tm (14 Brackenfield Road, Stockport, SK4 2RH) Tj T* ET
+BT 1 0 0 1 4 37.8 Tm (Previous address) Tj T* ET
+BT 1 0 0 1 159.9055 37.8 Tm (22 Edgeley Court, Stockport, SK3 9LP \(to 2021\)) Tj T* ET
+BT 1 0 0 1 4 21.8 Tm (Email on file) Tj T* ET
+BT 1 0 0 1 159.9055 21.8 Tm (darren.cole87@gmail.com) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (Mobile on file) Tj T* ET
+BT 1 0 0 1 159.9055 5.8 Tm (07700 900118) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 112 m 481.8898 112 l S
+n 0 0 m 481.8898 0 l S
+n 0 0 m 0 112 l S
+n 481.8898 0 m 481.8898 112 l S
+n 0 96 m 481.8898 96 l S
+n 0 80 m 481.8898 80 l S
+n 0 64 m 481.8898 64 l S
+n 0 48 m 481.8898 48 l S
+n 0 32 m 481.8898 32 l S
+n 0 16 m 481.8898 16 l S
+n 155.9055 0 m 155.9055 112 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 535.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (Electoral Roll) Tj T* ET
+Q
+Q
+q
+1 0 0 1 56.69291 484.2047 cm
+q
+1 1 1 rg
+n 0 32 481.8898 -16 re f*
+.933333 .952941 .972549 rg
+n 0 16 481.8898 -16 re f*
+.121569 .305882 .47451 rg
+n 0 48 481.8898 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 37.8 Tm (Address) Tj T* ET
+BT 1 0 0 1 259.1181 37.8 Tm (Registered) Tj T* ET
+BT 1 0 0 1 344.1575 37.8 Tm (Period) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 21.8 Tm (14 Brackenfield Road, Stockport, SK4 2RH) Tj T* ET
+BT 1 0 0 1 259.1181 21.8 Tm (Yes) Tj T* ET
+BT 1 0 0 1 344.1575 21.8 Tm (2021 - present) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (22 Edgeley Court, Stockport, SK3 9LP) Tj T* ET
+BT 1 0 0 1 259.1181 5.8 Tm (Yes) Tj T* ET
+BT 1 0 0 1 344.1575 5.8 Tm (2016 - 2021) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 48 m 481.8898 48 l S
+n 0 0 m 481.8898 0 l S
+n 0 0 m 0 48 l S
+n 481.8898 0 m 481.8898 48 l S
+n 0 32 m 481.8898 32 l S
+n 0 16 m 481.8898 16 l S
+n 255.1181 0 m 255.1181 48 l S
+n 340.1575 0 m 340.1575 48 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 458.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (CAIS - Credit Accounts) Tj T* ET
+Q
+Q
+q
+1 0 0 1 82.20472 375.2047 cm
+q
+1 1 1 rg
+n 0 64 430.8661 -16 re f*
+.933333 .952941 .972549 rg
+n 0 48 430.8661 -16 re f*
+1 1 1 rg
+n 0 32 430.8661 -16 re f*
+.933333 .952941 .972549 rg
+n 0 16 430.8661 -16 re f*
+.121569 .305882 .47451 rg
+n 0 80 430.8661 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 69.8 Tm (Lender / type) Tj T* ET
+BT 1 0 0 1 151.4016 69.8 Tm (Acc no \(masked\)) Tj T* ET
+BT 1 0 0 1 219.4331 69.8 Tm (Opened) Tj T* ET
+BT 1 0 0 1 270.4567 69.8 Tm (Status) Tj T* ET
+BT 1 0 0 1 327.1496 69.8 Tm (Balance) Tj T* ET
+BT 1 0 0 1 383.8425 69.8 Tm (Limit) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 53.8 Tm (Barclays - Current a/c) Tj T* ET
+BT 1 0 0 1 151.4016 53.8 Tm (****1847) Tj T* ET
+BT 1 0 0 1 219.4331 53.8 Tm (03/2016) Tj T* ET
+BT 1 0 0 1 270.4567 53.8 Tm (Active) Tj T* ET
+BT 1 0 0 1 327.1496 53.8 Tm (GBP 2,140) Tj T* ET
+BT 1 0 0 1 383.8425 53.8 Tm (-) Tj T* ET
+BT 1 0 0 1 4 37.8 Tm (Barclaycard - Credit card) Tj T* ET
+BT 1 0 0 1 151.4016 37.8 Tm (****6620) Tj T* ET
+BT 1 0 0 1 219.4331 37.8 Tm (07/2019) Tj T* ET
+BT 1 0 0 1 270.4567 37.8 Tm (Active) Tj T* ET
+BT 1 0 0 1 327.1496 37.8 Tm (GBP 4,980) Tj T* ET
+BT 1 0 0 1 383.8425 37.8 Tm (GBP 5,000) Tj T* ET
+BT 1 0 0 1 4 21.8 Tm (MotoNovo - Motor finance \(Audi Q7\)) Tj T* ET
+BT 1 0 0 1 151.4016 21.8 Tm (****3391) Tj T* ET
+BT 1 0 0 1 219.4331 21.8 Tm (04/2023) Tj T* ET
+BT 1 0 0 1 270.4567 21.8 Tm (Active) Tj T* ET
+BT 1 0 0 1 327.1496 21.8 Tm (GBP 31,200) Tj T* ET
+BT 1 0 0 1 383.8425 21.8 Tm (GBP 44,000) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (Lendable - Loan) Tj T* ET
+BT 1 0 0 1 151.4016 5.8 Tm (****7714) Tj T* ET
+BT 1 0 0 1 219.4331 5.8 Tm (11/2024) Tj T* ET
+BT 1 0 0 1 270.4567 5.8 Tm (Default) Tj T* ET
+BT 1 0 0 1 327.1496 5.8 Tm (GBP 8,650) Tj T* ET
+BT 1 0 0 1 383.8425 5.8 Tm (GBP 10,000) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 80 m 430.8661 80 l S
+n 0 0 m 430.8661 0 l S
+n 0 0 m 0 80 l S
+n 430.8661 0 m 430.8661 80 l S
+n 0 64 m 430.8661 64 l S
+n 0 48 m 430.8661 48 l S
+n 0 32 m 430.8661 32 l S
+n 0 16 m 430.8661 16 l S
+n 147.4016 0 m 147.4016 80 l S
+n 215.4331 0 m 215.4331 80 l S
+n 266.4567 0 m 266.4567 80 l S
+n 323.1496 0 m 323.1496 80 l S
+n 379.8425 0 m 379.8425 80 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 349.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (Public Information \(CCJ / Insolvency\)) Tj T* ET
+Q
+Q
+q
+1 0 0 1 70.86614 298.2047 cm
+q
+1 1 1 rg
+n 0 32 453.5433 -16 re f*
+.933333 .952941 .972549 rg
+n 0 16 453.5433 -16 re f*
+.121569 .305882 .47451 rg
+n 0 48 453.5433 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 37.8 Tm (Type) Tj T* ET
+BT 1 0 0 1 89.03937 37.8 Tm (Date) Tj T* ET
+BT 1 0 0 1 157.0709 37.8 Tm (Amount) Tj T* ET
+BT 1 0 0 1 225.1024 37.8 Tm (Court / Source) Tj T* ET
+BT 1 0 0 1 372.5039 37.8 Tm (Status) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 21.8 Tm (CCJ) Tj T* ET
+BT 1 0 0 1 89.03937 21.8 Tm (14/08/2023) Tj T* ET
+BT 1 0 0 1 157.0709 21.8 Tm (GBP 3,420) Tj T* ET
+BT 1 0 0 1 225.1024 21.8 Tm (Manchester County Court) Tj T* ET
+BT 1 0 0 1 372.5039 21.8 Tm (Unsatisfied) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (Confiscation \(POCA\)) Tj T* ET
+BT 1 0 0 1 89.03937 5.8 Tm (14/09/2018) Tj T* ET
+BT 1 0 0 1 157.0709 5.8 Tm (GBP 38,000) Tj T* ET
+BT 1 0 0 1 225.1024 5.8 Tm (Minshull St Crown Court) Tj T* ET
+BT 1 0 0 1 372.5039 5.8 Tm (Per PNC) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 48 m 453.5433 48 l S
+n 0 0 m 453.5433 0 l S
+n 0 0 m 0 48 l S
+n 453.5433 0 m 453.5433 48 l S
+n 0 32 m 453.5433 32 l S
+n 0 16 m 453.5433 16 l S
+n 85.03937 0 m 85.03937 48 l S
+n 153.0709 0 m 153.0709 48 l S
+n 221.1024 0 m 221.1024 48 l S
+n 368.5039 0 m 368.5039 48 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 272.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (Financial Associations) Tj T* ET
+Q
+Q
+q
+1 0 0 1 70.86614 221.2047 cm
+q
+1 1 1 rg
+n 0 32 453.5433 -16 re f*
+.933333 .952941 .972549 rg
+n 0 16 453.5433 -16 re f*
+.121569 .305882 .47451 rg
+n 0 48 453.5433 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 37.8 Tm (Associated name) Tj T* ET
+BT 1 0 0 1 202.4252 37.8 Tm (Link) Tj T* ET
+BT 1 0 0 1 372.5039 37.8 Tm (Since) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 21.8 Tm (ANSARI, Nadia) Tj T* ET
+BT 1 0 0 1 202.4252 21.8 Tm (Joint current account \(closed 2024\)) Tj T* ET
+BT 1 0 0 1 372.5039 21.8 Tm (2022) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (NORTHGATE LOGISTICS LTD) Tj T* ET
+BT 1 0 0 1 202.4252 5.8 Tm (Director / business lending) Tj T* ET
+BT 1 0 0 1 372.5039 5.8 Tm (2019) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 48 m 453.5433 48 l S
+n 0 0 m 453.5433 0 l S
+n 0 0 m 0 48 l S
+n 453.5433 0 m 453.5433 48 l S
+n 0 32 m 453.5433 32 l S
+n 0 16 m 453.5433 16 l S
+n 198.4252 0 m 198.4252 48 l S
+n 368.5039 0 m 368.5039 48 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 195.2047 cm
+q
+.121569 .305882 .47451 rg
+BT 1 0 0 1 0 7 Tm /F2 11 Tf 18 TL (Recent Searches) Tj T* ET
+Q
+Q
+q
+1 0 0 1 70.86614 144.2047 cm
+q
+1 1 1 rg
+n 0 32 453.5433 -16 re f*
+.933333 .952941 .972549 rg
+n 0 16 453.5433 -16 re f*
+.121569 .305882 .47451 rg
+n 0 48 453.5433 -16 re f*
+1 1 1 rg
+BT /F2 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 37.8 Tm (Date) Tj T* ET
+BT 1 0 0 1 89.03937 37.8 Tm (Searcher) Tj T* ET
+BT 1 0 0 1 344.1575 37.8 Tm (Type) Tj T* ET
+0 0 0 rg
+BT /F1 8.2 Tf 12 TL ET
+BT 1 0 0 1 4 21.8 Tm (18/03/2026) Tj T* ET
+BT 1 0 0 1 89.03937 21.8 Tm (MotoNovo Finance) Tj T* ET
+BT 1 0 0 1 344.1575 21.8 Tm (Credit application) Tj T* ET
+BT 1 0 0 1 4 5.8 Tm (02/05/2026) Tj T* ET
+BT 1 0 0 1 89.03937 5.8 Tm (Quick Cash Ltd) Tj T* ET
+BT 1 0 0 1 344.1575 5.8 Tm (Quotation) Tj T* ET
+q
+1 J
+1 j
+.721569 .768627 .815686 RG
+.4 w
+n 0 48 m 453.5433 48 l S
+n 0 0 m 453.5433 0 l S
+n 0 0 m 0 48 l S
+n 453.5433 0 m 453.5433 48 l S
+n 0 32 m 453.5433 32 l S
+n 0 16 m 453.5433 16 l S
+n 85.03937 0 m 85.03937 48 l S
+n 340.1575 0 m 340.1575 48 l S
+Q
+Q
+Q
+q
+1 0 0 1 51.35433 138.2047 cm
+Q
+q
+1 0 0 1 51.35433 136.2047 cm
+q
+1 w
+1 J
+.827451 .827451 .827451 RG
+n 0 0 m 492.5669 0 l S
+Q
+Q
+q
+1 0 0 1 51.35433 123.2047 cm
+q
+.501961 .501961 .501961 rg
+BT 1 0 0 1 0 4.8 Tm /F1 7.2 Tf 12 TL (FICTITIOUS TEST DATA - OPERATION GANNET - not a real person, account, or record.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 51.35433 111.2047 cm
+q
+.6 .2 0 rg
+BT 1 0 0 1 0 3 Tm /F2 9 Tf 12 TL 200.5275 0 Td (OFFICIAL-SENSITIVE) Tj T* -200.5275 0 Td ET
+Q
+Q
+ 
+endstream
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000061 00000 n 
+0000000102 00000 n 
+0000000209 00000 n 
+0000000321 00000 n 
+0000000524 00000 n 
+0000000592 00000 n 
+0000000881 00000 n 
+0000000940 00000 n 
+trailer
+<<
+/ID 
+[<fe3afc502b55af283facf317e98e48e2><fe3afc502b55af283facf317e98e48e2>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 6 0 R
+/Root 5 0 R
+/Size 9
+>>
+startxref
+11372
+%%EOF

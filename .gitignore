@@ -1,0 +1,9 @@
+node_modules/
+sea-prep.blob
+sea-config.json
+dist/
+exe_build/
+_backups/
+*.exe
+*.cmd
+package-lock.json
