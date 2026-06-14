@@ -810,6 +810,11 @@
       Spokeswoman:1,Spokesperson:1
     };
     var ORG_TRAIL = /^\s*(?:Party|Company|Theatre|Theater|Group|Services?|Department|Police|Hospital|University|College|School|Academy|Club|Airport|Council|Court|Committee|Commission|Association|Trust|Bank|Force|Office|Ministry|Agency|Authority|Board|Centre|Center|Institute|Foundation|Society|Union|League|Federation|Corporation|Limited|Ltd|Holdings|Syndrome|Estate)\b/;
+    // A Title-Case run that NAMES an organisation/venue (ends with an org word)
+    // or a bank/hotel/etc. (starts with one) — type it as organisation, not person.
+    var ORG_END = /\b(?:Gazette|Times|Herald|Post|Tribune|Chronicle|Courier|Mail|News|Journal|Observer|Express|Telegraph|Guardian|Bank|Trust|Holdings|Freight|Logistics|Imports|Exports|Trading|Theatre|Theater|Company|Club|Society|Association|Federation|Foundation|Institute|Academy|College|University|Hospital|Clinic|Church|Cathedral|Mosque|Temple|Synagogue|Group|Partners|Partnership|Chambers|Solicitors|Services|Systems|Solutions|Industries|Enterprises|Ventures|Investments|Insurance|Press|Media|Studios|Records|Brewery|Distillery|Mills|Works|Depot|Warehouse|Market|Exchange|Council|Authority|Agency|Bureau|Ministry|Commission|Committee|Board|Union|League|Centre|Center|Corporation)$/;
+    var ORG_START = /^(?:Hotel|Motel|Inn|Lodge|Resort|Hostel|Banca|Banco|Banque|Bank|Caf[e\u00e9]|Bar|Restaurant|Bistro|Brasserie|Cinema|Theatre|Theater|Museum|Gallery|University|College|Hospital|Church|Mosque|Temple|Synagogue)\b/;
+    var STREET_START = /^(?:Avenida|Avenue|Ave|Calle|Rua|Rue|Stra(?:ss|\u00df)e|Via|Piazza|Plaza|Pra[c\u00e7]a|Street|Road|Lane|Drive|Close|Court|Way|Place|Square|Terrace|Crescent|Walk|Row|Gardens|Boulevard|Highway|Parade|Wharf|Quay)\b/;
     var NAME_TITLE = /(?:^|[^A-Za-z])(?:Mr|Mrs|Ms|Miss|Mx|Dr|Prof|Professor|Sir|Dame|Lord|Lady|Rev|Reverend|Fr|Imam|Rabbi|Sheikh|Sgt|Sergeant|Det|Detective|Insp|Inspector|Supt|Superintendent|Constable|Officer|Cmsr|Commissioner|Cmdr|Commander|Cllr|Councillor|President|Minister|Chancellor|Secretary|Senator|Governor|Mayor|Judge|Justice|Capt|Captain|Col|Colonel|Maj|Major|Lt|Lieutenant|Gen|General|Brig|Brigadier|PC|DC|DS|DI|DCI|DSI|DCS|ACC|CC)\.?\s+$/;
     var PERSON_VERB = /^(?:\s*,?\s*(?:\d[\d,]*\s*,)?\s*)(?:said|says|told|added|asked|stated|confirmed|denied|claimed|argued|warned|admitted|insisted|noted|wrote|met|visited|travelled|traveled|flew|drove|called|phoned|emailed|texted|messaged|contacted|attacked|assaulted|stabbed|killed|murdered|injured|arrested|charged|detained|sentenced|jailed|named|appeared|pleaded|attended|joined|led|owns|owned|runs|ran|founded|works|worked|lives|lived|was|is|had|has|who|whose)\b/i;
     var PERSON_PREVERB = /\b(?:said|told|met|with|by|arrested|charged|named|victim|suspect|attacker|witness|driver|owner|father|mother|brother|sister|son|daughter|wife|husband|partner|friend|associate|colleague|neighbour|neighbor|leader|director|chief|boss|founder|head|chairman|spokesman|spokeswoman|spokesperson|officer)\s+$/i;
@@ -834,8 +839,28 @@
       // quoted run -> film/operation/title, not a person (aliases handled in 9c/9d)
       var qB = text.slice(Math.max(0, origS - 1), origS), qA = text.slice(origE, origE + 1);
       if (/['"‘’“”]/.test(qB) && /['"‘’“”]/.test(qA)) continue;
-      // trim leading titles / acronyms / stop words, and trailing stop words
+      // trim leading titles / acronyms / stop words
       while (run.length && nameDropLead(run[0].w)) run.shift();
+      // organisation / venue / street? (decide BEFORE trailing-stop trim removes the
+      // very keyword — Trust, Centre, Bank — that identifies it). Need >= 2 tokens
+      // so a bare second-mention ("the Gazette", "the Bank") is not a new entity.
+      if (run.length >= 2) {
+        var orS = run[0].s, orE = run[run.length - 1].e;
+        if (!spans.overlaps(orS, orE)) {
+          var orTxt = text.slice(orS, orE).replace(/\s+/g, " ");
+          if ((ORG_END.test(orTxt) || ORG_START.test(orTxt)) && !G.lookup(orTxt)) {
+            spans.claim(orS, orE);
+            addEntity("organisation", orTxt, orTxt, {}, "med", orS, orE, ["prose org"]);
+            continue;
+          }
+          if (STREET_START.test(orTxt) && !G.lookup(orTxt)) {
+            spans.claim(orS, orE);
+            addEntity("location", orTxt, orTxt, { kind: "address" }, "med", orS, orE, ["prose address"]);
+            continue;
+          }
+        }
+      }
+      // trailing-stop trim (persons only from here)
       while (run.length && (NAME_STOP[run[run.length - 1].w] || /^[A-Z][A-Z'’.]{1,}$/.test(run[run.length - 1].w))) run.pop();
       if (run.length < 2) continue;                         // need >= 2 name tokens
       if (run.some(function (t) { return NAME_STOP[t.w]; })) continue; // internal stop word
@@ -890,7 +915,7 @@
        national known only as 'Mateo'" — a NEW person whose sole name is the alias.
        (An alias attached to a named subject is handled separately as aka.) ---- */
     (function () {
-      var reAliasOnly = /\b(?:an?|the)\s+(?:[A-Za-z]+\s+){0,3}?(?:national|male|female|man|woman|individual|associate|figure|nominal|subject)\s+(?:(?:known|referred\s+to|going)\s+(?:only\s+)?(?:as|by)|called)\s+["'\u2018\u2019]\s*([A-Z][A-Za-z]{1,20})\s*["'\u2018\u2019]/g, am;
+      var reAliasOnly = /\b(?:an?|the)\s+(?:[A-Za-z]+\s+){0,3}?(?:national|male|female|man|woman|individual|associate|figure|nominal|subject|beneficiary|recipient|payee|customer|client|contact|person|lad|guy|bloke|fella|youth|juvenile|teenager|boy|girl)\s+(?:(?:known|referred\s+to|going|recorded|listed|identified)\s+(?:only\s+)?(?:as|by)|called)\s+["'\u2018\u2019]\s*([A-Z][A-Za-z]{1,20})\s*["'\u2018\u2019]/g, am;
       while ((am = reAliasOnly.exec(text))) {
         var nm = am[1];
         var ni = am.index + am[0].lastIndexOf(nm);
@@ -1413,11 +1438,18 @@
         if (hasRelBetween(primary, org)) return;
         var osp = org.spans[0];
         var ols = text.lastIndexOf("\n", osp[0]);
-        var octx = text.slice(Math.max(0, osp[0] - 90), Math.min(text.length, osp[1] + 90));
+        // constrain to the organisation's OWN sentence/row so a trigger word in the
+        // next sentence is not mis-attributed (prose bleed across "." or blank line).
+        var _sS = Math.max(text.lastIndexOf("\n", osp[0] - 1), text.lastIndexOf(".", osp[0] - 1)) + 1;
+        var _dE = text.indexOf(".", osp[1]); var _nE = text.indexOf("\n", osp[1]);
+        var _sE = Math.min(_dE < 0 ? text.length : _dE, _nE < 0 ? text.length : _nE);
+        var octx = text.slice(Math.max(0, _sS), _sE);
         var orow = text.slice(ols < 0 ? 0 : ols + 1, Math.min(text.length, osp[1] + 90));
-        if (/\b(?:employer|employment|director(?:ship)?s?|PSC|payroll|PAYE\s*ref|role)\b/i.test(octx) &&
-            !/\b(?:lender|loan|credit\s+agreement|bank\s+statement)\b/i.test(orow)) {
-          linkFrom(org, "EMPLOYS", primary, "med", orow.trim().slice(0, 140) || "structured employment/directorship");
+        var _own = /\b(?:director(?:ship)?s?|PSC|owner|proprietor|sole\s+trader|founder)\b/i.test(octx);
+        var _emp = /\b(?:employer|employment|payroll|PAYE\s*ref|employed\s+by|works?\s+for)\b/i.test(octx);
+        if ((_own || _emp) && !/\b(?:lender|loan|credit\s+agreement|bank\s+statement)\b/i.test(orow)) {
+          if (_own) addRelDirect(primary, org, "OWNS", "med", octx.trim().slice(0, 140) || "directorship", "directorship");
+          else linkFrom(org, "EMPLOYS", primary, "med", orow.trim().slice(0, 140) || "structured employment");
         }
       });
 
@@ -1665,24 +1697,91 @@
     /* ---- 13e. Money transfers: "transfer/payment of <money> ... to <person>"
        -> subject TRANSACTED_WITH recipient, amount on the edge. ---- */
     (function () {
-      var reXfer = /\b(?:transfer(?:red|s)?|payment|paid|sent|wired|remitted)\b[^.\n]{0,90}?\bto\b[^.\n]{0,140}/gi, xm;
-      while ((xm = reXfer.exec(text))) {
-        var segStart = xm.index, segEnd = xm.index + xm[0].length;
-        var money = entities.find(function (e) {
+      function nearestMoney(lo, hi) {
+        return entities.find(function (e) {
           return e.type === "money" && e.spans && e.spans.length &&
-            e.spans[0][0] >= segStart - 50 && e.spans[0][0] <= segEnd;
+            e.spans[0][0] >= lo && e.spans[0][0] <= hi;
         });
+      }
+      function firstEntityIn(types, lo, hi) {
+        return entities.filter(function (e) {
+          return types.indexOf(e.type) !== -1 && e.spans && e.spans.length &&
+            e.spans[0][0] >= lo && e.spans[0][0] <= hi;
+        }).sort(function (a, b) { return a.spans[0][0] - b.spans[0][0]; })[0];
+      }
+      // Flatten single newlines (positions preserved) so a sentence wrapped across
+      // lines — as in real PDFs/emails — still matches as one segment.
+      var flat = text.replace(/[\r\n]/g, " ");
+      // OUTGOING: "transfer/payment/paid/sent/wired of <money> ... to <person/org>"
+      var reTo = /\b(?:transfer(?:red|s|ed)?|payment|paid|sent|wired|remitted)\b[^.]{0,90}?\bto\b[^.]{0,140}/gi, xm;
+      while ((xm = reTo.exec(flat))) {
+        var segStart = xm.index, segEnd = xm.index + xm[0].length;
+        var _ps = flat.lastIndexOf(".", segStart - 1) + 1;      // don't cross into the previous sentence
+        var money = nearestMoney(Math.max(_ps, segStart - 60), segEnd);
+        if (!money) continue;                                   // a transaction needs an amount
         var toRel = xm[0].toLowerCase().lastIndexOf(" to ");
         var toPos = segStart + (toRel >= 0 ? toRel + 4 : 0);
-        var recip = entities.filter(function (e) {
-          return e.type === "person" && e.spans && e.spans.length &&
-            e.spans[0][0] >= toPos && e.spans[0][0] <= segEnd + 40;
-        }).sort(function (a, b) { return a.spans[0][0] - b.spans[0][0]; })[0];
+        var recip = firstEntityIn(["person", "organisation"], toPos, segEnd + 40);
         if (recip && principalPerson && recip.ref !== principalPerson.ref) {
-          var rl = addRelDirect(principalPerson, recip, "TRANSACTED_WITH", "med", "money transfer", "transaction");
-          if (rl && money) rl.amount = money.label;
+          var rl = addRelDirect(principalPerson, recip, "TRANSACTED_WITH", "med", xm[0].trim().slice(0, 140), "transaction");
+          if (rl) rl.amount = money.label;
         }
       }
+      // INCOMING: "received/credit/deposit of <money> ... from <person/org>"
+      var reFrom = /\b(?:receiv(?:e|ed|es)|credit(?:s|ed)?|deposit(?:s|ed)?|incoming|funds)\b[^.]{0,90}?\bfrom\b[^.]{0,120}/gi, fm;
+      while ((fm = reFrom.exec(flat))) {
+        var fStart = fm.index, fEnd = fm.index + fm[0].length;
+        var money2 = nearestMoney(fStart - 60, fEnd);
+        if (!money2) continue;
+        var frRel = fm[0].toLowerCase().lastIndexOf(" from ");
+        var frPos = fStart + (frRel >= 0 ? frRel + 6 : 0);
+        var sender = firstEntityIn(["person", "organisation"], frPos, fEnd + 40);
+        if (sender && principalPerson && sender.ref !== principalPerson.ref) {
+          var rl2 = addRelDirect(sender, principalPerson, "TRANSACTED_WITH", "med", fm[0].trim().slice(0, 140), "transaction");
+          if (rl2) rl2.amount = money2.label;
+        }
+      }
+    })();
+
+    /* ---- 13f. Ownership in prose: "<Person> runs/owns/founded/director of <Org>"
+       -> Person OWNS Org (sentence-scoped; links the person in that clause). ---- */
+    (function () {
+      var OWN_CUE = /\b(?:runs?|owns?|owned|founded|co-founded|heads?|controls?|operates?|manages?|director\s+of|owner\s+of|proprietor\s+of|chief\s+executive\s+of|ceo\s+of|managing\s+director\s+of|boss\s+of)\b/i;
+      var flatO = text.replace(/[\r\n]/g, " ");
+      // sentence bounds that span single line-wraps (stop at . ! ? or a blank line)
+      function sbounds(p0, p1) {
+        var a = p0; while (a > 0 && !/[.!?]/.test(text[a - 1]) && !(text[a - 1] === "\n" && text[a - 2] === "\n")) a--;
+        var b = p1; while (b < text.length && !/[.!?]/.test(text[b]) && !(text[b] === "\n" && text[b + 1] === "\n")) b++;
+        return [a, b];
+      }
+      entities.filter(function (e) { return e.type === "organisation"; }).forEach(function (org) {
+        if (!org.spans || !org.spans.length) return;
+        var osp = org.spans[0];
+        var bb = sbounds(osp[0], osp[1]), sS = bb[0], sE = bb[1];
+        var sent = flatO.slice(sS, sE);
+        if (!OWN_CUE.test(sent)) return;
+        var inSent = entities.filter(function (e) {
+          return e.type === "person" && e.spans && e.spans.length &&
+            e.spans[0][0] >= sS && e.spans[0][0] < sE;
+        }).sort(function (a, b) { return a.spans[0][0] - b.spans[0][0]; });
+        var who = null;
+        if (inSent.length) {
+          var before = inSent.filter(function (pp) { return pp.spans[0][0] < osp[0]; });
+          who = before.length ? before[before.length - 1] : inSent[0];
+        } else {
+          // coreference: a bare surname in this sentence referring to a known person
+          // (e.g. "Daniel Okoro ... Okoro, who runs <Org>")
+          for (var pi = 0; pi < entities.length && !who; pi++) {
+            var pe = entities[pi];
+            if (pe.type !== "person") continue;
+            var ln = pe.label.split(/\s+/).pop().replace(/[^A-Za-z]/g, "");
+            if (ln.length >= 3 && new RegExp("\\b" + ln + "\\b").test(sent)) who = pe;
+          }
+        }
+        if (who && !hasRelBetween(who, org)) {
+          addRelDirect(who, org, "OWNS", "high", sent.trim().slice(0, 140), "ownership");
+        }
+      });
     })();
 
     function addRelDirect(srcEnt, tgtEnt, type, conf, sentence, cue) {
