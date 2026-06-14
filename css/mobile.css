@@ -38,8 +38,11 @@
   }
   #topbar::-webkit-scrollbar { display: none; }
   #brand .sub { display: none; }            /* tagline off; keep the wordmark */
-  #case-name { width: 120px; flex: 0 0 auto; }
-  #search { width: 150px; flex: 0 0 auto; }
+  #brand { flex: 0 0 auto; }                /* wordmark stays put (tap = cover) */
+  /* case-name shrinks to share space so the primary actions fit without the
+     strip auto-scrolling and clipping the title on first paint. */
+  #case-name { flex: 1 1 84px; min-width: 60px; width: auto; }
+  #search { width: 130px; flex: 0 0 auto; }
   #topbar .btn { flex: 0 0 auto; white-space: nowrap; }
 
   /* One pane at a time, driven by body[data-mview]. */
@@ -224,6 +227,29 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
   /* chart-tools row is now empty (folded into More) — hide its chrome */
   #chart-tools:empty { display: none; }
+
+  /* But Path / Key players / Analytics get appended here after the fold, so it
+     isn't empty in practice. On phones, lay them out as ONE tidy horizontal
+     scroll strip pinned to the top of the chart pane — not a vertical column
+     blanketing the canvas and the empty-state guidance. */
+  body.mobile-mode #chart-tools {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    max-width: calc(100vw - 12px);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px;
+  }
+  body.mobile-mode #chart-tools::-webkit-scrollbar { display: none; }
+  body.mobile-mode #chart-tools .btn { flex: 0 0 auto; min-height: 36px; }
+  /* keep the empty-state guidance clear of the tools strip */
+  body.mobile-mode #chart-empty { padding-top: 52px; }
 
   /* the More menu can hold a lot now — let it scroll, single tidy column */
   body.mobile-mode #more-drawer { max-height: 68vh; overflow: auto; grid-template-columns: 1fr 1fr; }

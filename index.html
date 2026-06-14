@@ -14,33 +14,13 @@
 <link rel="stylesheet" href="css/solar.css?v=20260611c">
 <link rel="stylesheet" href="css/mobile.css?v=20260613e">
 <link rel="stylesheet" href="css/enhance.css?v=20260613f">
-<style id="solar-intro-style">
-  /* arrival from the SOLAR hero — fades the cosmic dark + a breath of the
-     nebula out, so the chart screen eases in rather than snapping on */
-  #solar-intro {
-    position: fixed; inset: 0; z-index: 99999; pointer-events: none;
-    background:
-      radial-gradient(58% 50% at 50% 42%,
-        rgba(120,96,214,0.22) 0%, rgba(84,74,184,0.10) 34%, rgba(11,16,23,0) 70%),
-      #0b1017;
-    animation: solarIntro 0.85s ease-out 0.04s forwards;
-  }
-  @keyframes solarIntro {
-    0%   { opacity: 1; }
-    100% { opacity: 0; visibility: hidden; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    #solar-intro { animation: none; opacity: 0; visibility: hidden; }
-  }
-</style>
 </head>
 <body>
-<div id="solar-intro" aria-hidden="true"></div>
 <div id="drop-overlay" aria-hidden="true">
   <div class="drop-card">
     <div class="drop-icon" aria-hidden="true">⤓</div>
     <div class="drop-title">Drop intelligence files to ingest</div>
-    <div class="drop-sub">.txt · .docx · .pdf · .csv · .json case &mdash; multiple files combine into one review</div>
+    <div class="drop-sub">.txt · .docx · .pdf · .csv · .json · photos (EXIF + OCR) — multiple files combine into one review</div>
   </div>
 </div>
 
@@ -68,7 +48,7 @@
   <select id="class-select" class="btn" title="Protective marking" aria-label="protective marking"><option>OFFICIAL</option><option>OFFICIAL — SENSITIVE</option><option>UNCLASSIFIED — DEMO</option></select>
   <button class="btn" id="btn-help" aria-label="help">?</button>
   <input type="file" id="case-file" accept=".json,application/json" class="visually-hidden" aria-hidden="true" tabindex="-1">
-  <input type="file" id="files-input" accept=".txt,.md,.log,.csv,.json,.docx,.pdf" multiple class="visually-hidden" aria-hidden="true" tabindex="-1">
+  <input type="file" id="files-input" accept=".txt,.md,.log,.csv,.json,.docx,.pdf,image/*,.jpg,.jpeg,.png,.heic,.heif,.webp" multiple class="visually-hidden" aria-hidden="true" tabindex="-1">
 </header>
 
 <main id="main">
@@ -283,7 +263,7 @@
 <script src="js/core/netanalysis.js?v=20260613a"></script>
 <script src="js/core/analytics.js?v=20260613a"></script>
 <script src="js/core/lang.js?v=20260613e"></script>
-<script src="js/core/extract.js?v=20260613h"></script>
+<script src="js/core/extract.js?v=20260613i"></script>
 <script src="js/core/model.js?v=20260613a"></script>
 <script src="js/core/fileread.js?v=20260612e"></script>
 <script src="js/ui/util.js?v=20260610b"></script>
@@ -295,7 +275,7 @@
 <script src="js/ui/timeline.js?v=20260613a"></script>
 <script src="js/ui/review.js?v=20260613a"></script>
 <script src="js/ui/importer.js?v=20260612d"></script>
-<script src="js/ui/dragdrop.js?v=20260612g"></script>
+<script src="js/ui/dragdrop.js?v=20260613a"></script>
 <script src="js/ui/inspector.js?v=20260613d"></script>
 <script src="js/ui/profiles.js?v=20260613b"></script>
 <script src="js/ui/intelexport.js?v=20260613c"></script>
@@ -303,7 +283,7 @@
 <script src="js/ui/solar.js?v=20260611b"></script>
 <script src="js/ui/hero.js?v=20260612d"></script>
 <script src="js/lib/tesseract/tesseract.min.js?v=20260613a"></script>
-<script src="js/ui/ocr.js?v=20260613a"></script>
+<script src="js/ui/ocr.js?v=20260613b"></script>
 <script src="js/ui/mobileui.js?v=20260613c"></script>
 <script src="js/ui/charttools.js?v=20260613d"></script>
 <script src="js/ui/netpanel.js?v=20260613a"></script>

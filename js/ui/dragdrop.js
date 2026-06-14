@@ -96,9 +96,77 @@
   function status(msg) { if (window.CRApp) window.CRApp.status(msg); }
   function dismissHero() { if (window.CRHero && window.CRHero.close) { try { window.CRHero.close(); } catch (_) {} } }
 
+  function isImageFile(f) {
+    return /^image\//.test(f.type || "") || /\.(png|jpe?g|gif|webp|heic|heif|bmp|tiff?)$/i.test(f.name || "");
+  }
+
+  function readAsDataUrl(file) {
+    return new Promise(function (res, rej) {
+      var rd = new FileReader();
+      rd.onload = function () { res(String(rd.result)); };
+      rd.onerror = function () { rej(new Error("read error")); };
+      rd.readAsDataURL(file);
+    });
+  }
+
+  // Standalone photo import: read EXIF GPS (offer a map pin, with consent) and OCR
+  // the image into the review pipeline. No selected subject required.
+  function handleImages(images) {
+    dismissHero();
+    status("Reading " + images.length + " photo" + (images.length === 1 ? "" : "s") + " — EXIF + OCR…");
+    var pins = [], texts = [], seq = Promise.resolve();
+    images.forEach(function (img) {
+      seq = seq.then(function () {
+        return readAsDataUrl(img).then(function (dataUrl) {
+          if (window.CRExif) {
+            var ex = window.CRExif.parseDataUrl(dataUrl);
+            if (ex && ex.lat != null && ex.lon != null) {
+              pins.push({ name: img.name, lat: ex.lat, lon: ex.lon,
+                iso: window.CRExif.exifDateToISO(ex.dateTimeOriginal) });
+            }
+          }
+          if (window.CROCR && window.CROCR.recognizeDataUrl) {
+            return window.CROCR.recognizeDataUrl(dataUrl).then(function (t) {
+              if (t && t.trim()) texts.push("===== " + img.name + " =====\n" + t.trim());
+            }).catch(function () { /* OCR failed for this image; keep EXIF + other images */ });
+          }
+        });
+      });
+    });
+    seq.then(function () {
+      if (pins.length) {
+        var summary = pins.map(function (p) {
+          return p.name + " → " + p.lat.toFixed(5) + ", " + p.lon.toFixed(5);
+        }).join("\n");
+        if (window.confirm(pins.length + " photo" + (pins.length === 1 ? "" : "s") +
+            " carry GPS coordinates:\n\n" + summary +
+            "\n\nAdd as map location pin" + (pins.length === 1 ? "" : "s") + "?")) {
+          pins.forEach(function (p) {
+            var coord = p.lat.toFixed(5) + ", " + p.lon.toFixed(5);
+            store.addEntity({ type: "location", label: "Photo location (" + coord + ")",
+              geo: { lat: p.lat, lon: p.lon }, origin: "photo EXIF GPS — " + p.name });
+          });
+          if (window.CRApp && window.CRApp.afterImport) window.CRApp.afterImport();
+        }
+      }
+      if (texts.length) {
+        window.CRReview.open(texts.join("\n\n"),
+          images.map(function (i) { return i.name; }).join(", "));
+      }
+      var bits = [];
+      bits.push(pins.length ? (pins.length + " geotagged") : "no GPS found");
+      bits.push(texts.length ? (texts.length + " with readable text") : "no readable text");
+      status("Photos processed — " + bits.join(", ") + (texts.length ? " — review before adding" : ""));
+    }).catch(function (e) { status("Photo import failed: " + (e && e.message || "error")); });
+  }
+
   function handleFiles(files) {
-    status("Reading " + files.length + " file" + (files.length === 1 ? "" : "s") + "...");
-    Promise.all(files.map(function (f) { return window.CRFileRead.readFile(f); }))
+    var imgs = files.filter(isImageFile);
+    var rest = files.filter(function (f) { return !isImageFile(f); });
+    if (imgs.length) handleImages(imgs);
+    if (!rest.length) return;
+    status("Reading " + rest.length + " file" + (rest.length === 1 ? "" : "s") + "...");
+    Promise.all(rest.map(function (f) { return window.CRFileRead.readFile(f); }))
       .then(route)
       .catch(function (err) { status("Drop failed: " + (err && err.message || "read error")); });
   }

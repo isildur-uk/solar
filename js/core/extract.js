@@ -672,6 +672,7 @@
       var sP = m.index, eP = m.index + m[0].length;
       if (spans.overlaps(sP, eP)) continue;
       if (NAME_STOPWORDS[m[2]]) continue;
+      if (/^(?:The|This|That|These|Those|A|An|And|But|Or|Our|Their|His|Her|Its|My|Your|No|All|Some|Any|Each|Every|If|As|At|In|On|Of|To|By)$/.test(m[1].split(/\s+/)[0])) continue; // function word, not a forename
       if (ORG_SUFFIX.test(m[0])) continue;
       if (labelForename(m[1])) continue;
       var label = m[1] + " " + m[2];
@@ -736,20 +737,122 @@
       var cm2 = lookahead.match(/^[^\d]{0,16}(\d{8})\b/);
       if (cm2) e.attrs.companyNumber = cm2[1];
     });
-    // 9c. Title-case pairs near person cues (med confidence)
-    var rePerson2 = /\b([A-Z][a-z]{2,})\s+([A-Z][a-z]{2,})\b/g;
-    var PERSON_CUES = /\b(mr|mrs|ms|miss|dr|aka|alias|brother|sister|son|daughter|wife|husband|partner|associate|subject|suspect|target|known as)\b/i;
-    while ((m = rePerson2.exec(text))) {
-      var sP2 = m.index, eP2 = m.index + m[0].length;
-      if (spans.overlaps(sP2, eP2)) continue;
-      if (G.lookup(m[0]) || G.lookup(m[1]) || G.lookup(m[2])) continue;
-      var ctx = text.slice(Math.max(0, sP2 - 30), sP2);
-      var after = text.slice(eP2, eP2 + 20);
-      var hasCue = PERSON_CUES.test(ctx) || /\bDOB\b/i.test(after);
-      if (!hasCue) continue;
-      if (labelForename(m[1]) || FIELD_LABELS[m[2]]) continue;
-      spans.claim(sP2, eP2);
-      addEntity("person", m[0], m[0], {}, "med", sP2, eP2, ["title-case heuristic"]);
+    // 9c. General Title-Case personal names (news / OSINT prose).
+    // SOLAR's other person rules assume report style — SURNAME in caps, or a cue
+    // word (aka / DOB / Mr). Real-world prose ("Gavin Robinson", "Jane Gull") has
+    // neither, so this pass recognises Title-Case name runs directly. Precision is
+    // held by a stop-word list + org/place + gazetteer + quoted-title guards;
+    // anything borderline is emitted at MED so the analyst clears it in review.
+    var NAME_PARTICLE = { de:1, del:1, della:1, van:1, von:1, der:1, den:1, da:1,
+      di:1, dí:1, la:1, le:1, du:1, dos:1, das:1, bin:1, al:1, ibn:1, "ter":1, "ten":1 };
+    var NAME_STOP = {
+      // sentence-initial / function words that are routinely capitalised
+      The:1,This:1,That:1,These:1,Those:1,There:1,Then:1,They:1,Their:1,Them:1,
+      He:1,She:1,It:1,Its:1,His:1,Her:1,Hers:1,We:1,Us:1,You:1,Your:1,Our:1,My:1,
+      A:1,An:1,And:1,But:1,Or:1,Nor:1,For:1,Yet:1,So:1,If:1,As:1,At:1,In:1,On:1,
+      Of:1,To:1,By:1,Up:1,Out:1,Off:1,Per:1,Via:1,With:1,From:1,Into:1,Onto:1,
+      Over:1,Under:1,When:1,While:1,Where:1,Which:1,Who:1,Whom:1,Whose:1,Why:1,
+      How:1,What:1,After:1,Before:1,During:1,Since:1,Until:1,Because:1,Although:1,
+      Though:1,However:1,Meanwhile:1,Moreover:1,Therefore:1,Thus:1,Also:1,
+      Following:1,According:1,Despite:1,Amid:1,Among:1,Amongst:1,Between:1,Both:1,
+      Each:1,Every:1,All:1,Some:1,Any:1,No:1,Not:1,Now:1,Here:1,Today:1,
+      Yesterday:1,Tomorrow:1,Last:1,Next:1,
+      // numbers as words
+      One:1,Two:1,Three:1,Four:1,Five:1,Six:1,Seven:1,Eight:1,Nine:1,Ten:1,
+      Eleven:1,Twelve:1,Thirteen:1,Fourteen:1,Fifteen:1,Sixteen:1,Twenty:1,
+      Thirty:1,Forty:1,Fifty:1,Sixty:1,Hundred:1,Thousand:1,Million:1,
+      // days / months
+      Monday:1,Tuesday:1,Wednesday:1,Thursday:1,Friday:1,Saturday:1,Sunday:1,
+      January:1,February:1,March:1,April:1,May:1,June:1,July:1,August:1,
+      September:1,October:1,November:1,December:1,
+      // direction / geographic qualifiers
+      North:1,South:1,East:1,West:1,Northern:1,Southern:1,Eastern:1,Western:1,
+      Central:1,Upper:1,Lower:1,Greater:1,Mount:1,Saint:1,Fort:1,Lake:1,Port:1,
+      Cape:1,Isle:1,
+      // nationalities / demonyms (adjectival, not names)
+      British:1,English:1,Scottish:1,Welsh:1,Irish:1,American:1,Canadian:1,
+      Australian:1,French:1,German:1,Spanish:1,Italian:1,Dutch:1,Belgian:1,
+      Portuguese:1,Swiss:1,Austrian:1,Danish:1,Swedish:1,Norwegian:1,Finnish:1,
+      European:1,African:1,Asian:1,Russian:1,Ukrainian:1,Polish:1,Czech:1,
+      Romanian:1,Bulgarian:1,Hungarian:1,Greek:1,Turkish:1,Chinese:1,Japanese:1,
+      Korean:1,Vietnamese:1,Thai:1,Indian:1,Pakistani:1,Bangladeshi:1,Afghan:1,
+      Iranian:1,Iraqi:1,Syrian:1,Lebanese:1,Sudanese:1,Somali:1,Ethiopian:1,
+      Nigerian:1,Ghanaian:1,Kenyan:1,Egyptian:1,Moroccan:1,Algerian:1,Mexican:1,
+      Brazilian:1,Argentine:1,Colombian:1,Albanian:1,Kosovan:1,Serbian:1,
+      Croatian:1,Kurdish:1,Arab:1,Arabic:1,Jewish:1,Muslim:1,Islamic:1,
+      Christian:1,Catholic:1,Protestant:1,Hindu:1,Sikh:1,Roma:1,
+      // institution / org / place common nouns
+      Party:1,Company:1,Theatre:1,Theater:1,Group:1,Service:1,Services:1,
+      Department:1,Police:1,Hospital:1,University:1,College:1,School:1,Academy:1,
+      Club:1,Airport:1,Council:1,Court:1,Committee:1,Commission:1,Association:1,
+      Trust:1,Bank:1,Force:1,Office:1,Ministry:1,Agency:1,Authority:1,Board:1,
+      Centre:1,Center:1,Institute:1,Foundation:1,Society:1,Union:1,League:1,
+      Federation:1,Corporation:1,Enterprise:1,Enterprises:1,Executive:1,
+      Road:1,Street:1,Avenue:1,Lane:1,Drive:1,Close:1,Square:1,Place:1,Way:1,
+      Park:1,Gardens:1,Estate:1,House:1,Hall:1,Tower:1,Bridge:1,Station:1,
+      Prison:1,Mosque:1,Church:1,Cathedral:1,Chapel:1,Temple:1,Synagogue:1,
+      Stadium:1,Arena:1,Market:1,Centre:1,
+      Democratic:1,Republican:1,Unionist:1,Nationalist:1,Conservative:1,Labour:1,
+      Liberal:1,Government:1,Parliament:1,Assembly:1,Congress:1,Senate:1,
+      Kingdom:1,Republic:1,State:1,States:1,County:1,City:1,Town:1,Village:1,
+      Borough:1,District:1,Region:1,Province:1,
+      Syndrome:1,Disease:1,Disorder:1,Virus:1,Mode:1,Reading:1,Limited:1,
+      Holdings:1,Operation:1,Project:1,Programme:1,Program:1,
+      National:1,Insurance:1,Computer:1,Crime:1,Revenue:1,Customs:1,Border:1,Immigration:1,Welfare:1,Benefit:1,Tax:1,Number:1,Record:1,System:1,Register:1,Registry:1,Database:1,
+      // titles / ranks / roles (also handled as prefixes below)
+      Mr:1,Mrs:1,Ms:1,Miss:1,Mx:1,Dr:1,Prof:1,Professor:1,Sir:1,Dame:1,Lord:1,
+      Lady:1,Rev:1,Reverend:1,Fr:1,Imam:1,Rabbi:1,Sheikh:1,
+      Constable:1,Sergeant:1,Detective:1,Inspector:1,Superintendent:1,Officer:1,
+      Commissioner:1,Commander:1,President:1,Vice:1,Minister:1,Chancellor:1,
+      Secretary:1,Senator:1,Governor:1,Mayor:1,Councillor:1,Judge:1,Justice:1,
+      Captain:1,Colonel:1,Major:1,Lieutenant:1,General:1,Admiral:1,Brigadier:1,
+      Chief:1,Assistant:1,Deputy:1,Acting:1,Interim:1,Leader:1,Spokesman:1,
+      Spokeswoman:1,Spokesperson:1
+    };
+    var ORG_TRAIL = /^\s*(?:Party|Company|Theatre|Theater|Group|Services?|Department|Police|Hospital|University|College|School|Academy|Club|Airport|Council|Court|Committee|Commission|Association|Trust|Bank|Force|Office|Ministry|Agency|Authority|Board|Centre|Center|Institute|Foundation|Society|Union|League|Federation|Corporation|Limited|Ltd|Holdings|Syndrome|Estate)\b/;
+    var NAME_TITLE = /(?:^|[^A-Za-z])(?:Mr|Mrs|Ms|Miss|Mx|Dr|Prof|Professor|Sir|Dame|Lord|Lady|Rev|Reverend|Fr|Imam|Rabbi|Sheikh|Sgt|Sergeant|Det|Detective|Insp|Inspector|Supt|Superintendent|Constable|Officer|Cmsr|Commissioner|Cmdr|Commander|Cllr|Councillor|President|Minister|Chancellor|Secretary|Senator|Governor|Mayor|Judge|Justice|Capt|Captain|Col|Colonel|Maj|Major|Lt|Lieutenant|Gen|General|Brig|Brigadier|PC|DC|DS|DI|DCI|DSI|DCS|ACC|CC)\.?\s+$/;
+    var PERSON_VERB = /^(?:\s*,?\s*(?:\d[\d,]*\s*,)?\s*)(?:said|says|told|added|asked|stated|confirmed|denied|claimed|argued|warned|admitted|insisted|noted|wrote|met|visited|travelled|traveled|flew|drove|called|phoned|emailed|texted|messaged|contacted|attacked|assaulted|stabbed|killed|murdered|injured|arrested|charged|detained|sentenced|jailed|named|appeared|pleaded|attended|joined|led|owns|owned|runs|ran|founded|works|worked|lives|lived|was|is|had|has|who|whose)\b/i;
+    var PERSON_PREVERB = /\b(?:said|told|met|with|by|arrested|charged|named|victim|suspect|attacker|witness|driver|owner|father|mother|brother|sister|son|daughter|wife|husband|partner|friend|associate|colleague|neighbour|neighbor|leader|director|chief|boss|founder|head|chairman|spokesman|spokeswoman|spokesperson|officer)\s+$/i;
+    function nameDropLead(w) {
+      return NAME_STOP[w] || /^[A-Z][A-Z'’.]{1,}$/.test(w); // stop-word or ALLCAPS acronym
+    }
+    var reCapTok = /[A-Z][A-Za-z\u00c0-\u017f]*(?:['\u2019-][A-Za-z\u00c0-\u017f]+)*/g, capm, capToks = [];
+    while ((capm = reCapTok.exec(text))) capToks.push({ w: capm[0], s: capm.index, e: capm.index + capm[0].length });
+    var ti = 0;
+    while (ti < capToks.length) {
+      var run = [capToks[ti]];
+      var jn = ti + 1;
+      while (jn < capToks.length) {
+        var between = text.slice(run[run.length - 1].e, capToks[jn].s);
+        if (/^\s+$/.test(between)) { run.push(capToks[jn]); jn++; continue; }
+        var pmn = between.match(/^\s+([a-zÀ-ſ]+)\s+$/);
+        if (pmn && NAME_PARTICLE[pmn[1]]) { run.push(capToks[jn]); jn++; continue; }
+        break;
+      }
+      ti = jn;
+      var origS = run[0].s, origE = run[run.length - 1].e;
+      // quoted run -> film/operation/title, not a person (aliases handled in 9c/9d)
+      var qB = text.slice(Math.max(0, origS - 1), origS), qA = text.slice(origE, origE + 1);
+      if (/['"‘’“”]/.test(qB) && /['"‘’“”]/.test(qA)) continue;
+      // trim leading titles / acronyms / stop words, and trailing stop words
+      while (run.length && nameDropLead(run[0].w)) run.shift();
+      while (run.length && (NAME_STOP[run[run.length - 1].w] || /^[A-Z][A-Z'’.]{1,}$/.test(run[run.length - 1].w))) run.pop();
+      if (run.length < 2) continue;                         // need >= 2 name tokens
+      if (run.some(function (t) { return NAME_STOP[t.w]; })) continue; // internal stop word
+      var sN = run[0].s, eN = run[run.length - 1].e;
+      if (spans.overlaps(sN, eN)) continue;                 // already claimed (person/place/etc.)
+      var lblN = text.slice(sN, eN).replace(/\s+/g, " ");
+      var VEHICLE_MAKE = /^(?:BMW|Audi|Mercedes|VW|Volkswagen|Ford|Vauxhall|Toyota|Honda|Nissan|Range|Land|Jaguar|Kia|Hyundai|Peugeot|Renault|Citroen|Citro\u00ebn|Skoda|Seat|Volvo|Lexus|Porsche|Tesla|Mini|Fiat|Mazda|Suzuki|Bentley|Rolls)$/;
+      if (run.length === 2 && VEHICLE_MAKE.test(run[0].w)) continue; // "Ford Transit" / "Range Rover" -> vehicle
+      if (G.lookup(lblN)) continue;                         // gazetteer place name
+      if (ORG_TRAIL.test(text.slice(eN, eN + 24))) continue;// "<X> Company/Party/..." -> org/place
+      if (labelForename(lblN)) continue;
+      var preN = text.slice(Math.max(0, sN - 24), sN);
+      var postN = text.slice(eN, eN + 30);
+      var strongN = NAME_TITLE.test(preN) || PERSON_PREVERB.test(preN) || PERSON_VERB.test(postN);
+      spans.claim(sN, eN);
+      addEntity("person", lblN, lblN, {}, strongN ? "high" : "med", sN, eN,
+        strongN ? ["prose name"] : ["prose name", "title-case heuristic"]);
     }
 
     // 9d0. attach stashed prefixed identifiers (PNC/CRO/NINO/PPT) to people

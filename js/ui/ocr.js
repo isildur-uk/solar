@@ -68,8 +68,10 @@
       })
       .catch(function (err) {
         overlay(false);
-        status("OCR failed: " + (err && err.message ? err.message : "unknown error"));
-        return "";
+        var msg = (err && err.message) ? err.message : "unknown error";
+        try { console.error("[SOLAR OCR] engine error:", err); } catch (_) {}
+        status("OCR engine error: " + msg + " (see console)");
+        throw err;  // propagate: don't let scan() mask this as 'no readable text'
       });
   }
 
@@ -109,10 +111,10 @@
     acquireImage().then(function (dataUrl) {
       if (!dataUrl) return; // cancelled
       return runOCR(dataUrl).then(function (text) {
-        if (!text) { status("No readable text found in image"); return; }
+        if (!text) { status("No readable text found in image (engine ran, found no text)"); return; }
         toPastePanel(text);
       });
-    });
+    }).catch(function () { /* real error already surfaced by runOCR */ });
   }
 
   function init() {
@@ -126,5 +128,5 @@
     init();
   }
 
-  window.CROCR = { scan: scan };
+  window.CROCR = { scan: scan, recognizeDataUrl: runOCR };
 })();
