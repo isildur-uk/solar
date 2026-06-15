@@ -24,14 +24,14 @@
   --sol-void:        #0c0c0b;   /* canvas — the space everything floats on */
   --sol-void-deep:   #050506;   /* outer falloff */
   --sol-charcoal:    #141619;   /* deep structural edges */
-  --sol-graphite:    #1f2228;   /* hairline borders */
+  --sol-graphite:    #2a2a27;   /* hairline borders */
   --sol-smoke:       #474747;   /* elevated outlines */
-  --sol-ash:         #7d8187;   /* muted helper / metadata text */
-  --sol-bone:        #b8c2d0;   /* secondary luminance */
+  --sol-ash:         #84837b;   /* muted helper / metadata text */
+  --sol-bone:        #dedcc9;   /* secondary luminance */
   --sol-white:       #ffffff;   /* emitted light — wordmark, primary text */
   --sol-signal:      #2563eb;   /* functional accent — focus only */
-  --sol-amber:       #e8b34b;   /* the horizon glow — our brand accent */
-  --sol-glow:        232, 179, 75;
+  --sol-amber:       #ebfc72;   /* the horizon glow — our brand accent */
+  --sol-glow:        235, 252, 114;
 
   /* ---- type ---- */
   --sol-font-display: "Inter Var", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;

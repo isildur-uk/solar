@@ -1,0 +1,84 @@
+/* ============================================================
+   SOLAR — redesign layer (loaded LAST)
+   Brings the chart screen in line with the hero: obsidian + lime,
+   Inter / Geist Mono, glass chrome, a unified 4px radius and a
+   minimal 2-level elevation, plus the animated nebula behind the
+   chart. Palette + font tokens live in app.css :root; this file is
+   structure and surface treatment only. Remove this <link> to revert.
+   ============================================================ */
+
+/* ---- unified radius on interactive + container surfaces ---- */
+.btn, select.btn, #search, #case-name,
+input[type="text"], input[type="search"], textarea,
+.modal, .card, .relcard, .lg-row, #legend-panel, .type-chip,
+.an-kpi, #status-msg, .ctx-menu, .ctx-item, .dup-pair, .kp-row {
+  border-radius: var(--radius);
+}
+
+/* ---- glass chrome — the hero's surface language ---- */
+#class-banner {
+  background: rgba(20, 20, 15, 0.82);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+  color: var(--accent);
+  letter-spacing: 0.22em;
+}
+#topbar {
+  background: rgba(16, 16, 14, 0.66);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1); backdrop-filter: blur(16px) saturate(1.1);
+  border-bottom: 1px solid var(--line);
+}
+#side {
+  background: rgba(15, 15, 13, 0.72);          /* reading surface — kept solid for the inspector */
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border-left: 1px solid var(--line);
+}
+#statusbar {
+  background: rgba(15, 15, 13, 0.70);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+}
+.modal-veil {
+  background: rgba(6, 6, 5, 0.62);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+}
+.modal {
+  background: rgba(20, 20, 17, 0.88);
+  -webkit-backdrop-filter: blur(20px) saturate(1.1); backdrop-filter: blur(20px) saturate(1.1);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+}
+#status-msg { box-shadow: var(--shadow-1); border: 1px solid var(--line); }
+.ctx-menu   { box-shadow: var(--shadow-2); }
+
+/* ---- buttons: ghost with a single lime breath (hero restraint) ---- */
+.btn { transition: border-color .2s ease, color .2s ease, background-color .2s ease, box-shadow .2s ease; }
+.btn:hover { border-color: var(--accent-dim); color: var(--accent); box-shadow: 0 0 16px -7px var(--accent); }
+.btn.primary { border-color: var(--accent-dim); color: var(--accent); }
+.btn.primary:hover { background: var(--accent-soft); box-shadow: 0 0 18px -6px var(--accent); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--accent); }
+
+/* ---- brand wordmark echoes the hero's refined silver→cream fill ---- */
+#brand .brand-line {
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f3e8 55%, #cfcdbf 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+#brand .accent { -webkit-text-fill-color: var(--accent); color: var(--accent); }
+
+/* ---- the animated nebula sits behind the chart ---- */
+#chart-wrap { background: #0a0a09; }
+#space-bg   { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+#chart      { position: absolute; inset: 0; z-index: 1; background: transparent; }
+#chart-tools  { z-index: 30; }
+#legend-panel { z-index: 20; }
+#chart-empty  { z-index: 6; }
+
+/* keep the in-app cover cards off the old 40px radius */
+.solar-card, .solar-card .glow, .solar-card .face { border-radius: 10px; }
+
+/* lime text-selection across the app */
+::selection { background: rgba(235, 252, 114, 0.22); }

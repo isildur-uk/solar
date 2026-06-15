@@ -111,16 +111,16 @@
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
     height: calc(var(--bottom-nav-h) + var(--safe-bottom));
     padding-bottom: var(--safe-bottom);
-    background: var(--panel, #0b1018);
-    border-top: 1px solid var(--line, #1f2a38);
+    background: var(--panel, #0c0c0b);
+    border-top: 1px solid var(--line, #2a2a27);
   }
   #bottom-nav button {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 2px; background: none; border: 0; color: var(--muted, #76879b);
+    gap: 2px; background: none; border: 0; color: var(--muted, #84837b);
     font: 500 10px var(--mono, Consolas, monospace); cursor: pointer;
   }
   #bottom-nav button .bn-ico { font-size: 18px; line-height: 1; }
-  #bottom-nav button[aria-pressed="true"] { color: var(--accent, #e8b34b); }
+  #bottom-nav button[aria-pressed="true"] { color: var(--accent, #ebfc72); }
 }
 
 /* ===================== "More" drawer ===================== */
@@ -131,8 +131,8 @@
     position: fixed; right: 8px; left: 8px;
     top: calc(var(--safe-top) + 54px);
     z-index: 70;
-    background: var(--panel, #0b1018);
-    border: 1px solid var(--line, #1f2a38);
+    background: var(--panel, #0c0c0b);
+    border: 1px solid var(--line, #2a2a27);
     border-radius: 12px; padding: 8px;
     box-shadow: 0 18px 50px rgba(0,0,0,.55);
     display: none;
@@ -149,14 +149,14 @@
   background: rgba(5,6,10,.72); backdrop-filter: blur(3px);
 }
 #ocr-overlay .ocr-card {
-  background: var(--panel, #0b1018); border: 1px solid var(--line, #1f2a38);
+  background: var(--panel, #0c0c0b); border: 1px solid var(--line, #2a2a27);
   border-radius: 14px; padding: 22px 26px; text-align: center;
-  color: var(--ink, #c9d4e0); font: 13px var(--mono, Consolas, monospace);
+  color: var(--ink, #f4f3e8); font: 13px var(--mono, Consolas, monospace);
   min-width: 220px;
 }
 #ocr-overlay .ocr-spin {
   width: 34px; height: 34px; margin: 0 auto 12px;
-  border: 3px solid var(--line, #1f2a38); border-top-color: var(--accent, #e8b34b);
+  border: 3px solid var(--line, #2a2a27); border-top-color: var(--accent, #ebfc72);
   border-radius: 50%; animation: ocr-spin 0.9s linear infinite;
 }
 @keyframes ocr-spin { to { transform: rotate(360deg); } }
@@ -172,27 +172,27 @@
 }
 #map-tools .btn { font-size: 11px; padding: 5px 9px; }
 .btn.active {
-  border-color: var(--accent, #e8b34b) !important;
-  color: var(--accent, #e8b34b) !important;
-  box-shadow: 0 0 0 1px var(--accent, #e8b34b) inset;
+  border-color: var(--accent, #ebfc72) !important;
+  color: var(--accent, #ebfc72) !important;
+  box-shadow: 0 0 0 1px var(--accent, #ebfc72) inset;
 }
-.kp-note { font: 11px var(--mono, Consolas, monospace); color: var(--muted, #76879b); margin: 0 0 12px; }
+.kp-note { font: 11px var(--mono, Consolas, monospace); color: var(--muted, #84837b); margin: 0 0 12px; }
 .kp-grid { display: flex; gap: 18px; flex-wrap: wrap; }
 .kp-col { flex: 1; min-width: 220px; }
 .kp-h {
   font: 600 10px var(--mono, Consolas, monospace); letter-spacing: .12em; text-transform: uppercase;
-  color: var(--muted, #76879b); border-bottom: 1px solid var(--line, #1f2a38);
+  color: var(--muted, #84837b); border-bottom: 1px solid var(--line, #2a2a27);
   padding-bottom: 4px; margin-bottom: 6px;
 }
 .kp-row {
   display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
   background: none; border: 0; border-radius: 6px; padding: 6px 8px; cursor: pointer;
-  color: var(--ink, #c9d4e0); font: 12px var(--mono, Consolas, monospace);
+  color: var(--ink, #f4f3e8); font: 12px var(--mono, Consolas, monospace);
 }
-.kp-row:hover { background: rgba(232,179,75,0.08); }
-.kp-rank { color: var(--muted, #76879b); width: 18px; }
+.kp-row:hover { background: rgba(235,252,114,0.08); }
+.kp-rank { color: var(--muted, #84837b); width: 18px; }
 .kp-lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kp-score { color: var(--accent, #e8b34b); font-weight: 600; }
+.kp-score { color: var(--accent, #ebfc72); font-weight: 600; }
 @media (max-width: 760px) { .kp-grid { flex-direction: column; } }
 
 /* ===================== iOS Safari robustness ===================== */

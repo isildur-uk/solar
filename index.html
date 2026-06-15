@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="css/solar.css?v=20260611c">
 <link rel="stylesheet" href="css/mobile.css?v=20260613e">
 <link rel="stylesheet" href="css/enhance.css?v=20260613f">
+<link rel="stylesheet" href="css/redesign.css?v=20260615a">
 </head>
 <body>
 <div id="drop-overlay" aria-hidden="true">
@@ -105,7 +106,7 @@
     <div class="modal-head"><h2>Paste intelligence text</h2>
       <button class="btn x" id="paste-cancel" aria-label="close">✕</button></div>
     <div class="modal-body">
-      <p style="font:11px Consolas,monospace;color:#8593a3;margin:0 0 8px">
+      <p style="font:11px Consolas,monospace;color:#a3a299;margin:0 0 8px">
         Names, phones, emails, dates, addresses, places and relationships will be
         extracted for your review — nothing reaches the chart unapproved.</p>
       <textarea id="paste-text" aria-label="intelligence text" spellcheck="false"></textarea>
@@ -130,7 +131,7 @@
       <span class="note" id="review-summary"></span>
       <div class="right" style="align-items:center">
         <label class="note" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="Anything left unconnected ties to the primary subject as a low-confidence dashed link">
-          <input type="checkbox" id="rv-link-orphans" checked style="accent-color:#e8b34b"> link orphans to subject
+          <input type="checkbox" id="rv-link-orphans" checked style="accent-color:#ebfc72"> link orphans to subject
         </label>
         <button class="btn primary" id="review-commit">Add to chart</button>
       </div>
@@ -145,12 +146,12 @@
       <button class="btn x" id="csv-cancel" aria-label="close">✕</button></div>
     <div class="modal-body">
       <div id="csv-stage-pick">
-        <p style="font:12px Consolas,monospace;color:#8593a3">Choose a CSV file. Column types
+        <p style="font:12px Consolas,monospace;color:#a3a299">Choose a CSV file. Column types
           (names, phone numbers, emails, locations…) are detected automatically; you confirm the mapping.</p>
         <input type="file" id="csv-file" accept=".csv,text/csv" aria-label="choose CSV file">
       </div>
       <div id="csv-stage-map" style="display:none">
-        <p id="csv-info" style="font:11px Consolas,monospace;color:#8593a3;margin:0 0 8px"></p>
+        <p id="csv-info" style="font:11px Consolas,monospace;color:#a3a299;margin:0 0 8px"></p>
         <div id="csv-table-wrap"><table id="csv-table"></table></div>
         <div class="csv-opts">
           <label>Link row entities to
@@ -164,7 +165,7 @@
           </label>
         </div>
       </div>
-      <p id="csv-info2" style="font:11px Consolas,monospace;color:#5a6878">
+      <p id="csv-info2" style="font:11px Consolas,monospace;color:#6e6d64">
         Exact identifier matches (same E.164 phone, same canonical email) reuse existing entities automatically.
         Fuzzy candidates are never auto-merged — run <b>Deconflict</b> afterwards.</p>
     </div>
@@ -190,33 +191,33 @@
     <div class="modal-head"><h2>Operational exports</h2>
       <button class="btn x" id="export-close" aria-label="close">✕</button></div>
     <div class="modal-body">
-      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#76879b;text-transform:uppercase;border-bottom:1px solid #1f2a38;padding-bottom:3px;margin-bottom:8px">Case metadata (used in every export)</div>
+      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#84837b;text-transform:uppercase;border-bottom:1px solid #2a2a27;padding-bottom:3px;margin-bottom:8px">Case metadata (used in every export)</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-        <label style="font:10px Consolas,monospace;color:#76879b">Officer / staff no.<br>
-          <input type="text" id="exp-meta-officer" style="background:#131c28;border:1px solid #1f2a38;color:#c9d4e0;font:11px Consolas,monospace;padding:4px 6px"></label>
-        <label style="font:10px Consolas,monospace;color:#76879b">Case reference<br>
-          <input type="text" id="exp-meta-caseref" style="background:#131c28;border:1px solid #1f2a38;color:#c9d4e0;font:11px Consolas,monospace;padding:4px 6px"></label>
-        <label style="font:10px Consolas,monospace;color:#76879b">Operation name<br>
-          <input type="text" id="exp-meta-op" style="background:#131c28;border:1px solid #1f2a38;color:#c9d4e0;font:11px Consolas,monospace;padding:4px 6px"></label>
+        <label style="font:10px Consolas,monospace;color:#84837b">Officer / staff no.<br>
+          <input type="text" id="exp-meta-officer" style="background:#17171a;border:1px solid #2a2a27;color:#f4f3e8;font:11px Consolas,monospace;padding:4px 6px"></label>
+        <label style="font:10px Consolas,monospace;color:#84837b">Case reference<br>
+          <input type="text" id="exp-meta-caseref" style="background:#17171a;border:1px solid #2a2a27;color:#f4f3e8;font:11px Consolas,monospace;padding:4px 6px"></label>
+        <label style="font:10px Consolas,monospace;color:#84837b">Operation name<br>
+          <input type="text" id="exp-meta-op" style="background:#17171a;border:1px solid #2a2a27;color:#f4f3e8;font:11px Consolas,monospace;padding:4px 6px"></label>
       </div>
-      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#76879b;text-transform:uppercase;border-bottom:1px solid #1f2a38;padding-bottom:3px;margin-bottom:8px">Intelligence logs</div>
+      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#84837b;text-transform:uppercase;border-bottom:1px solid #2a2a27;padding-bottom:3px;margin-bottom:8px">Intelligence logs</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
         <button class="btn" id="exp-logv1">Logging Tool v1 (Subjects + Log CSVs)</button>
         <button class="btn" id="exp-log2">Intel Log 2 (Enquiry CSV)</button>
         <button class="btn" id="exp-ir">Intelligence Report draft (.txt)</button>
       </div>
-      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#76879b;text-transform:uppercase;border-bottom:1px solid #1f2a38;padding-bottom:3px;margin-bottom:8px">Subject profiles (selected person, or first on chart)</div>
+      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#84837b;text-transform:uppercase;border-bottom:1px solid #2a2a27;padding-bottom:3px;margin-bottom:8px">Subject profiles (selected person, or first on chart)</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
         <button class="btn" id="exp-profile-short">Short profile (.docx)</button>
         <button class="btn" id="exp-profile-long">Long profile (.docx)</button>
         <button class="btn" id="exp-profile-html">Print profile (.html)</button>
       </div>
-      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#76879b;text-transform:uppercase;border-bottom:1px solid #1f2a38;padding-bottom:3px;margin-bottom:8px">i2 Analyst's Notebook</div>
+      <div class="sec" style="font:600 10px Consolas,monospace;letter-spacing:.14em;color:#84837b;text-transform:uppercase;border-bottom:1px solid #2a2a27;padding-bottom:3px;margin-bottom:8px">i2 Analyst's Notebook</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" id="exp-i2">Import pack (entities + links CSV)</button>
         <button class="btn" id="exp-anx">ANX XML</button>
       </div>
-      <p style="font:10px Consolas,monospace;color:#76879b;margin-top:12px">
+      <p style="font:10px Consolas,monospace;color:#84837b;margin-top:12px">
         Everything is generated locally to ATLAS data standards (SURNAME caps, DOB DD/MM/CCYY,
         VRM prefix, 3×5×2 written [2CP]). Review before dissemination.</p>
     </div>
@@ -288,5 +289,6 @@
 <script src="js/ui/charttools.js?v=20260613d"></script>
 <script src="js/ui/netpanel.js?v=20260613a"></script>
 <script src="js/ui/analytics.js?v=20260613a"></script>
+<script src="js/ui/space-bg.js?v=20260615a"></script>
 </body>
 </html>

@@ -7,8 +7,8 @@
 
 :root {
   /* the live accent set by the bloom picker; everything warms from this */
-  --accent-dim: #9c7a36;                       /* fallback pre-color-mix */
-  --accent-soft: rgba(232, 179, 75, 0.24);     /* fallback pre-color-mix */
+  --accent-dim: #bacd31;                       /* fallback pre-color-mix */
+  --accent-soft: rgba(235, 252, 114, 0.24);     /* fallback pre-color-mix */
   --accent-dim: color-mix(in srgb, var(--accent) 60%, #1a1408);
   --accent-soft: color-mix(in srgb, var(--accent) 24%, transparent);
 }
@@ -133,7 +133,7 @@
   box-shadow: 0 0 10px 2px var(--accent-soft);
 }
 #hero-orbits .ring.r2 .planet { background: #82bcff; box-shadow: 0 0 10px 2px rgba(130, 188, 255, 0.4); width: 5px; height: 5px; }
-#hero-orbits .ring.r3 .planet { background: #c9d4e0; box-shadow: 0 0 8px 2px rgba(201, 212, 224, 0.35); width: 4px; height: 4px; }
+#hero-orbits .ring.r3 .planet { background: #f4f3e8; box-shadow: 0 0 8px 2px rgba(201, 212, 224, 0.35); width: 4px; height: 4px; }
 
 /* (legacy scrolling-cover overrides removed — the cover is now a single
    centred wordmark; layout lives in hero.css) */
@@ -185,7 +185,7 @@
   border-radius: 40px;
   border: 6px solid transparent;
   background:
-    linear-gradient(#11161f, #11161f) padding-box,
+    linear-gradient(#161614, #161614) padding-box,
     var(--grad) border-box;
   overflow: hidden;
   padding: 26px;
@@ -351,22 +351,22 @@
     radial-gradient(60% 70% at 24% 30%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 70%),
     radial-gradient(55% 65% at 78% 72%, rgba(36, 92, 180, 0.10), transparent 72%),
     radial-gradient(ellipse 95% 85% at 50% 45%, rgba(18, 28, 46, 0.55), transparent 75%),
-    #070b12;
+    #0a0a09;
 }
 #chart-wrap::before { opacity: 0.9; }
 
 /* glass side panel, timeline and status bar floating over the starfield */
 #side {
-  background: color-mix(in srgb, #0f1620 84%, transparent);
+  background: color-mix(in srgb, #131311 84%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-left: 1px solid color-mix(in srgb, var(--accent) 16%, #1f2a38);
+  border-left: 1px solid color-mix(in srgb, var(--accent) 16%, #2a2a27);
 }
 #timeline-wrap {
-  background: color-mix(in srgb, #0f1620 86%, transparent);
+  background: color-mix(in srgb, #131311 86%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid color-mix(in srgb, var(--accent) 14%, #1f2a38);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 14%, #2a2a27);
 }
 #statusbar {
   background: color-mix(in srgb, #0c1117 88%, transparent);
@@ -376,8 +376,8 @@
 
 /* inspector: accent-lit section rules, glass identity */
 #inspector .sec {
-  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, #1f2a38);
-  color: color-mix(in srgb, var(--accent) 55%, #8593a3);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, #2a2a27);
+  color: color-mix(in srgb, var(--accent) 55%, #a3a299);
 }
 #inspector .type-chip {
   border-color: currentColor;
@@ -390,19 +390,19 @@
   font: 600 10.5px var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: color-mix(in srgb, #131c28 80%, transparent);
+  background: color-mix(in srgb, #17171a 80%, transparent);
 }
 #topbar .btn.primary {
-  background: color-mix(in srgb, var(--accent) 12%, #131c28);
+  background: color-mix(in srgb, var(--accent) 12%, #17171a);
 }
 #case-name { letter-spacing: 0.04em; }
 
 /* chart tool buttons float as glass chips */
 #chart-tools .btn {
-  background: color-mix(in srgb, #0f1620 72%, transparent);
+  background: color-mix(in srgb, #131311 72%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-color: color-mix(in srgb, var(--accent) 20%, #1f2a38);
+  border-color: color-mix(in srgb, var(--accent) 20%, #2a2a27);
 }
 
 /* timeline dots inherit the accent glow language */

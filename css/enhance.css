@@ -11,11 +11,11 @@
 
 .an-kpis {
   display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 22px;
-  border-bottom: 1px solid var(--sol-graphite, #1f2228); padding-bottom: 16px;
+  border-bottom: 1px solid var(--sol-graphite, #2a2a27); padding-bottom: 16px;
 }
 .an-kpi {
   flex: 1 1 84px; min-width: 84px;
-  background: rgba(255,255,255,0.02); border: 1px solid var(--sol-graphite, #1f2228);
+  background: rgba(255,255,255,0.02); border: 1px solid var(--sol-graphite, #2a2a27);
   border-radius: 8px; padding: 10px 12px;
 }
 .an-kpi-v {
@@ -24,26 +24,26 @@
 }
 .an-kpi-l {
   font: 500 10px 'Geist Mono', Consolas, monospace; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--sol-ash, #7d8187); margin-top: 5px;
+  text-transform: uppercase; color: var(--sol-ash, #84837b); margin-top: 5px;
 }
 
 .an-panel { margin: 0 0 26px; }
 .an-head {
-  font: 600 16px/1.25 'Inter', 'Segoe UI', sans-serif; color: var(--sol-bone, #b8c2d0);
+  font: 600 16px/1.25 'Inter', 'Segoe UI', sans-serif; color: var(--sol-bone, #dedcc9);
   margin: 0 0 2px; letter-spacing: -0.01em; max-width: 56ch;
 }
 .an-sub {
-  font: 400 12px/1.4 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #7d8187);
+  font: 400 12px/1.4 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #84837b);
   margin: 0 0 10px;
 }
 .an-svg { width: 100%; height: auto; display: block; overflow: visible; }
-.an-hit:hover { fill: rgba(232,179,75,0.06); }
+.an-hit:hover { fill: rgba(235,252,114,0.06); }
 .an-source {
   font: italic 400 10.5px 'Geist Mono', Consolas, monospace; color: #8b93a0;
-  margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--sol-graphite, #1f2228);
+  margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--sol-graphite, #2a2a27);
 }
 .an-empty {
-  font: 12px 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #7d8187);
+  font: 12px 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #84837b);
   padding: 14px 0;
 }
 
@@ -89,8 +89,8 @@
   position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
   max-width: 80vw; z-index: 400; pointer-events: none; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
-  background: rgba(12,12,11,.94); border: 1px solid var(--sol-graphite,#1f2228);
-  color: var(--sol-bone,#b8c2d0); font: 12px/1.4 Inter, system-ui, sans-serif;
+  background: rgba(12,12,11,.94); border: 1px solid var(--sol-graphite,#2a2a27);
+  color: var(--sol-bone,#dedcc9); font: 12px/1.4 Inter, system-ui, sans-serif;
   padding: 8px 14px; border-radius: 999px; box-shadow: 0 10px 34px rgba(0,0,0,.5);
   opacity: 1; transition: opacity .35s ease;
 }
@@ -100,7 +100,7 @@
 #ct-pop {
   display: none; position: absolute; top: 38px; left: 0; z-index: 660;
   grid-template-columns: 1fr 1fr; gap: 6px; min-width: 240px; padding: 8px;
-  background: var(--sol-void,#0b1018); border: 1px solid var(--sol-graphite,#1f2228);
+  background: var(--sol-void,#0c0c0b); border: 1px solid var(--sol-graphite,#2a2a27);
   border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.55);
 }
 #ct-pop.open { display: grid; }
@@ -111,8 +111,8 @@
 #inspector .srctext.expanded { max-height: none; }
 
 /* review: collapsed geographic-containment group (declutter) */
-.geo-group { margin-top: 10px; border-top: 1px dashed var(--sol-graphite,#1f2228); padding-top: 8px; }
-.geo-group summary { cursor: pointer; font: 600 10px 'Geist Mono', Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--sol-ash,#7d8187); }
+.geo-group { margin-top: 10px; border-top: 1px dashed var(--sol-graphite,#2a2a27); padding-top: 8px; }
+.geo-group summary { cursor: pointer; font: 600 10px 'Geist Mono', Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--sol-ash,#84837b); }
 .geo-group[open] summary { margin-bottom: 6px; }
-.geo-row { display: flex; align-items: center; gap: 6px; font: 11px 'Geist Mono', Consolas, monospace; color: var(--sol-bone,#b8c2d0); padding: 3px 0 3px 8px; }
-.geo-row .geo-rel { color: var(--sol-ash,#7d8187); }
+.geo-row { display: flex; align-items: center; gap: 6px; font: 11px 'Geist Mono', Consolas, monospace; color: var(--sol-bone,#dedcc9); padding: 3px 0 3px 8px; }
+.geo-row .geo-rel { color: var(--sol-ash,#84837b); }
