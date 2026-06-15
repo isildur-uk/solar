@@ -20,7 +20,9 @@ From inside this `Solar` folder, in a terminal:
 3. Every push to the default branch redeploys automatically.
 
 ## Notes
-- Entry point is `index.html` (served at `/` automatically). `hero.html` is the cinematic cover.
+- Entry point is `hero.html` (the cinematic cover): `vercel.json` redirects `/` -> `/hero.html`,
+  matching the LAN server and the `.exe`. ENTER on the cover leads into the workbench `index.html`.
+  (Redirects are processed before the filesystem, so this overrides Vercel's default `/` -> index.html.)
 - It's a PUBLIC URL: anyone with the link can open the tool and fetch bundled files
   (`demo_contacts.csv`, `assets/profile_*.docx`). Analyst case data stays in the browser and is
   never uploaded, but the bundle itself is public. To lock the URL later, enable Deployment

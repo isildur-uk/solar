@@ -10,7 +10,7 @@ wasm:"application/wasm",gz:"application/gzip",map:"application/json",txt:"text/p
 const mime=p=>T[(p.split(".").pop()||"").toLowerCase()]||"application/octet-stream";
 http.createServer((req,res)=>{
   let p=decodeURIComponent((req.url.split("?")[0]||"/"));
-  if(p==="/"||p==="") p="/hero.html";
+  if(p==="/"||p==="") p="/hero.html";   // canonical front door - matches Vercel redirect + exe_build/server.js (keep in sync)
   const f=path.join(ROOT,p.replace(/^\/+/,""));
   if(!f.startsWith(ROOT)){res.writeHead(403);return res.end("no");}
   fs.readFile(f,(e,buf)=>{ if(e){res.writeHead(404);return res.end("Not found: "+p);}

@@ -1,7 +1,7 @@
 # SOLAR — link analysis & smart matching
 *(formerly Chart Room — a connections map looks like a solar system)*
 
-i2-Analyst's-Notebook-style charting workbench. Single-page app: open `index.html` in a browser
+i2-Analyst's-Notebook-style charting workbench. Single-page app: the cinematic cover `hero.html` is the one front door — served at `/` on Vercel, by the LAN server (`serve-lan.js`) and by the `.exe` — and its ENTER leads into the workbench `index.html`
 (or host the folder — Vercel/static hosting works as-is). No build step, no backend; all case data
 stays in the browser (localStorage + JSON save/load). The only network call is the basemap tile
 server, with an offline fallback.
@@ -36,12 +36,20 @@ against a real i2 import before relying on it*).
 - `tests/run_tests.js` + `tests/lang_tests.js` — 127 spec-based tests (engine + language layer).
 - Cache-buster convention on script/link tags: `?v=YYYYMMDD<letter>` — bump on every JS/CSS edit.
 
-## Hero cover (UI)
-First open (or whenever the case is empty) lands on a cinematic cover: original WebGL aurora
-shader in the house palette (CSS fallback if WebGL is unavailable), gradient-sweep headline,
-and a working prompt card — typewriter cycles example passages; click to type your own; the
-animated send button runs extraction directly. `+` jumps to CSV import; Esc or "Enter the
-workbench" dismisses; clicking the CHARTROOM brand reopens it. Honours prefers-reduced-motion.
+## Hero cover (the single front door)
+`hero.html` is the ONE landing experience across every launch path — a cinematic starfield cover
+with the SOLAR wordmark; ENTER blooms an iris into the workbench (`index.html`). Honours
+prefers-reduced-motion, and on touch/small screens it redirects straight to the workbench.
+
+How each path reaches it (kept in sync — change all of these together, never just one):
+- Vercel (the tested deployment): `vercel.json` redirects `/` -> `/hero.html` (redirects run before
+  the filesystem, so this beats the default `index.html`).
+- LAN server: `serve-lan.js` serves `/` -> `hero.html`.
+- Desktop `.exe`: `exe_build/server.js` serves `/` -> `hero.html` (falls back to `index.html`).
+- `1-Launch-SOLAR.cmd`: syncs to GitHub, then opens the live Vercel URL — the same front door.
+
+The legacy in-app cover (`js/ui/hero.js`) is retired: it builds hidden and an empty case boots
+straight into the workbench, so the hero never shows twice. `hero.html` is the only cover to edit.
 
 ## Windows executable
 Current build: `dist/Solar-v13.exe` — rebuilt with a matching Node v24.13.1 SEA runtime after
