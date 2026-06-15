@@ -165,20 +165,9 @@
   /* ---------------- boot ---------------- */
 
   function boot() {
-    // restore accent before anything paints amber defaults
-    var saved = savedAccent();
-    if (saved) applyAccent(saved, false);
-
-    // bloom picker lives in the topbar, before the search box
-    var search = U.el("search");
-    if (search && search.parentNode) {
-      var holder = document.createElement("div");
-      search.parentNode.insertBefore(holder, search);
-      var root = buildBloom(holder);
-      holder.replaceWith(root);
-      applyAccent(saved || "#e8b34b", false);
-    }
-
+    // Bloom colour picker retired: the accent is fixed (lime) via CSS tokens.
+    // We no longer apply any saved/amber accent inline, so it can't override
+    // the redesign palette. (buildBloom / applyAccent kept but unused.)
     wireCards();
   }
 

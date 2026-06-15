@@ -27,22 +27,9 @@
     var topbar = el("topbar");
     if (!topbar) return;
 
-    if (!el("btn-more")) {
-      moreBtn = document.createElement("button");
-      moreBtn.className = "btn";
-      moreBtn.id = "btn-more";
-      moreBtn.type = "button";
-      moreBtn.setAttribute("aria-expanded", "false");
-      moreBtn.setAttribute("aria-controls", "more-drawer");
-      moreBtn.textContent = "⋯ More";
-      topbar.appendChild(moreBtn);
-      moreBtn.addEventListener("click", function () {
-        var open = drawer.classList.toggle("open");
-        moreBtn.setAttribute("aria-expanded", open ? "true" : "false");
-      });
-    } else {
-      moreBtn = el("btn-more");
-    }
+    // "⋯ More" overflow retired — the toolbar now groups actions into
+    // Add / Case / Export dropdown menus, which also serve on mobile.
+    moreBtn = null;
 
     if (!el("more-drawer")) {
       drawer = document.createElement("div");
@@ -96,9 +83,8 @@
 
   function enterMobile() {
     var topbar = el("topbar");
-    if (!topbar || !drawer) return;
-    moveInto(topbar);            // secondary case actions
-    // chart controls are handled by the universal Tools dropdown (charttools.js)
+    if (!topbar) return;
+    // Toolbar actions now live in dropdown menus, so no overflow move is needed.
     document.body.classList.add("mobile-mode");
     if (!document.body.getAttribute("data-mview")) setView("chart");
   }

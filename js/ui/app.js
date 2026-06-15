@@ -124,14 +124,15 @@
       var on = window.CRGraph.togglePhysics();
       U.el("btn-physics").textContent = on ? "Physics: on" : "Physics: off";
     });
-    var layoutSel = U.el("layout-select");
-    if (layoutSel) layoutSel.addEventListener("change", function () {
-      if (!layoutSel.value) return;
-      window.CRGraph.applyLayout(layoutSel.value);
-      U.el("btn-physics").textContent = layoutSel.value === "organic" ? "Physics: on" : "Physics: off";
-      status("Layout: " + layoutSel.options[layoutSel.selectedIndex].text +
-        (layoutSel.value === "organic" ? "" : " — nodes pinned; drag to adjust"));
-      layoutSel.value = "";
+    var layoutMenu = U.el("menu-layout");
+    if (layoutMenu) layoutMenu.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-layout]");
+      if (!b) return;
+      var kind = b.getAttribute("data-layout");
+      window.CRGraph.applyLayout(kind);
+      U.el("btn-physics").textContent = kind === "organic" ? "Physics: on" : "Physics: off";
+      status("Layout: " + b.textContent.trim() +
+        (kind === "organic" ? "" : " — nodes pinned; drag to adjust"));
     });
 
     // keyboard QoL: Delete removes selection, Ctrl+Z undoes, F fits
@@ -164,14 +165,6 @@
     U.el("btn-undo").addEventListener("click", function () {
       if (!store.undo()) status("Nothing to undo");
     });
-    U.el("btn-note").addEventListener("click", function () {
-      U.promptModal("Note text", "", function (t) {
-        if (t && t.trim()) {
-          store.addEntity({ type: "note", label: t.trim().slice(0, 300), origin: "analyst note" });
-        }
-      });
-    });
-
     // save / load / export
     U.el("btn-save").addEventListener("click", function () {
       U.download(safeName(store.meta.name) + ".chartroom.json",
@@ -216,28 +209,16 @@
       U.el("paste-text").value = SAMPLE_TEXT;
       U.openModal("paste-veil");
     });
-    U.el("btn-help").addEventListener("click", function () { U.openModal("help-veil"); });
-    U.el("help-close").addEventListener("click", function () { U.closeModal("help-veil"); });
-
     // case meta
     U.el("case-name").value = store.meta.name;
     U.el("case-name").addEventListener("change", function () {
       store.meta.name = U.el("case-name").value.slice(0, 80) || "Untitled case";
       store.saveLocal();
     });
-    U.el("class-select").value = store.meta.classification || "OFFICIAL";
+    // classification UI retired — exports stay marked OFFICIAL by default
+    // date format is fixed to DD/MM (DMY)
+    store.meta.dateFormat = "DMY";
     applyClassification();
-    U.el("class-select").addEventListener("change", function () {
-      store.meta.classification = U.el("class-select").value;
-      applyClassification();
-      store.saveLocal();
-    });
-    U.el("datefmt").value = store.meta.dateFormat || "DMY";
-    U.el("datefmt").addEventListener("change", function () {
-      store.meta.dateFormat = U.el("datefmt").value;
-      store.saveLocal();
-      updateStatus();
-    });
 
     // search
     U.el("search").addEventListener("input", U.debounce(function () {
@@ -258,9 +239,7 @@
   }
 
   function applyClassification() {
-    var c = store.meta.classification || "OFFICIAL";
-    U.el("class-banner").textContent = c;
-    document.title = "Solar — " + c;
+    document.title = "Solar — " + (store.meta.classification || "OFFICIAL");
   }
 
   function safeName(s) {
