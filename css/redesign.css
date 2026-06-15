@@ -178,3 +178,32 @@ details.menu[open] > summary {
 
 /* retired controls — hide defensively if any markup lingers */
 #bloom-root, #class-banner, #btn-more, #more-drawer { display: none !important; }
+
+/* ============================================================
+   MOBILE FIX — let the dropdown menus escape the scrollable toolbar.
+   On phones, #topbar / #chart-tools were overflow-x:auto strips that
+   CLIPPED the Add / Case / Export / Tools / Layout pop-ups, so the
+   actions inside them were unreachable. Wrap instead of clip, drop the
+   topbar backdrop-filter (it traps positioned children), lift menus
+   above the chart, and give items a 44px tap target.
+   ============================================================ */
+@media (max-width: 760px) {
+  #topbar {
+    overflow: visible !important;
+    flex-wrap: wrap !important;
+    position: relative;
+    z-index: 500;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    background: rgba(16, 16, 14, 0.97);
+    height: auto;
+  }
+  body.mobile-mode #chart-tools,
+  #chart-tools { overflow: visible !important; }
+  .menu-pop, #ct-pop { z-index: 9000; }
+  details.menu { position: static; }                 /* let the pop size to content, not the chip */
+  .menu-pop {
+    min-width: 60vw; max-width: calc(100vw - 16px);
+    left: 8px;
+  }
+  .menu-pop .btn, #ct-pop .btn, #ct-pop summary, details.menu > summary { min-height: 44px; }
+}
