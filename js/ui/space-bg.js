@@ -1,10 +1,10 @@
 /* ============================================================
    SOLAR — space-bg.js
-   A dim, animated nebula + starfield rendered behind the link
-   chart, carrying the hero's cosmic atmosphere into the workspace.
-   Deliberately low-contrast with a legibility vignette so the
-   graph stays readable. Confined to #chart-wrap, pointer-events
-   none, sits below the vis-network canvas. Honours reduced-motion.
+   An animated nebula + starfield behind the link chart, carrying the
+   hero's cosmic atmosphere into the workspace. Prominent like the hero,
+   but with a soft centre vignette so the graph + empty-state text stay
+   readable. Confined to #chart-wrap, pointer-events none, below the
+   vis-network canvas. Honours reduced-motion.
    ============================================================ */
 (function () {
   "use strict";
@@ -24,21 +24,22 @@
 
   function seed() {
     stars = [];
-    var n = Math.max(50, Math.min(160, Math.floor((W * H) / 14000)));
+    var n = Math.max(70, Math.min(220, Math.floor((W * H) / 9000)));
     for (var i = 0; i < n; i++) {
       stars.push({
         x: Math.random(), y: Math.random(),
-        r: 0.3 + Math.random() * 1.0,
+        r: 0.3 + Math.random() * 1.2,
         p: Math.random() * 6.2832,
         s: 0.3 + Math.random() * 0.6
       });
     }
-    /* a few drifting gas masses in the hero's violet/blue palette */
+    /* drifting gas masses in the hero's violet/blue palette — prominent */
     blobs = [
-      { c: [150, 96, 210], x: 0.32, y: 0.36, r: 0.52, a: 0.10,  dx: 0.000020, dy: 0.000015, ph: 0 },
-      { c: [82, 112, 235], x: 0.66, y: 0.58, r: 0.60, a: 0.085, dx: -0.000016, dy: 0.000022, ph: 2 },
-      { c: [210, 150, 235], x: 0.50, y: 0.72, r: 0.46, a: 0.07,  dx: 0.000012, dy: -0.000020, ph: 4 },
-      { c: [120, 150, 245], x: 0.78, y: 0.28, r: 0.40, a: 0.06,  dx: -0.000020, dy: 0.000012, ph: 1 }
+      { c: [150, 96, 210], x: 0.30, y: 0.34, r: 0.58, a: 0.20, dx: 0.000020, dy: 0.000015, ph: 0 },
+      { c: [82, 112, 235], x: 0.66, y: 0.58, r: 0.64, a: 0.17, dx: -0.000016, dy: 0.000022, ph: 2 },
+      { c: [205, 140, 235], x: 0.50, y: 0.74, r: 0.50, a: 0.15, dx: 0.000012, dy: -0.000020, ph: 4 },
+      { c: [120, 150, 245], x: 0.80, y: 0.26, r: 0.44, a: 0.13, dx: -0.000020, dy: 0.000012, ph: 1 },
+      { c: [170, 110, 225], x: 0.16, y: 0.66, r: 0.46, a: 0.12, dx: 0.000017, dy: 0.000014, ph: 3 }
     ];
   }
 
@@ -57,12 +58,11 @@
     ctx.fillStyle = "#0a0a09";
     ctx.fillRect(0, 0, W, H);
 
-    /* nebula gas — additive, very dim */
     ctx.globalCompositeOperation = "lighter";
     for (var i = 0; i < blobs.length; i++) {
       var b = blobs[i];
-      var bx = (b.x + Math.sin(t * b.dx + b.ph) * 0.04) * W;
-      var by = (b.y + Math.cos(t * b.dy + b.ph) * 0.04) * H;
+      var bx = (b.x + Math.sin(t * b.dx + b.ph) * 0.05) * W;
+      var by = (b.y + Math.cos(t * b.dy + b.ph) * 0.05) * H;
       var br = b.r * Math.max(W, H);
       var g = ctx.createRadialGradient(bx, by, 0, bx, by, br);
       g.addColorStop(0, "rgba(" + b.c[0] + "," + b.c[1] + "," + b.c[2] + "," + b.a.toFixed(3) + ")");
@@ -71,21 +71,20 @@
       ctx.beginPath(); ctx.arc(bx, by, br, 0, 6.2832); ctx.fill();
     }
 
-    /* stars */
     for (var j = 0; j < stars.length; j++) {
       var s = stars[j];
       var tw = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * 0.001 * s.s + s.p));
-      ctx.globalAlpha = tw * 0.5;
-      ctx.fillStyle = "#cfcdbf";
+      ctx.globalAlpha = tw * 0.75;
+      ctx.fillStyle = "#dedcc9";
       ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.2832); ctx.fill();
     }
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
 
-    /* legibility vignette — keeps the graph readable over the gas */
-    var vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.18, W / 2, H / 2, Math.max(W, H) * 0.75);
-    vg.addColorStop(0, "rgba(10,10,9,0.34)");
-    vg.addColorStop(1, "rgba(10,10,9,0.80)");
+    /* gentle legibility vignette — soft centre keeps text/nodes readable */
+    var vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.10, W / 2, H / 2, Math.max(W, H) * 0.78);
+    vg.addColorStop(0, "rgba(10,10,9,0.22)");
+    vg.addColorStop(1, "rgba(10,10,9,0.58)");
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, W, H);
 

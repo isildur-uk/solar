@@ -62,10 +62,12 @@ input[type="text"], input[type="search"], textarea,
 #brand .brand-line {
   font-family: var(--sans);
   font-weight: 600;
-  letter-spacing: -0.005em;
-  background: linear-gradient(180deg, #ffffff 0%, #f4f3e8 55%, #cfcdbf 100%);
+  font-size: 16px;
+  letter-spacing: -0.03em;                 /* mirror the hero title's tight tracking */
+  background: linear-gradient(176deg, #ffffff 0%, #f4f3e8 50%, #c5c3b6 100%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 0 14px rgba(150,140,210,0.16));
 }
 #brand .accent { -webkit-text-fill-color: var(--accent); color: var(--accent); }
 
@@ -87,26 +89,44 @@ input[type="text"], input[type="search"], textarea,
 /* lock the accent to lime (defend against any runtime override) */
 :root { --accent: #ebfc72 !important; --accent-dim: #bacd31 !important; }
 
-/* lighter liquid-glass on every button — hero language, dense-UI safe */
+/* buttons mimic the hero ENTER exactly: glass body + bevelled rim + lime breath */
 .btn {
-  background: rgba(244, 243, 232, 0.045);
-  border: 1px solid var(--line);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.22);
+  position: relative; isolation: isolate;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(244, 243, 232, 0.05);
+  border: 1px solid rgba(244, 243, 232, 0.12);
+  border-radius: 10px;
   color: var(--text);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.45);
+  overflow: hidden;
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.20),
+    inset 2px 2px 0.4px -2.5px rgba(255,255,255,0.60),
+    inset -2px -2px 0.4px -2.5px rgba(255,255,255,0.55),
+    inset 1px 1px 1px -0.5px rgba(255,255,255,0.45),
+    inset -1px -1px 1px -0.5px rgba(255,255,255,0.45),
+    inset 0 0 5px 5px rgba(255,255,255,0.05),
+    inset 0 0 2px 2px rgba(255,255,255,0.04);
+}
+.btn::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: url(#liquid-glass) blur(1px);
 }
 .btn:hover {
-  background: rgba(235, 252, 114, 0.07);
-  border-color: var(--accent-dim);
-  color: var(--accent);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 0 16px -8px var(--accent);
+  color: var(--accent); border-color: var(--accent-dim);
+  background: rgba(235, 252, 114, 0.08);
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.22),
+    inset 2px 2px 0.4px -2.5px rgba(255,255,255,0.70),
+    inset -2px -2px 0.4px -2.5px rgba(255,255,255,0.65),
+    inset 1px 1px 1px -0.5px rgba(255,255,255,0.50),
+    inset -1px -1px 1px -0.5px rgba(255,255,255,0.50),
+    0 0 20px -6px var(--accent);
 }
-.btn.primary {
-  color: var(--accent);
-  border-color: var(--accent-dim);
-  background: rgba(235, 252, 114, 0.06);
-}
-.btn.danger:hover { color: var(--bad); border-color: var(--bad); box-shadow: 0 0 16px -8px var(--bad); }
+.btn:active { transform: translateY(0) scale(0.99); }
+.btn.primary { color: var(--accent); border-color: rgba(235,252,114,0.42); background: rgba(235,252,114,0.07); }
+.btn.danger:hover { color: var(--bad); border-color: var(--bad); box-shadow: 0 4px 12px rgba(0,0,0,0.22), 0 0 20px -6px var(--bad); }
 .btn:disabled { opacity: 0.4; }
 
 /* dropdown menus built on native <details> */
@@ -134,14 +154,24 @@ details.menu[open] > summary {
   animation: menuIn .14s ease;
 }
 @keyframes menuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-.menu-pop .btn {
-  width: 100%; text-align: left;
+.menu-pop .btn, #ct-pop .btn, #ct-pop select, #ct-pop summary {
+  width: 100%; text-align: left; justify-content: flex-start;
   background: transparent; border-color: transparent; box-shadow: none;
-  -webkit-backdrop-filter: none; backdrop-filter: none;
+  text-shadow: none; border-radius: var(--radius);
   padding: 7px 10px;
 }
-.menu-pop .btn:hover { background: rgba(235, 252, 114, 0.08); border-color: transparent; box-shadow: none; }
-.menu-pop .btn.danger:hover { background: rgba(217, 128, 128, 0.10); color: var(--bad); }
+.menu-pop .btn::before, #ct-pop .btn::before { display: none; }
+.menu-pop .btn:hover, #ct-pop .btn:hover { background: rgba(235, 252, 114, 0.08); border-color: transparent; box-shadow: none; transform: none; color: var(--accent); }
+.menu-pop .btn.danger:hover, #ct-pop .btn.danger:hover { background: rgba(217, 128, 128, 0.10); color: var(--bad); }
+
+/* chart-tools: single glass dropdown to match the toolbar menus */
+#ct-pop {
+  background: rgba(20, 20, 17, 0.92);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1); backdrop-filter: blur(18px) saturate(1.1);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow-2); padding: 6px; gap: 3px;
+}
+#ct-toggle[aria-expanded="true"] { color: var(--accent); border-color: var(--accent-dim); background: rgba(235,252,114,0.08); }
 
 /* bigger inspector — shrink the map pane */
 #map-pane { flex: 0 0 34%; }

@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="css/solar.css?v=20260615c">
 <link rel="stylesheet" href="css/mobile.css?v=20260615c">
 <link rel="stylesheet" href="css/enhance.css?v=20260615c">
-<link rel="stylesheet" href="css/redesign.css?v=20260615d">
+<link rel="stylesheet" href="css/redesign.css?v=20260615f">
 </head>
 <body>
 <div id="drop-overlay" aria-hidden="true">
@@ -303,9 +303,19 @@
 <script src="js/lib/tesseract/tesseract.min.js?v=20260613a"></script>
 <script src="js/ui/ocr.js?v=20260613b"></script>
 <script src="js/ui/mobileui.js?v=20260615d"></script>
-<script src="js/ui/charttools.js?v=20260613d"></script>
+<script src="js/ui/charttools.js?v=20260615e"></script>
 <script src="js/ui/netpanel.js?v=20260613a"></script>
 <script src="js/ui/analytics.js?v=20260613a"></script>
-<script src="js/ui/space-bg.js?v=20260615c"></script>
+<script src="js/ui/space-bg.js?v=20260615e"></script>
+<svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+  <defs>
+    <filter id="liquid-glass" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05 0.05" numOctaves="1" seed="1" result="turb"/>
+      <feGaussianBlur in="turb" stdDeviation="2" result="blurNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="blurNoise" scale="40" xChannelSelector="R" yChannelSelector="B" result="disp"/>
+      <feGaussianBlur in="disp" stdDeviation="0.5"/>
+    </filter>
+  </defs>
+</svg>
 </body>
 </html>
