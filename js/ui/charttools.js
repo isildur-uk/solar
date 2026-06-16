@@ -1,65 +1,53 @@
 /* SOLAR — charttools.js
- * Collapse the chart control strip (Layout / Fit / Physics / Legend / Demo /
- * Geo / Path / Key players / Analytics) into ONE glass "Tools ▾" dropdown so
- * the chart surface stays clean. Controls are moved (not cloned) so their
- * handlers survive. Late-injected controls (Path / Key players / Analytics,
- * added by netpanel.js / analytics.js after this runs) are absorbed via a
- * MutationObserver, and the Layout <details> menu is captured too.
+ * Build a single "Tools ▾" dropdown as a STANDARD <details class="menu"> so it
+ * shares menus.js open/close behaviour and the toolbar's button styling (i.e.
+ * it behaves and sizes exactly like Add / Case). Every chart control is moved
+ * into it: the static ones declared in #chart-tools, plus the ones injected
+ * later by netpanel.js / analytics.js (Path / Key players / Analytics).
+ * #chart-tools itself stays hidden as the injection target.
  */
 (function () {
   "use strict";
   function init() {
-    var tools = document.getElementById("chart-tools");
-    if (!tools || document.getElementById("ct-toggle")) return;
+    var src = document.getElementById("chart-tools");
+    if (!src || document.getElementById("menu-tools")) return;
+
+    var details = document.createElement("details");
+    details.className = "menu";
+    details.id = "menu-tools";
+
+    var summary = document.createElement("summary");
+    summary.className = "btn";
+    summary.title = "Chart tools — layout, physics, fit, legend, analysis";
+    summary.innerHTML = 'Tools <span aria-hidden="true">&#9662;</span>';
 
     var pop = document.createElement("div");
-    pop.id = "ct-pop";
+    pop.className = "menu-pop";
+    pop.id = "tools-pop";
     pop.setAttribute("role", "menu");
     pop.setAttribute("aria-label", "chart tools");
 
-    var toggle = document.createElement("button");
-    toggle.id = "ct-toggle";
-    toggle.className = "btn";
-    toggle.type = "button";
-    toggle.setAttribute("aria-haspopup", "true");
-    toggle.setAttribute("aria-expanded", "false");
-    toggle.title = "Chart tools — layout, physics, fit, legend, analysis";
-    toggle.innerHTML = 'Tools <span aria-hidden="true">&#9662;</span>';
+    details.appendChild(summary);
+    details.appendChild(pop);
 
     function isControl(n) {
-      if (!n || n.nodeType !== 1 || n === toggle || n === pop) return false;
-      if (n.classList && n.classList.contains("ct-sep")) return true;
+      if (!n || n.nodeType !== 1) return false;
+      if (n.classList && (n.classList.contains("ct-sep") || n.classList.contains("menu-sep"))) return true;
       return n.tagName === "BUTTON" || n.tagName === "SELECT" || n.tagName === "DETAILS";
     }
     function absorb(n) { if (isControl(n)) pop.appendChild(n); }
 
-    Array.prototype.slice.call(tools.children).forEach(absorb);
+    /* drop the menu where #chart-tools sits, move the static controls in */
+    src.parentNode.insertBefore(details, src);
+    Array.prototype.slice.call(src.children).forEach(absorb);
 
-    toggle.addEventListener("click", function (e) {
-      e.stopPropagation();
-      var open = pop.classList.toggle("open");
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
-    });
-    document.addEventListener("click", function (e) {
-      if (pop.classList.contains("open") && !pop.contains(e.target) && e.target !== toggle) {
-        pop.classList.remove("open"); toggle.setAttribute("aria-expanded", "false");
-      }
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && pop.classList.contains("open")) {
-        pop.classList.remove("open"); toggle.setAttribute("aria-expanded", "false");
-      }
-    });
-
-    tools.appendChild(toggle);
-    tools.appendChild(pop);
-
+    /* absorb late-injected controls (Path / Key players / Analytics) */
     if (window.MutationObserver) {
       new MutationObserver(function (muts) {
         muts.forEach(function (m) {
           Array.prototype.slice.call(m.addedNodes).forEach(absorb);
         });
-      }).observe(tools, { childList: true });
+      }).observe(src, { childList: true });
     }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
