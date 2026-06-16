@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="css/solar.css?v=20260615c">
 <link rel="stylesheet" href="css/mobile.css?v=20260615c">
 <link rel="stylesheet" href="css/enhance.css?v=20260615c">
-<link rel="stylesheet" href="css/redesign.css?v=20260615k">
+<link rel="stylesheet" href="css/redesign.css?v=20260615l">
 </head>
 <body>
 <div id="drop-overlay" aria-hidden="true">
@@ -45,18 +45,14 @@
 
   <details class="menu" id="menu-case">
     <summary class="btn">Case &#9662;</summary>
-    <div class="menu-pop" role="menu" aria-label="case actions">
+    <div class="menu-pop" role="menu" aria-label="case, export and clear">
       <button class="btn" id="btn-save" title="Download case as JSON">Save</button>
       <button class="btn" id="btn-open" title="Open a saved case">Open</button>
-      <button class="btn danger" id="btn-clear" title="Clear chart">Clear</button>
-    </div>
-  </details>
-
-  <details class="menu" id="menu-export">
-    <summary class="btn">Export &#9662;</summary>
-    <div class="menu-pop" role="menu" aria-label="export">
+      <div class="menu-sep" aria-hidden="true"></div>
       <button class="btn" id="btn-png" title="Export chart as PNG">Chart PNG</button>
       <button class="btn" id="btn-anx" title="Operational exports: intel logs, profiles, IR draft, i2">Operational exports&#8230;</button>
+      <div class="menu-sep" aria-hidden="true"></div>
+      <button class="btn danger" id="btn-clear" title="Clear chart">Clear</button>
     </div>
   </details>
 
