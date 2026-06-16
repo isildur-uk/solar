@@ -425,15 +425,15 @@ test("EXTRACT: relationship person-TRAVELS_TO->Malaga", function () {
   var locs    = extracted.entities.filter(function (e) { return e.type === "location"; });
   assert(persons.length >= 1, "need person");
   var personRef = persons[0].ref;
-  var malaga = locs.find(function (l) {
-    var lbl = (l.label || "").toLowerCase();
+  // air-travel context resolves "flights to Malaga" to the AIRPORT (Malaga Airport
+  // (AGP)); accept a TRAVELS_TO to any Malaga-labelled destination (airport or city).
+  var rel = extracted.relationships.find(function (r) {
+    if (r.sourceRef !== personRef || r.type !== "TRAVELS_TO") return false;
+    var tgt = extracted.entities.find(function (e) { return e.ref === r.targetRef; });
+    var lbl = (tgt && tgt.label || "").toLowerCase();
     return lbl.indexOf("malaga") !== -1 || lbl.indexOf("málaga") !== -1;
   });
-  assert(malaga !== undefined, "Malaga location not found");
-  var rel = extracted.relationships.find(function (r) {
-    return r.sourceRef === personRef && r.targetRef === malaga.ref && r.type === "TRAVELS_TO";
-  });
-  assert(rel !== undefined, "person-TRAVELS_TO->Malaga not found");
+  assert(rel !== undefined, "person-TRAVELS_TO->Malaga(airport/city) not found");
 });
 
 test("EXTRACT: relationship person-DEPARTS_FROM->Bristol Airport with dateISO 2026-06-11", function () {

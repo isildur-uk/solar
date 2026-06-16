@@ -438,10 +438,12 @@
       applyAddressGeo(attrsA, raw, parent, pcUK ? pcUK[0] : null);
       // An address that carries a postcode ends AT the postcode — trim any
       // sentence continuation the matcher over-ran into ("...M14 7QP, having relocated").
-      var _pc = pcUK ? pcUK[0] : (attrsA.postcode || null);
-      if (_pc) {
-        var _pcEnd = raw.indexOf(_pc);
-        if (_pcEnd !== -1) { _pcEnd += _pc.length; if (_pcEnd < raw.length) raw = raw.slice(0, _pcEnd).trim(); }
+      // UK postcodes END an address, so trim any sentence run-on after them. Non-UK
+      // postcodes (e.g. Spanish "29016 Málaga, Spain") PRECEDE the locality — do not
+      // trim there or the city/country is lost.
+      if (pcUK) {
+        var _pcEnd = raw.indexOf(pcUK[0]);
+        if (_pcEnd !== -1) { _pcEnd += pcUK[0].length; if (_pcEnd < raw.length) raw = raw.slice(0, _pcEnd).trim(); }
       }
       var entA = addEntity("address", raw, raw, attrsA,
         (pcUK || pcES || parent) ? "high" : (hasEvidence ? "med" : "low"), sA, eA);
@@ -490,7 +492,9 @@
       var gA = G.lookup(m[0]) || G.lookup(m[1] + " Airport") || G.lookup(m[1]);
       spans.claim(sL, eL);
       if (gA) {
-        addEntity("location", (gA.t === "airport" ? gA.n : m[1] + " Airport"),
+        var _an = (gA.t === "airport" ? gA.n : m[1] + " Airport");
+        var _alabel = gA.iata ? (_an + " (" + gA.iata + ")") : _an;
+        addEntity("location", _alabel,
           gA.n, { lat: gA.lat, lon: gA.lon, cc: gA.cc, kind: "airport", iata: gA.iata || "", gaz: gA.id },
           "high", sL, eL);
       } else {
@@ -534,7 +538,8 @@
             spans.claim(idx, endI);
             var attrs2 = { lat: g.lat, lon: g.lon, cc: g.cc, kind: g.t, gaz: g.id };
             if (g.iata) attrs2.iata = g.iata;
-            addEntity("location", g.n, g.n, attrs2, "high", idx, endI);
+            var _glabel = (g.t === "airport" && g.iata) ? (g.n + " (" + g.iata + ")") : g.n;
+            addEntity("location", _glabel, g.n, attrs2, "high", idx, endI);
           }
         }
         idx = endI;
@@ -1279,8 +1284,28 @@
             var rel = addRel(subject, lc, "DEPARTS_FROM", demote("high"), sTxt, "depart cue", firstDate, dep);
             if (rel && firstDate) markDateUsed(datesInSent, rel);
           } else if (trv) {
-            var rel2 = addRel(subject, lc, "TRAVELS_TO", demote("high"), sTxt, "travel cue", firstDate, trv);
-            if (rel2 && firstDate) markDateUsed(datesInSent, rel2);
+            var _cueTxt = text.slice(trv[0], trv[1]);
+            // "book/booked flights to X" — the sentence date is when it was BOOKED,
+            // not when travel happens. Keep the destination link but not that date.
+            var _isBooking = /book/i.test(_cueTxt);
+            // air-travel cue + a city with a known airport -> define the AIRPORT
+            // (name + IATA) as the destination; the city node stays for any stay.
+            var _isAir = /fl(?:y|ies|ight|ights|ew|ying)|\bair\b/i.test(_cueTxt);
+            var _target = lc;
+            if (_isAir && lc.attrs && lc.attrs.kind === "city" && G.airportForCity) {
+              var _apr = G.airportForCity(lc.value || lc.label);
+              if (_apr) {
+                var _aplab = _apr.iata ? (_apr.n + " (" + _apr.iata + ")") : _apr.n;
+                _target = entities.find(function (e) { return e.type === "location" && e.value === _apr.n; }) ||
+                  addEntity("location", _aplab, _apr.n,
+                    { lat: _apr.lat, lon: _apr.lon, cc: _apr.cc, kind: "airport", iata: _apr.iata || "", gaz: _apr.id, inferred: true },
+                    "med", lc.spans[lc.spans.length - 1][0], lc.spans[lc.spans.length - 1][1], ["inferred airport"]);
+              }
+            }
+            if (hasRelBetween(subject, _target)) return;
+            var _tdate = _isBooking ? null : firstDate;
+            var rel2 = addRel(subject, _target, "TRAVELS_TO", demote("high"), sTxt, _isBooking ? "booking cue" : "travel cue", _tdate, trv);
+            if (rel2 && _tdate) markDateUsed(datesInSent, rel2);
           }
         });
 
@@ -1691,6 +1716,20 @@
         for (var a = 0; a < ls.length; a++)
           for (var b = a + 1; b < ls.length; b++)
             addRelDirect(ls[a], ls[b], "JOURNEY_WITH", "med", "same journey", "journey");
+      });
+      // A dated departure dates the flight: copy a DEPARTS_FROM date onto a dateless
+      // TRAVELS_TO whose destination is an AIRPORT in the same journey/paragraph.
+      relationships.forEach(function (dr) {
+        if (dr.type !== "DEPARTS_FROM" || !dr.dateISO) return;
+        var dl = entities.find(function (e) { return e.ref === dr.targetRef; });
+        if (!dl || !dl.spans || !dl.spans.length) return;
+        var dpi = paraOf(dl.spans[0][0]);
+        relationships.forEach(function (tr) {
+          if (tr.type !== "TRAVELS_TO" || tr.dateISO || tr.sourceRef !== dr.sourceRef) return;
+          var tl = entities.find(function (e) { return e.ref === tr.targetRef; });
+          if (!tl || !tl.attrs || tl.attrs.kind !== "airport" || !tl.spans || !tl.spans.length) return;
+          if (paraOf(tl.spans[0][0]) === dpi) tr.dateISO = dr.dateISO;
+        });
       });
     })();
 

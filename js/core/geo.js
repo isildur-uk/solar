@@ -411,6 +411,22 @@
     return null;
   }
 
+  /** City name -> the airport record that serves it (e.g. "Malaga" -> AGP), or null.
+      Used to enrich a city referenced in an air-travel context. */
+  function airportForCity(name) {
+    if (!name) return null;
+    var f = fold(name);
+    var direct = INDEX[f + " airport"];
+    if (direct && direct.t === "airport") return direct;
+    var found = null;
+    GAZ.some(function (g) {
+      if (g.t !== "airport") return false;
+      if (fold(g.n).indexOf(f) === 0) { found = g; return true; }
+      return (g.a || []).some(function (al) { return fold(al).indexOf(f) === 0; }) ? (found = g, true) : false;
+    });
+    return found;
+  }
+
   /** IATA code lookup, e.g. "AGP" → Malaga Airport. */
   function lookupIata(code) {
     return IATA[String(code || "").toUpperCase()] || null;
@@ -473,6 +489,7 @@
     fold: fold,
     lookup: lookup,
     lookupIata: lookupIata,
+    airportForCity: airportForCity,
     allKeys: allKeys,
     countryByCc: countryByCc,
     postcodeArea: postcodeArea,
