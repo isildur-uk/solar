@@ -78,8 +78,35 @@
     handleFiles(files);
   }
 
+  function injectCamera() {
+    var pop = document.querySelector("#menu-add .menu-pop");
+    if (!pop || document.getElementById("btn-camera")) return;
+    var inp = document.createElement("input");
+    inp.type = "file";
+    inp.accept = "image/*";
+    inp.setAttribute("capture", "environment");   // opens the rear camera on mobile
+    inp.className = "visually-hidden";
+    inp.setAttribute("aria-hidden", "true");
+    inp.tabIndex = -1;
+    inp.addEventListener("change", function () {
+      var f = inp.files && inp.files[0];
+      inp.value = "";
+      if (f) handleImages([f]);
+    });
+    var btn = document.createElement("button");
+    btn.className = "btn";
+    btn.id = "btn-camera";
+    btn.type = "button";
+    btn.textContent = "Take Photo";
+    btn.title = "Capture a photo with the camera; reads EXIF GPS, or offers your current location";
+    btn.addEventListener("click", function () { inp.click(); });
+    pop.appendChild(btn);
+    pop.appendChild(inp);
+  }
+
   function init(caseStore) {
     store = caseStore;
+    injectCamera();
     overlay = U.el("drop-overlay");
     if (!overlay) return;
     // capture phase + both targets: we see the event before anything else can stop it,
@@ -148,6 +175,22 @@
           });
           if (window.CRApp && window.CRApp.afterImport) window.CRApp.afterImport();
         }
+      } else if (navigator.geolocation && window.confirm(
+          images.length + " photo" + (images.length === 1 ? "" : "s") +
+          " had no embedded GPS — phones strip a photo's location when it is shared to the web.\n\n" +
+          "Use your device's CURRENT location to place " + (images.length === 1 ? "it" : "them") +
+          " on the map instead?")) {
+        status("Getting your current location…");
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          var lat = pos.coords.latitude, lon = pos.coords.longitude;
+          var coord = lat.toFixed(5) + ", " + lon.toFixed(5);
+          store.addEntity({ type: "location", label: "Photo location (" + coord + ")",
+            geo: { lat: lat, lon: lon }, origin: "device current location" });
+          if (window.CRApp && window.CRApp.afterImport) window.CRApp.afterImport();
+          status("Pinned current location " + coord + " — see Map");
+        }, function (err) {
+          status("Current location unavailable: " + (err && err.message || "permission denied"));
+        }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
       }
       if (texts.length) {
         window.CRReview.open(texts.join("\n\n"),
