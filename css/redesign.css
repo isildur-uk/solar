@@ -208,3 +208,23 @@ details.menu[open] > summary {
   }
   .menu-pop .btn, #ct-pop .btn, #ct-pop summary, details.menu > summary { min-height: 44px; }
 }
+
+/* ============================================================
+   Tools control now lives inline in the toolbar row (one row,
+   same font/design/alignment as Add / Case / Export / Undo).
+   ============================================================ */
+#chart-tools {
+  position: relative;
+  top: auto; left: auto;
+  display: inline-flex; flex-direction: row; align-items: center;
+  gap: 6px; z-index: auto;
+}
+#chart-tools .btn { font-size: 12px; padding: 6px 11px; }
+@media (max-width: 760px) {
+  body.mobile-mode #chart-tools,
+  #chart-tools {
+    position: relative !important;
+    top: auto !important; left: auto !important; right: auto !important;
+    max-width: none !important; overflow: visible !important; padding: 0 !important;
+  }
+}
