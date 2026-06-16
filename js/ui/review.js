@@ -26,9 +26,9 @@
     cardState = {};
     relState = {};
 
-    result.entities.forEach(function (ent) {
+    function initEntityCard(ent) {
       var suggestions = M.matchEntity(
-        { type: ent.type, label: ent.label, ids: idsFor(ent), attrs: ent.attrs },
+        { type: ent.type, label: ent.label, ids: idsFor(ent), attrs: ent.attrs || {} },
         store.entities);
       ent._suggestions = suggestions.slice(0, 3);
       var best = suggestions[0];
@@ -39,7 +39,8 @@
         label: ent.label,
         type: ent.type
       };
-    });
+    }
+    result.entities.forEach(initEntityCard);
     result.relationships.forEach(function (r) {
       relState[r.ref] = {
         include: r.confidence !== "low" && !r.negated,  // denied acts need opt-in
@@ -51,6 +52,20 @@
     renderSource();
     renderCards();
     U.openModal("review-veil");
+
+    // Optional smart-mode augmentation: union-merge a transformer NER's hits
+    // (additive, advisory). No-op unless a model runtime is vendored AND enabled;
+    // rule results are already shown, smart hits pop in when inference resolves.
+    if (window.CRSmartNER && window.CRSmartNER.available() && window.CRSmartNER.enabled) {
+      window.CRSmartNER.extract(text, { dateFormat: store.meta.dateFormat }).then(function (spans) {
+        var merged = window.CRSmartNER.mergeInto(result, spans);
+        if (!merged.added.length) return;
+        merged.added.forEach(initEntityCard);
+        result = { entities: merged.entities, relationships: result.relationships, events: result.events, ambiguities: result.ambiguities, cues: result.cues, primary: result.primary, grading: result.grading };
+        renderSource();
+        renderCards();
+      });
+    }
   }
 
   function idsFor(ent) {

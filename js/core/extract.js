@@ -337,20 +337,20 @@
       addEntity("phone", "IMEI " + imeiDigits, imeiDigits, { kind: "IMEI" }, "high", m.index, m.index + m[0].length);
     }
     // Passport: PPT 123456789 [Country]
-    var rePptPre = /\bPPT[\s.:]*([0-9]{6,9})(?:\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)?))?/g;
+    var rePptPre = /\b(?:PPT|[Pp]assport)(?:\s+(?:no\.?|number))?[\s.:]*(?:is\s+)?([0-9]{6,9}|[0-9]{6}[A-Z])\b(?:\s*\(([^)]{2,40})\))?/g;
     while ((m = rePptPre.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);
       personIdHits.push({ key: "passport", value: m[1] + (m[2] ? " " + m[2] : ""), start: m.index, end: m.index + m[0].length });
     }
     // CRO / SCRO + PNC ID
-    var reCroPre = /\b(S?CRO)[\s.:]*([0-9]{1,6}\/[0-9]{2}[A-Z]?)\b/g;
+    var reCroPre = /\b(S?CRO)[\s.:]*(?:is\s+)?([0-9]{1,6}\/[0-9]{2}[A-Z]?)\b/g;
     while ((m = reCroPre.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);
       personIdHits.push({ key: "cro", value: m[2], start: m.index, end: m.index + m[0].length });
     }
-    var rePncPre = /\bPNC(?:\s?ID)?[\s.:]*([0-9]{2,4}\/[0-9]{1,7}[A-Z])\b/g;
+    var rePncPre = /\bPNC(?:\s?ID)?[\s.:]*(?:is\s+)?([0-9]{2,4}\/[0-9]{1,7}[A-Z])\b/g;
     while ((m = rePncPre.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);
@@ -358,7 +358,7 @@
     }
     // NINO — labelled first, then the distinctive bare shape (GBIQ tables
     // print "JT 60 12 04 C" with no label at all)
-    var reNinoPre = /\bNINO[\s.:]*([A-CEGHJ-PR-TW-Z]{2}\s?\d{2}\s?\d{2}\s?\d{2}\s?[A-D])\b/g;
+    var reNinoPre = /\b(?:NINO|[Nn]ational\s+[Ii]nsurance(?:\s+(?:[Nn]o\.?|[Nn]umber))?)[\s.:]*(?:is\s+)?([A-CEGHJ-PR-TW-Z]{2}\s?\d{2}\s?\d{2}\s?\d{2}\s?[A-D])\b/g;
     while ((m = reNinoPre.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);
@@ -376,7 +376,7 @@
     while ((m = reCoNo.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);
-      orgIdHits.push({ value: m[1], start: m.index, end: m.index + m[0].length });
+      orgIdHits.push({ key: "companyNumber", value: m[1], start: m.index, end: m.index + m[0].length });
     }
     // Financial: AC / SC / CC
     var reFinPre = /\b(AC|SC|CC)[\s.:]+([0-9A-Z]{6,18})\b/g;
@@ -413,6 +413,8 @@
       if (key === "imsi" || key === "iccid") {
         addEntity("phone", key.toUpperCase() + " " + val.replace(/\D/g, ""), val.replace(/\D/g, ""),
           { kind: key.toUpperCase() }, "high", m.index, m.index + m[0].length);
+      } else if (key === "vat") {
+        orgIdHits.push({ key: "vat", value: val.replace(/\s+/g, ""), start: m.index, end: m.index + m[0].length });
       } else {
         personIdHits.push({ key: key, value: val, start: m.index, end: m.index + m[0].length });
       }
@@ -762,8 +764,9 @@
           if (dist >= 0 && dist < bestDist) { bestDist = dist; bestOrg = e; }
         });
       });
-      if (bestOrg && bestDist < 220 && !bestOrg.attrs.companyNumber) {
-        bestOrg.attrs.companyNumber = hit.value;
+      var okey = hit.key || "companyNumber";
+      if (bestOrg && bestDist < 220 && !bestOrg.attrs[okey]) {
+        bestOrg.attrs[okey] = hit.value;
         bestOrg.spans.push([hit.start, hit.end]);
       }
     });
@@ -869,8 +872,8 @@
       while (jn < capToks.length) {
         var between = text.slice(run[run.length - 1].e, capToks[jn].s);
         if (/^\s+$/.test(between)) { run.push(capToks[jn]); jn++; continue; }
-        var pmn = between.match(/^\s+([a-zÀ-ſ]+)\s+$/);
-        if (pmn && NAME_PARTICLE[pmn[1]]) { run.push(capToks[jn]); jn++; continue; }
+        var pmn = between.match(/^\s+((?:[a-zÀ-ſ]+\s+)+)$/);
+        if (pmn && pmn[1].trim().split(/\s+/).every(function (w) { return NAME_PARTICLE[w]; })) { run.push(capToks[jn]); jn++; continue; }
         break;
       }
       ti = jn;
@@ -917,6 +920,34 @@
       spans.claim(sN, eN);
       addEntity("person", lblN, lblN, {}, strongN ? "high" : "med", sN, eN,
         strongN ? ["prose name"] : ["prose name", "title-case heuristic"]);
+    }
+
+    // 9c2. CM nominal in prose: "Forename [middle/particle...] SURNAME" with an
+    // ALL-CAPS surname (the CM house style), which 9c's acronym-trim discards.
+    // Precision-gated by a person cue so place/org caps ("to SEVILLE", "Apex PLC")
+    // are not mistaken for people.
+    var ORG_CAPS_TAIL = { PLC: 1, LTD: 1, LLP: 1, LLC: 1, INC: 1, CIC: 1, CO: 1, CORP: 1, LP: 1 };
+    var reCapsSurname = /\b([A-Z][a-zà-ÿ'’-]+(?:\s+(?:de|del|della|van|von|der|den|da|di|du|dos|das|bin|al|ibn|ter|ten|la|le|[A-Z][a-zà-ÿ'’-]+)){0,3}\s+[A-Z][A-Z'’]{2,})\b/g;
+    var csm;
+    while ((csm = reCapsSurname.exec(text))) {
+      var csStart = csm.index, csEnd = csm.index + csm[0].length;
+      if (spans.overlaps(csStart, csEnd)) continue;            // already a person/place/org
+      var csLbl = csm[1].replace(/\s+/g, " ");
+      var csToks = csLbl.split(" ");
+      var csFirst = csToks[0], csLast = csToks[csToks.length - 1];
+      if (NAME_STOP[csFirst]) continue;                        // sentence-initial function word
+      if (ORG_CAPS_TAIL[csLast] || ORG_END.test(csLbl) || ORG_START.test(csLbl)) continue; // org, not person
+      if (G.lookup(csLbl) || G.lookup(csLast)) continue;       // gazetteer place
+      var csPre = text.slice(Math.max(0, csStart - 26), csStart);
+      var csPost = text.slice(csEnd, csEnd + 30);
+      var appos = /,\s*$/.test(csPre) && /^\s*,/.test(csPost); // "..., Maria van der BERG, ..."
+      var PERSON_NOUN = /\b(?:associate|colleague|friend|brother|sister|mother|father|son|daughter|wife|husband|partner|cousin|relative|suspect|victim|witness|accomplice|nominal|subject|individual|keeper|driver|owner|director|employee|boyfriend|girlfriend|neighbou?r|contact|man|woman|male|female)\b/i;
+      var appoCued = appos && PERSON_NOUN.test(csPre);         // apposition alone is too weak — need a person noun
+      var strongPost = PERSON_VERB.test(csPost) && !/^[\s,]*(?:was|is|are|were|had|has|have|been|being|will|would|who|whose)\b/i.test(csPost); // copulas follow anything, incl. places
+      var cued = NAME_TITLE.test(csPre) || PERSON_PREVERB.test(csPre) || strongPost || appoCued;
+      if (!cued) continue;                                     // precision: only with a person cue
+      spans.claim(csStart, csEnd);
+      addEntity("person", csLbl, csLbl, {}, "high", csStart, csEnd, ["prose name", "caps surname"]);
     }
 
     // 9d0. attach stashed prefixed identifiers (PNC/CRO/NINO/PPT) to people
@@ -1021,6 +1052,108 @@
       }
     });
 
+    // 9z. Fold "formerly known as / née / fka" into the preceding person — the
+    // alias name is the SAME individual, not a separate nominal. Moves any
+    // identifiers/status the phantom accrued onto the host and rewires links.
+    (function () {
+      var reFka = /\b(?:formerly\s+known\s+as|formerly|n[ée]e|f\.?k\.?a\.?)\s+([A-Z][\w'’.-]+(?:\s+(?:[a-zà-ÿ]+\s+)?[A-Z][\w'’.-]+)*)/gi;
+      var fm;
+      while ((fm = reFka.exec(text))) {
+        var aliasName = fm[1].replace(/\s+/g, " ").trim();
+        var nameAt = fm.index + fm[0].lastIndexOf(fm[1]);
+        var host = null, bestS = -1;
+        entities.forEach(function (e) {
+          if (e.type !== "person") return;
+          var sp0 = e.spans[0][0];
+          if (sp0 < fm.index && sp0 > bestS) { bestS = sp0; host = e; }
+        });
+        if (!host) continue;
+        var aliasEnt = entities.find(function (e) {
+          return e.type === "person" && e !== host && e.spans.some(function (sp) { return sp[0] >= nameAt - 1 && sp[1] <= nameAt + fm[1].length + 1; });
+        });
+        if (host.label !== aliasName) host.attrs.aka = host.attrs.aka ? (host.attrs.aka + "; " + aliasName) : aliasName;
+        if (aliasEnt && aliasEnt !== host) {
+          Object.keys(aliasEnt.attrs).forEach(function (k) {
+            if (k === "aka") return;
+            if ((k === "cmStatus" || k === "cmWarnings") && Array.isArray(host.attrs[k]) && Array.isArray(aliasEnt.attrs[k])) {
+              aliasEnt.attrs[k].forEach(function (c) { if (host.attrs[k].indexOf(c) === -1) host.attrs[k].push(c); });
+            } else if (host.attrs[k] === undefined) { host.attrs[k] = aliasEnt.attrs[k]; }
+          });
+          relationships.forEach(function (rl) {
+            if (rl.sourceRef === aliasEnt.ref) rl.sourceRef = host.ref;
+            if (rl.targetRef === aliasEnt.ref) rl.targetRef = host.ref;
+          });
+          var seen = {};
+          relationships = relationships.filter(function (rl) {
+            if (rl.sourceRef === rl.targetRef) return false;
+            var kk = rl.sourceRef + "|" + rl.targetRef + "|" + rl.type;
+            if (seen[kk]) return false; seen[kk] = 1; return true;
+          });
+          aliasEnt.spans.forEach(function (sp) { host.spans.push(sp); });
+          entities = entities.filter(function (e) { return e !== aliasEnt; });
+        }
+      }
+    })();
+
+    var corefSpanKeys = {};   // spans added by coreference — excluded from SVO subject/object resolution
+    var pronounSpanKeys = {}; // object-pronoun coref spans — usable as targets, never as a clause SUBJECT
+    /* ---- 11b. Lightweight coreference: bare-surname second mentions ----
+     * Register standalone surname occurrences as extra spans/mentions of the
+     * matching person so relationship inference connects them. Ambiguous
+     * surnames (two people share one) resolve to the document subject. */
+    (function () {
+      function surnameOf(lbl) {
+        var toks = String(lbl).split(/\s+/), sn = null;
+        for (var i = toks.length - 1; i >= 0; i--) { if (/^[A-Z][A-Z'’-]{1,}$/.test(toks[i])) { sn = toks[i]; break; } }
+        return sn;
+      }
+      function escapeRe(x) { return x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+      var bySurname = {};
+      entities.forEach(function (e) {
+        if (e.type !== "person") return;
+        var sn = surnameOf(e.label);
+        if (!sn || sn.length < 3) return;                 // need a distinctive surname
+        (bySurname[sn] = bySurname[sn] || []).push(e);
+      });
+      var primaryC = (typeof mainPerson === "function") ? mainPerson() : null;
+      Object.keys(bySurname).forEach(function (sn) {
+        var cands = bySurname[sn], ent = null;
+        if (cands.length === 1) ent = cands[0];
+        else if (primaryC && cands.indexOf(primaryC) !== -1) ent = primaryC;  // ambiguous -> the subject
+        if (!ent) return;
+        var re = new RegExp("\\b" + escapeRe(sn) + "\\b", "g"), mm;
+        while ((mm = re.exec(text))) {
+          var s0 = mm.index, e0 = mm.index + sn.length;
+          if (ent.spans.some(function (sp) { return s0 >= sp[0] && e0 <= sp[1]; })) continue;  // own full-name mention
+          if (spans.overlaps(s0, e0)) continue;                                                 // claimed elsewhere
+          if (/(?:the|a|an|this|that)\s+$/i.test(text.slice(Math.max(0, s0 - 5), s0))) continue;      // "the WOOD" is a common noun, not the surname
+          ent.spans.push([s0, e0]); corefSpanKeys[ent.ref + ":" + s0 + ":" + e0] = 1;
+        }
+      });
+    })();
+
+    /* ---- 11c. Pronoun coreference (object pronouns, directed prepositions) ----
+     * Resolve "to/with/from/for him|her|them" to the nearest preceding person
+     * mention so directed relations (transfers, comms) connect to a person, not
+     * a dangling pronoun. Conservative: object forms only, proximity-bounded. */
+    (function () {
+      var ps = [];
+      entities.forEach(function (e) { if (e.type === "person") e.spans.forEach(function (sp) { ps.push({ e: e, s: sp[0], en: sp[1] }); }); });
+      var rePro = /\b(?:to|with|from|for|by|alongside)\s+(him|her|them)\b/gi, pm;
+      while ((pm = rePro.exec(text))) {
+        var pAt = pm.index + pm[0].length - pm[1].length;
+        var best = null;
+        for (var i = 0; i < ps.length; i++) {
+          if (ps[i].en <= pAt && (pAt - ps[i].en) < 320 && (!best || ps[i].en > best.en)) best = ps[i];
+        }
+        if (!best) continue;
+        var s0 = pAt, e0 = pAt + pm[1].length;
+        if (best.e.spans.some(function (sp) { return s0 >= sp[0] && e0 <= sp[1]; })) continue;
+        if (spans.overlaps(s0, e0)) continue;
+        best.e.spans.push([s0, e0]); corefSpanKeys[best.e.ref + ":" + s0 + ":" + e0] = 1; pronounSpanKeys[best.e.ref + ":" + s0 + ":" + e0] = 1;
+      }
+    })();
+
     /* ---- 12. Relationship inference (sentence-scoped verb cues) ---- */
     // Sentence boundaries: . ! ? or newline — but never inside a claimed entity
     // span (emails and addresses contain dots).
@@ -1108,7 +1241,10 @@
       }
 
       var persons = entitiesInRange(s0, s1, "person");
-      var subject = persons[0] || null;
+      function _nonPronounSubj(p) {
+        return p.spans.some(function (sp) { return sp[0] >= s0 && sp[1] <= s1 && !pronounSpanKeys[p.ref + ":" + sp[0] + ":" + sp[1]]; });
+      }
+      var subject = persons.filter(_nonPronounSubj)[0] || null;   // a pronoun-only mention is a target, not the subject
       var carried = false;
       // A person is the discourse SUBJECT only if it opens the sentence (subject
       // position), not if it merely appears (e.g. an object "...frequented by WALSH").
@@ -1176,6 +1312,7 @@
         var entRanges = [];
         entities.forEach(function (ent) {
           ent.spans.forEach(function (sp) {
+            if (corefSpanKeys[ent.ref + ":" + sp[0] + ":" + sp[1]]) return;   // coref mentions don't drive SVO clauses
             if (sp[0] >= s0 && sp[1] <= s1) {
               entRanges.push({ start: sp[0] - s0, end: sp[1] - s0, type: ent.type, _ent: ent });
             }
@@ -1208,6 +1345,16 @@
           } else {
             subjEnt = carrySubject;        // inherited/elided subject -> salient subject / principal
           }
+          // Appositive/subject-position correction: a carried (cross-sentence) subject
+          // must yield to a person sitting in THIS sentence before the verb, e.g.
+          // "A known associate, Maria van der BERG, transferred EUR 4,000 ...".
+          if (!subjEnt || subjEnt === carrySubject) {
+            var _vS = cl.verb.start, _near = null;
+            entRanges.forEach(function (rg) {
+              if (rg._ent.type === "person" && rg.end <= _vS && (!_near || rg.end > _near.end)) _near = rg;
+            });
+            if (_near) subjEnt = _near._ent;
+          }
           if (subjEnt) lastPerson = subjEnt;
           var vAbs = [s0 + cl.verb.start, s0 + cl.verb.end];
 
@@ -1228,6 +1375,15 @@
             return;
           }
           if (!subjEnt) return;
+
+          // "a known associate/criminal/..." is an adjectival noun phrase, not the
+          // verb "to know" — don't mint an ASSOCIATE_OF from it.
+          if (cl.verb.lemma === "know") {
+            var _vb = text.slice(Math.max(0, vAbs[0] - 8), vAbs[0]);
+            var _va = text.slice(vAbs[1], vAbs[1] + 20);
+            if (/\b(?:a|an|the|that|this)\s*$/i.test(_vb) ||
+                /^\s*,?\s+(?:associate|accomplice|criminal|offender|figure|nominal|dealer|smuggler|trafficker|fugitive|contact|individual|subject)\b/i.test(_va)) return;
+          }
 
           cl.objects.forEach(function (ob) {
             if (ob.kind !== "entity") return;
@@ -1311,7 +1467,10 @@
 
         locs.forEach(function (lc) {
           if (hasRelBetween(subject, lc)) return;
-          var lcStart = lc.spans[lc.spans.length - 1][0];
+          // use the FIRST mention of this location within THIS sentence — a later
+          // mention (e.g. the same city inside a hotel address) has no travel cue.
+          var _inSent = lc.spans.filter(function (sp) { return sp[0] >= s0 && sp[1] <= s1; });
+          var lcStart = (_inSent[0] || lc.spans[lc.spans.length - 1])[0];
           var dep = cueSpanBefore(departFrom, lcStart);
           var trv = cueSpanBefore(travelTo, lcStart);
           if (dep && (!trv || dep[0] > trv[0])) {
@@ -1374,7 +1533,7 @@
 
         // Person ↔ person in same sentence
         var meetRe = /\b(met|meets?|meeting|contacted|called|messaged|associates?\s+(?:of|with)|linked\s+to|brother|sister|wife|husband|partner)\b/i;
-        var commRe = /\b(liaison\s+with|liais(?:e|ing)\s+with|messag(?:ing|ed)|encrypted\s+messaging|whatsapp(?:ed)?|texted|in\s+contact\s+with)\b/i;
+        var commRe = /\b(liaison\s+with|liais(?:e|ing)\s+with|communicat(?:ed|ing|es)?\s+with|messag(?:ing|ed)|encrypted\s+messaging|whatsapp(?:ed)?|texted|in\s+contact\s+with)\b/i;
         var meetSpan = cueSpan(meetRe);
         var commSpan = cueSpan(commRe);
         for (var i = 1; i < persons.length; i++) {
@@ -1505,7 +1664,7 @@
         var octx = text.slice(Math.max(0, _sS), _sE);
         var orow = text.slice(ols < 0 ? 0 : ols + 1, Math.min(text.length, osp[1] + 90));
         var _own = /\b(?:director(?:ship)?s?|PSC|owner|proprietor|sole\s+trader|founder)\b/i.test(octx);
-        var _emp = /\b(?:employer|employment|payroll|PAYE\s*ref|employed\s+by|works?\s+for)\b/i.test(octx);
+        var _emp = /\b(?:employer|employment|payroll|PAYE\s*ref)\b/i.test(octx) || /\b(?:employed\s+by|works?\s+for)\s*$/i.test(text.slice(Math.max(0, osp[0] - 30), osp[0]));
         if ((_own || _emp) && !/\b(?:lender|loan|credit\s+agreement|bank\s+statement)\b/i.test(orow)) {
           if (_own) addRelDirect(primary, org, "OWNS", "med", octx.trim().slice(0, 140) || "directorship", "directorship");
           else linkFrom(org, "EMPLOYS", primary, "med", orow.trim().slice(0, 140) || "structured employment");
@@ -1514,7 +1673,7 @@
 
       // Associations sections: link people that appear at/after the header to
       // the subject — typed FAMILY_OF when their row says so.
-      var assocRe = /\b(?:ASSOCIATED\s+SUBJECTS|ASSOCIATES?\b|ASSOCIATIONS?\b|Associated\s+name|Linked\s*\/\s*Associated\s+Individuals|Co-Travellers?\b|Passengers\s+on\s+PNR)/i;
+      var assocRe = /\b(?:ASSOCIATED\s+SUBJECTS|ASSOCIATES?\b|ASSOCIATIONS?\b|Associated\s+name|Linked\s*\/\s*Associated\s+Individuals|Co-Travellers?\b|Passengers\s+on\s+PNR)/;
       var assocIdx = text.search(assocRe);
       if (assocIdx !== -1) {
         entities.filter(function (e) { return e.type === "person" && e !== primary; }).forEach(function (p) {
@@ -1934,6 +2093,87 @@
             break;
           }
         }
+      }
+    })();
+
+    // 9z2. Prose kinship: "his/her/their <kin>, <Person>" -> FAMILY_OF(subject, person).
+    (function () {
+      var reKin = /\b(?:his|her|their)\s+(?:elder\s+|younger\s+|half[- ])?(brother|sister|mother|father|son|daughter|wife|husband|partner|cousin|sibling|spouse|nephew|niece|uncle|aunt)\b[\s,]+([A-Z][\w'’.-]+(?:\s+(?:[a-zà-ÿ]+\s+)?[A-Z][\w'’.-]+)*)/gi;
+      var km;
+      while ((km = reKin.exec(text))) {
+        var kinAt = km.index + km[0].lastIndexOf(km[2]);
+        var kinEnt = entities.find(function (e) { return e.type === "person" && e.spans.some(function (sp) { return sp[0] >= kinAt - 1 && sp[1] <= kinAt + km[2].length + 1; }); });
+        if (!kinEnt) continue;
+        var subj = null, kbest = -1;
+        entities.forEach(function (e) { if (e.type !== "person" || e === kinEnt) return; var s0 = e.spans[0][0]; if (s0 < km.index && s0 > kbest) { kbest = s0; subj = e; } });
+        var primaryK = (typeof mainPerson === "function") ? mainPerson() : null;   // his/her/their -> the document subject
+        if (primaryK && primaryK !== kinEnt) subj = primaryK;
+        if (subj && subj !== kinEnt && !hasRelBetween(subj, kinEnt)) addRel(subj, kinEnt, "FAMILY_OF", "med", km[0].replace(/\s+/g, " ").trim().slice(0, 140), "kinship cue");
+      }
+    })();
+
+    // 9z3. Org <-> org "associated with": ASSOCIATE_OF between the orgs either side.
+    (function () {
+      var reOA = /\bassociated\s+with\b/gi, oam;
+      while ((oam = reOA.exec(text))) {
+        var before = null, bb = -1, after = null, ab = Infinity;
+        entities.forEach(function (e) {
+          if (e.type !== "organisation") return;
+          var sp = e.spans[0];
+          if (sp[1] <= oam.index && sp[1] > bb) { bb = sp[1]; before = e; }
+          if (sp[0] >= oam.index + oam[0].length && sp[0] < ab) { ab = sp[0]; after = e; }
+        });
+        if (before && after && before !== after && !hasRelBetween(before, after) &&
+            (oam.index - bb) < 60 && (ab - (oam.index + oam[0].length)) < 60) {
+          addRelDirect(before, after, "ASSOCIATE_OF", "med", text.slice(bb, Math.min(text.length, ab + 24)).replace(/\s+/g, " ").trim().slice(0, 140), "association cue");
+        }
+      }
+    })();
+
+    // 9z4. "staying/resides at [the hotel] <address>" -> Address entity + STAYS_AT.
+    // Capture up to a phone/contact cue or line end, then trim at a real
+    // sentence boundary (>=2 lowercase + ". X") so "C. Maestranza" is kept whole.
+    (function () {
+      var reStay = /\b(?:stay(?:ing|ed|s)?|resid\w+|lodg\w+|living|based|holed\s+up|put\s+up)\s+at\s+(?:the\s+)?(?:hotel|address|property|flat|apartment|premises|house|villa|hostel)?\s*([A-ZÀ-Ý0-9][^\n]*?)(?=\s*,?\s*(?:tel(?:ephone)?\b|phone\b|mob(?:ile)?\b|contact\b|\+\d|\bon\s+\d{2}|\n|$))/gi;
+      var sm;
+      while ((sm = reStay.exec(text))) {
+        var raw = sm[1];
+        var addr = raw.replace(/\s+/g, " ").trim();
+        var cut = addr.match(/^(.*?[A-Za-z0-9à-ÿ]{2,})\.\s+[A-Z]/);   // sentence end after a >=2-char token (incl. postcode); single-letter "C." kept
+        if (cut) addr = cut[1];
+        addr = addr.replace(/[,.;:\s]+$/, "");
+        if (addr.length < 6) continue;
+        if (!/[0-9]/.test(addr) && (addr.match(/,/g) || []).length < 1) continue; // address-like
+        var aS = sm.index + sm[0].lastIndexOf(raw), aE = aS + addr.length;
+        // an address legitimately contains already-claimed city/country nodes,
+        // so do NOT skip on overlap — just register it as its own entity.
+        spans.claim(aS, aE);
+        var adEnt = addEntity("address", addr, addr, { kind: "address" }, "high", aS, aE, ["stay address"]);
+var subjA = null, sb = -1;
+        entities.forEach(function (e) { if (e.type !== "person") return; e.spans.forEach(function (sp) { if (sp[1] <= aS && sp[1] > sb) { sb = sp[1]; subjA = e; } }); });
+        if (!subjA) subjA = (typeof mainPerson === "function" && mainPerson()) || entities.find(function (e) { return e.type === "person"; });
+        if (subjA && adEnt && !hasRelBetween(subjA, adEnt)) addRel(subjA, adEnt, "STAYS_AT", "med", sm[0].replace(/\s+/g, " ").trim().slice(0, 140), "stay cue");
+      }
+    })();
+
+    // 9z4b. Comma-structured foreign address ending in a known country, with no
+    // stay cue — "Calle Mayor 5, 28013 Madrid, Spain". Tightly guarded: >=2
+    // comma segments and a digit (street no./postcode) to avoid prose like
+    // "a friend in Madrid, Spain".
+    (function () {
+      var countries = "Spain|France|Germany|Italy|Portugal|Netherlands|Belgium|Ireland|Switzerland|Austria|Poland|Greece|Turkey|Morocco|Romania|Bulgaria|Croatia|Serbia|Norway|Sweden|Denmark|Finland|Cyprus|Malta|Luxembourg|Hungary|United Arab Emirates|United States|Canada|Australia";
+      var reAddr = new RegExp("\\b([A-Z0-9][^\\n,]{2,40}(?:,\\s*[^\\n,]{1,45}){1,4},\\s*(?:" + countries + "))\\b", "g");
+      var am;
+      while ((am = reAddr.exec(text))) {
+        var raw = am[1];
+        if (!/[0-9]/.test(raw) || raw.length < 10) continue;              // need a number; address-like length
+        var lead = raw.search(/(?:\b\d+\s+[A-ZÀ-Ý]|\b(?:Calle|C\/|Rue|Via|Viale|Piazza|Avenida|Av\.?|Avenue|Plaza|Carrer|Carretera|Camino|Paseo|Stra(?:ss|ß)e|Rua|Pra[çc]a|Ulica)\b)/);
+        if (lead < 0) continue;                                            // no identifiable street start -> not confidently an address
+        var aS = am.index + lead, aE = am.index + raw.length;
+        var addr = raw.slice(lead).replace(/\s+/g, " ").trim();
+        var covered = entities.some(function (e) { return e.type === "address" && e.spans.some(function (sp) { return sp[0] <= aS + 2 && sp[1] >= aE - 2; }); });
+        if (covered) continue;                                             // already captured (e.g. via stay cue)
+        addEntity("address", addr, addr, { kind: "address" }, "med", aS, aE, ["country-anchored address"]);
       }
     })();
 

@@ -295,6 +295,17 @@
     return label;
   }
 
+  /* soft-wrap a tooltip string to ~width chars per line on word boundaries */
+  function wrapTip(text, width) {
+    text = String(text || "");
+    var words = text.split(/\s+/), out = [], line = "";
+    for (var i = 0; i < words.length; i++) {
+      if (line && (line.length + 1 + words[i].length) > width) { out.push(line); line = words[i]; }
+      else { line = line ? line + " " + words[i] : words[i]; }
+    }
+    if (line) out.push(line);
+    return out.join("\n");
+  }
   function edgeFromLink(l) {
     var arrows = "";
     if (l.direction === "->") arrows = "to";
@@ -309,7 +320,7 @@
       _tip = ((St && St.linkMeta) ? St.linkMeta(l.type).label : l.type.replace(/_/g, " "));
       if (l.dateISO) _tip += " — " + U.fmtDate(l.dateISO);
     }
-    e.title = _tip;
+    e.title = wrapTip(_tip, 58);
     return e;
   }
 
