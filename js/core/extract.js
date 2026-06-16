@@ -1736,21 +1736,8 @@
        places to each other (origin + transit/return airports connected). ---- */
     (function () {
       function paraOf(pos) { return (text.slice(0, pos).match(/\n\s*\n/g) || []).length; }
-      var byPara = {};
-      relationships.forEach(function (r) {
-        if (r.type !== "TRAVELS_TO" && r.type !== "DEPARTS_FROM") return;
-        var loc = entities.find(function (e) { return e.ref === r.targetRef && e.type === "location"; });
-        if (!loc || !loc.spans || !loc.spans.length) return;
-        var pi = paraOf(loc.spans[0][0]);
-        byPara[pi] = byPara[pi] || [];
-        if (byPara[pi].indexOf(loc) === -1) byPara[pi].push(loc);
-      });
-      Object.keys(byPara).forEach(function (pi) {
-        var ls = byPara[pi];
-        for (var a = 0; a < ls.length; a++)
-          for (var b = a + 1; b < ls.length; b++)
-            addRelDirect(ls[a], ls[b], "JOURNEY_WITH", "med", "same journey", "journey");
-      });
+      // JOURNEY_WITH (pairing every location in a paragraph) was removed: it
+      // produced low-value airport<->destination links that cluttered the chart.
       // A dated departure dates the flight: copy a DEPARTS_FROM date onto a dateless
       // TRAVELS_TO whose destination is an AIRPORT in the same journey/paragraph.
       relationships.forEach(function (dr) {

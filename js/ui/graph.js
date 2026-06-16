@@ -207,6 +207,10 @@
       var _dl = cmDisplayLabel(e);
       var _bd = nodeBadges(e);
       var _lt = U.truncate(_dl, 26);
+      if (e.type === "person" && e.attrs && e.attrs.dob) {
+        var _dob = St ? St.ddmmyyyy(e.attrs.dob) : e.attrs.dob;
+        if (_dob) _lt += "\nDOB " + _dob;
+      }
       if (_bd.lines.length) _lt += "\n" + _bd.lines.join("\n");
       n.label = _lt;
       if (_bd.warn && !(hlSet && !hlSet[e.id])) {
@@ -300,6 +304,12 @@
     e.id = l.id; e.from = l.from; e.to = l.to;
     e.label = edgeLabel(l);
     e.arrows = arrows;
+    var _tip = l.sentence ? String(l.sentence).trim() : "";
+    if (!_tip) {
+      _tip = ((St && St.linkMeta) ? St.linkMeta(l.type).label : l.type.replace(/_/g, " "));
+      if (l.dateISO) _tip += " — " + U.fmtDate(l.dateISO);
+    }
+    e.title = _tip;
     return e;
   }
 

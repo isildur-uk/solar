@@ -37,6 +37,11 @@
     else showLink(sel.id);
   }
 
+  var ATTR_LABEL = { dob: "DOB", aka: "AKA", pnc: "PNC", cro: "CRO", nino: "NINO", vat: "VAT", vin: "VIN",
+    iccid: "ICCID", imei: "IMEI", ip: "IP", companyNumber: "Company No.", sortCode: "Sort code",
+    regFormat: "Reg. format", cc: "Country", iata: "IATA", colour: "Colour", make: "Make", model: "Model" };
+  function attrLabel(k) { return ATTR_LABEL[k] || (k.charAt(0).toUpperCase() + k.slice(1)); }
+  function attrValue(k, v) { return (k === "dob" && window.CRStandards) ? (window.CRStandards.ddmmyyyy(v) || v) : v; }
   var CHIP = "display:inline-block;padding:2px 7px;margin:2px 3px 0 0;border:1px solid #3a4a5e;border-radius:10px;background:#1b2735;color:#e8b34b;font-size:11px;cursor:pointer";
   function cmTermBlock(title, kind, codes, vocab) {
     var chips = codes.map(function (c) {
@@ -70,7 +75,7 @@
     var rows = "";
     Object.keys(e.attrs).forEach(function (k) {
       if (k[0] === "_" || k === "cmStatus" || k === "cmWarnings" || k === "cm" || k === "cmValid" || k === "cmDate") return;
-      rows += "<tr><td>" + U.esc(k) + "</td><td>" + U.esc(e.attrs[k]) + "</td></tr>";
+      rows += "<tr><td>" + U.esc(attrLabel(k)) + "</td><td>" + U.esc(attrValue(k, e.attrs[k])) + "</td></tr>";
     });
     if (e.ids && e.ids.e164) rows += "<tr><td>E.164</td><td>" + U.esc(e.ids.e164) + "</td></tr>";
     if (e.ids && e.ids.email) rows += "<tr><td>canonical</td><td>" + U.esc(e.ids.email) + "</td></tr>";
