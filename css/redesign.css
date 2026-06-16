@@ -24,8 +24,8 @@ input[type="text"], input[type="search"], textarea,
   letter-spacing: 0.22em;
 }
 #topbar {
-  background: rgba(16, 16, 14, 0.66);
-  -webkit-backdrop-filter: blur(16px) saturate(1.1); backdrop-filter: blur(16px) saturate(1.1);
+  position: relative; z-index: 100;            /* stacking context above the chart */
+  background: rgba(14, 14, 12, 0.96);          /* solid bar — backdrop-filter would clip the dropdowns */
   border-bottom: 1px solid var(--line);
 }
 #side {
@@ -219,7 +219,6 @@ details.menu[open] > summary {
   display: inline-flex; flex-direction: row; align-items: center;
   gap: 6px; z-index: auto;
 }
-#chart-tools .btn { font-size: 12px; padding: 6px 11px; }
 @media (max-width: 760px) {
   body.mobile-mode #chart-tools,
   #chart-tools {
