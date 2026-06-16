@@ -24,6 +24,8 @@
           (typeof require === "function" ? require("./geo.js") : null);
   var L = (typeof window !== "undefined" && window.CRLang) ||
           (typeof require === "function" ? require("./lang.js") : null);
+  var St = (typeof window !== "undefined" && window.CRStandards) ||
+          (typeof require === "function" ? require("./cm-standards.js") : null);
 
   var MONTHS = {
     jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3, apr: 4, april: 4,
@@ -164,8 +166,40 @@
         attrs: attrs || {}, confidence: confidence,
         spans: [[start, end]], flags: flags || [], _canon: canon
       };
+      cmEnrich(ent, start, end);
       entities.push(ent);
       return ent;
+    }
+
+    // CM enrichment: standardise/validate into attrs + tag recognised terms.
+    // Additive only — never alters label/value/_canon (matching + dedup safe).
+    function cmEnrich(ent, start, end) {
+      if (!St) return;
+      var a = ent.attrs || (ent.attrs = {});
+      try {
+        if (ent.type === "person") {
+          var ctx = text.slice(Math.max(0, (start || 0) - 140), Math.min(text.length, (end || 0) + 140));
+          if (ctx) {
+            var st = St.detectStatus(ctx).map(function (x) { return x.code; });
+            var wn = St.detectWarningSignals(ctx).map(function (x) { return x.code; });
+            if (st.length && !a.cmStatus) a.cmStatus = st;
+            if (wn.length && !a.cmWarnings) a.cmWarnings = wn;
+          }
+        } else if (ent.type === "phone") {
+          if (a.kind !== "IMEI") a.cm = St.phoneCM(ent.value || ent.label);
+        } else if (ent.type === "vehicle") {
+          var vv = ent.value || ent.label;
+          a.cm = St.identifiers.vrm.freeText(vv); a.cmValid = St.identifiers.vrm.validate(vv);
+        } else if (ent.type === "money") {
+          a.cm = St.currencyCM(ent.label);
+        } else if (ent.type === "ip") {
+          a.cm = St.identifiers.ip.freeText(ent.label); a.cmValid = St.identifiers.ip.validate(ent.label);
+        } else if (ent.type === "account") {
+          a.cm = St.identifiers.account.freeText(ent.value || ent.label);
+        } else if (ent.type === "date") {
+          if (a.iso) a.cmDate = St.ddmmyyyy(a.iso);
+        }
+      } catch (e) { /* enrichment must never break extraction */ }
     }
 
     function canonicalValue(type, v) {

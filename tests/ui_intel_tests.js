@@ -24,7 +24,7 @@ window.matchMedia = () => ({ matches: false, addEventListener(){}, removeEventLi
 
 // capture downloads
 const downloads = [];
-const scripts = ["js/core/match.js","js/core/format.js","js/core/geo.js","js/core/lang.js",
+const scripts = ["js/core/match.js","js/core/cm-vocab.js","js/core/cm-standards.js","js/core/format.js","js/core/geo.js","js/core/lang.js",
   "js/core/extract.js","js/core/model.js","js/core/docxzip.js",
   "js/ui/util.js","js/ui/profiles.js","js/ui/intelexport.js"];
 for (const s of scripts) {
@@ -71,7 +71,7 @@ const tk = window.CRProfiles.shortTokens(s);
 T("token NAME_DOB", tk.NAME_DOB === "Geoff BAINES DOB 20/12/2000");
 T("token SURNAME caps", tk.SURNAME === "BAINES");
 T("token VRM list", /VRM VK21ABC/.test(tk.VEH_VRM_LIST));
-T("token comm +format", /\+07686868686 \(mobile\)/.test(tk.COMM_IDS));
+T("token comm CM format (no +)", /07686868686 \(Mobile\)/.test(tk.COMM_IDS) && tk.COMM_IDS.indexOf("+0") === -1);
 T("token PNC", tk.PNC === "95/11112R");
 
 // real docx fill with these tokens

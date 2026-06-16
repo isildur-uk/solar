@@ -177,14 +177,18 @@
 
   function exportI2Pack() {
     var T = window.CRModel.ENTITY_TYPES;
+    var St = window.CRStandards;
+    function stLabel(c) { var h = St && St.statusByCode && St.statusByCode(c); return h ? h.label : c; }
+    function wnLabel(c) { var h = St && St.warningByCode && St.warningByCode(c); return h ? h.label : c; }
+    var dirMap = { "->": "End 1 to End 2", "<-": "End 2 to End 1", "both": "Both" };
     var ents = [["Identity", "Label", "Entity Type", "Semantic Type", "Description",
       "Grade 1 (Source)", "Grade 2 (Assessment)", "Grade 3 (Handling)", "Source Reference",
-      "Date of Birth", "Attributes"]];
+      "Date of Birth", "Status", "Warning Signals", "Attributes"]];
     store.entities.forEach(function (e) {
       if (e.type === "note") return;
       var ty = T[e.type] || {};
       var prov = e.provenance || {};
-      var attrs = Object.keys(e.attrs || {}).filter(function (k) { return k[0] !== "_"; })
+      var attrs = Object.keys(e.attrs || {}).filter(function (k) { return k[0] !== "_" && k !== "cmStatus" && k !== "cmWarnings" && k !== "cm" && k !== "cmValid" && k !== "cmDate"; })
         .map(function (k) { return k + "=" + e.attrs[k]; }).join("; ");
       ents.push([
         (e.ids && (e.ids.e164 || e.ids.email)) || e.label,   // i2 Identity (unique, canonical)
@@ -195,22 +199,27 @@
         prov.source || "", prov.assessment || "", prov.handling || "",
         prov.sourceRef || "",
         e.attrs && e.attrs.dob ? F.ddmmyyyy(e.attrs.dob) : "",
+        (e.attrs && e.attrs.cmStatus) ? e.attrs.cmStatus.map(stLabel).join("; ") : "",
+        (e.attrs && e.attrs.cmWarnings) ? e.attrs.cmWarnings.map(wnLabel).join("; ") : "",
         attrs
       ]);
     });
-    var lnks = [["End 1 Identity", "End 2 Identity", "Link Type", "Direction",
+    var lnks = [["End 1 Identity", "End 2 Identity", "Link Type", "Semantic Type", "Direction",
       "Line Strength", "Date", "Label", "Description"]];
     store.links.forEach(function (l) {
       var a = store.getEntity(l.from), b = store.getEntity(l.to);
       if (!a || !b || a.type === "note" || b.type === "note") return;
+      var lm = (St && St.linkMeta) ? St.linkMeta(l.type) : null;
+      var ltype = (lm && lm.label) || l.type.replace(/_/g, " ");
       lnks.push([
         (a.ids && (a.ids.e164 || a.ids.email)) || a.label,
         (b.ids && (b.ids.e164 || b.ids.email)) || b.label,
-        l.type.replace(/_/g, " "),
-        "End 1 to End 2",
+        ltype,
+        l.sem || (lm && lm.sem) || "",
+        dirMap[l.direction] || "None",
         l.negated ? "Tentative" : (STRENGTH[l.confidence] || "Unconfirmed"),
         l.dateISO ? F.ddmmyyyy(l.dateISO) : "",
-        l.type.replace(/_/g, " ") + (l.amount ? " " + l.amount : "") + (l.negated ? " (denied)" : ""),
+        ltype + (l.amount ? " " + l.amount : "") + (l.negated ? " (denied)" : ""),
         l.sentence || ""
       ]);
     });
@@ -224,6 +233,8 @@
       "2. links.csv — import second, as links between existing entities:",
       "   End 1 / End 2 Identity columns → the two link ends; Direction 'End 1 to End 2';",
       "   Line Strength column → Confirmed (solid) / Unconfirmed (dashed) / Tentative (dotted).",
+      "   Semantic Type column → the i2 link semantic type; Direction is End 1 to End 2 / Both / None.",
+      "   Entities carry Status and Warning Signals columns from the CM recognised-term sets.",
       "3. Dates are DD/MM/YYYY (custom format dd/MM/yyyy in the wizard).",
       "4. Grading is NCA 3x5x2: Source 1-3, Assessment A-E, Handling P/C.",
       "Verify the first few rows after import — identities must be unique per entity."

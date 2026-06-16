@@ -37,6 +37,21 @@
     else showLink(sel.id);
   }
 
+  var CHIP = "display:inline-block;padding:2px 7px;margin:2px 3px 0 0;border:1px solid #3a4a5e;border-radius:10px;background:#1b2735;color:#e8b34b;font-size:11px;cursor:pointer";
+  function cmTermBlock(title, kind, codes, vocab) {
+    var chips = codes.map(function (c) {
+      var lbl = (vocab.filter(function (v) { return v.code === c; })[0] || {}).label || c;
+      return '<span class="cm-chip" data-kind="' + kind + '" data-code="' + U.escAttr(c) + '" title="click to remove" style="' + CHIP + '">' + U.esc(lbl) + ' \u2715</span>';
+    }).join("");
+    var opts = '<option value="">+ add ' + U.esc(title.toLowerCase()) + '</option>' +
+      vocab.filter(function (v) { return codes.indexOf(v.code) === -1; }).map(function (v) {
+        return '<option value="' + U.escAttr(v.code) + '">' + U.esc(v.label) + '</option>';
+      }).join("");
+    return '<div class="cm-term" style="margin:4px 0">' +
+      '<div style="color:#76879b;font-size:11px;margin:4px 0 2px">' + U.esc(title) + '</div>' +
+      '<div class="cm-chips">' + (chips || '<span style="color:#5a6878">none</span>') + '</div>' +
+      '<select class="cm-add" data-kind="' + kind + '" aria-label="add ' + U.escAttr(title) + '" style="margin-top:3px">' + opts + '</select></div>';
+  }
   function provSelect(id, opts, val, label) {
     return '<select id="' + id + '" aria-label="' + U.escAttr(label) + '">' +
       opts.map(function (o) {
@@ -54,13 +69,25 @@
     // attributes
     var rows = "";
     Object.keys(e.attrs).forEach(function (k) {
-      if (k[0] === "_") return;
+      if (k[0] === "_" || k === "cmStatus" || k === "cmWarnings" || k === "cm" || k === "cmValid" || k === "cmDate") return;
       rows += "<tr><td>" + U.esc(k) + "</td><td>" + U.esc(e.attrs[k]) + "</td></tr>";
     });
     if (e.ids && e.ids.e164) rows += "<tr><td>E.164</td><td>" + U.esc(e.ids.e164) + "</td></tr>";
     if (e.ids && e.ids.email) rows += "<tr><td>canonical</td><td>" + U.esc(e.ids.email) + "</td></tr>";
     if (e.geo) rows += "<tr><td>coords</td><td>" + U.esc(e.geo.lat.toFixed(4) + ", " + e.geo.lon.toFixed(4)) + "</td></tr>";
     if (rows) html += '<div class="sec">Attributes</div><table>' + rows + "</table>";
+
+    // CM — recognised terms + canonical string
+    var St2 = window.CRStandards;
+    if (St2) {
+      var cmHtml = "";
+      if (e.attrs.cm) cmHtml += '<table><tr><td>CM</td><td>' + U.esc(e.attrs.cm) + '</td></tr></table>';
+      if (e.type === "person") {
+        cmHtml += cmTermBlock("Status of subject", "status", e.attrs.cmStatus || [], St2.STATUS_OF_SUBJECT);
+        cmHtml += cmTermBlock("Warning signals", "warn", e.attrs.cmWarnings || [], St2.WARNING_SIGNALS);
+      }
+      if (cmHtml) html += '<div class="sec">CM — recognised terms</div>' + cmHtml;
+    }
 
     // provenance 3×5×2: source evaluation 1–3, assessment A–E, handling P/C
     var F = window.CRFormat;
@@ -146,6 +173,29 @@
     var condEl2 = U.el("prov-conditions");
     if (condEl2) condEl2.addEventListener("change", saveProv);
     U.el("prov-ref").addEventListener("change", saveProv);
+
+    function cmAttrKey(kind) { return kind === "status" ? "cmStatus" : "cmWarnings"; }
+    function cmSave(kind, codes) {
+      var a2 = {}; Object.keys(e.attrs).forEach(function (k) { a2[k] = e.attrs[k]; });
+      if (codes.length) a2[cmAttrKey(kind)] = codes; else delete a2[cmAttrKey(kind)];
+      store.snapshot();
+      store.updateEntity(id, { attrs: a2 }, "CM " + kind + " updated");
+    }
+    document.querySelectorAll(".cm-add").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var kind = sel.getAttribute("data-kind"), code = sel.value;
+        if (!code) return;
+        var cur = (e.attrs[cmAttrKey(kind)] || []).slice();
+        if (cur.indexOf(code) === -1) cur.push(code);
+        cmSave(kind, cur);
+      });
+    });
+    document.querySelectorAll(".cm-chip").forEach(function (ch) {
+      ch.addEventListener("click", function () {
+        var kind = ch.getAttribute("data-kind"), code = ch.getAttribute("data-code");
+        cmSave(kind, (e.attrs[cmAttrKey(kind)] || []).filter(function (x) { return x !== code; }));
+      });
+    });
 
     // media wiring
     var addBtn = U.el("insp-addphoto");

@@ -8,6 +8,12 @@
   "use strict";
 
   var U = window.CRUtil, F = window.CRFormat;
+  var St = window.CRStandards || null;
+  function _termLabels(codes, byCode) {
+    return (codes || []).map(function (c) { var h = St && St[byCode] && St[byCode](c); return h ? h.label : c; });
+  }
+  function statusLabels(e) { return _termLabels(e.attrs && e.attrs.cmStatus, "statusByCode"); }
+  function warningLabels(e) { return _termLabels(e.attrs && e.attrs.cmWarnings, "warningByCode"); }
   var store = null;
 
   function init(caseStore) { store = caseStore; }
@@ -92,6 +98,8 @@
       DESCRIPTION: a.description || "",
       LANGUAGES: a.languages || "",
       PNC: a.pnc || "",
+      STATUS: statusLabels(s.entity).join(", "),
+      WARNINGS: warningLabels(s.entity).join(", "),
       CRO: a.cro || "",
       DOC_PASSPORTS: a.passport || "",
       DOC_DL: a.drivingLicence || "",
@@ -175,6 +183,9 @@
       " is charted in Solar with " + (s.phones.length + s.emails.length) +
       " communication identifiers, " + s.addresses.length + " addresses and " +
       s.vehicles.length + " vehicles.");
+    var _st = statusLabels(s.entity), _wn = warningLabels(s.entity);
+    if (_st.length) bits.push("Status of subject: " + _st.join(", ") + ".");
+    if (_wn.length) bits.push("WARNING SIGNALS: " + _wn.join(", ") + ".");
     if (s.associates.length) {
       bits.push("Associates: " + s.associates.map(function (x) { return x.e.label; }).join(", ") + ".");
     }

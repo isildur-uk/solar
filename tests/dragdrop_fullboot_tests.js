@@ -21,7 +21,7 @@ function DataSet(){ const m=new Map(); return { add(x){(Array.isArray(x)?x:[x]).
 window.vis = { DataSet: DataSet, Network: function(){ return new Proxy({}, { get:(t,p)=>(t[p]||(t[p]=()=>{})) }); } };
 function Lobj(){ return new Proxy(function(){}, { get:(t,p)=>(t[p]||(t[p]=Lobj())), apply:()=>Lobj() }); } window.L = Lobj();
 window.Papa = { parse:(f,opt)=>{ opt&&opt.complete&&opt.complete({data:[],meta:{fields:[]}}); } };
-const order = ["js/core/match.js","js/core/format.js","js/core/docxzip.js","js/core/geo.js","js/core/lang.js","js/core/extract.js","js/core/model.js","js/core/fileread.js","js/ui/util.js","js/ui/icons.js","js/ui/graph.js","js/ui/mappane.js","js/ui/timeline.js","js/ui/review.js","js/ui/importer.js","js/ui/dragdrop.js","js/ui/inspector.js","js/ui/profiles.js","js/ui/intelexport.js","js/ui/app.js","js/ui/solar.js","js/ui/hero.js"];
+const order = ["js/core/match.js","js/core/cm-vocab.js","js/core/cm-standards.js","js/core/format.js","js/core/docxzip.js","js/core/geo.js","js/core/lang.js","js/core/extract.js","js/core/model.js","js/core/fileread.js","js/ui/util.js","js/ui/icons.js","js/ui/graph.js","js/ui/mappane.js","js/ui/timeline.js","js/ui/review.js","js/ui/importer.js","js/ui/dragdrop.js","js/ui/inspector.js","js/ui/profiles.js","js/ui/intelexport.js","js/ui/app.js","js/ui/solar.js","js/ui/hero.js"];
 for (const s of order) { try { window.eval(fs.readFileSync(base + "/" + s, "utf8")); } catch (e) { errors.push("load " + s + ": " + e.message); } }
 try { window.CRApp && window.CRApp.boot && window.CRApp.boot(); } catch (e) { errors.push("boot: " + e.message); }
 setTimeout(() => {

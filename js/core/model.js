@@ -36,6 +36,9 @@
   var F = (typeof window !== "undefined" && window.CRFormat) ||
           (typeof require === "function" ? require("./format.js") : null);
 
+  var St = (typeof window !== "undefined" && window.CRStandards) ||
+          (typeof require === "function" ? require("./cm-standards.js") : null);
+
   // NCA 3×5×2: source evaluation 1–3, intelligence assessment A–E, handling P/C
   function defaultProvenance() {
     return { source: "2", assessment: "C", handling: "P", conditions: "", sourceRef: "", gradedBy: "" };
@@ -102,6 +105,17 @@
     // canonical identifiers for exact matching
     if (e.type === "phone" && !e.ids.e164) e.ids.e164 = M.normalisePhone(e.label).e164;
     if (e.type === "email" && !e.ids.email) e.ids.email = M.normaliseEmail(e.label);
+    // CM canonical identifiers + recognised-term tagging (drives chart intelligence)
+    if (St) {
+      if (e.type === "vehicle" && !e.ids.vrm) e.ids.vrm = St.identifiers.vrm.canonical(e.label);
+      if (e.type === "person") {
+        var _ctx = [e.label, e.sourceText, e.attrs && e.attrs.notes].filter(Boolean).join(" ");
+        if (_ctx) {
+          if (!e.attrs.cmStatus) { var _st = St.detectStatus(_ctx).map(function (x) { return x.code; }); if (_st.length) e.attrs.cmStatus = _st; }
+          if (!e.attrs.cmWarnings) { var _wn = St.detectWarningSignals(_ctx).map(function (x) { return x.code; }); if (_wn.length) e.attrs.cmWarnings = _wn; }
+        }
+      }
+    }
     this.entities.push(e);
     this._emit("entity:add");
     return e;
@@ -156,6 +170,8 @@
       sentence: spec.sentence || "",
       audit: [{ ts: now(), action: "created", detail: spec.origin || "manual" }]
     };
+    // i2 fidelity: stamp i2 link type, semantic type, and meta direction
+    if (St) { var _lm = St.linkMeta(l.type); l.i2 = _lm.i2; l.sem = _lm.sem; if (!spec.direction && _lm.dir) l.direction = _lm.dir; }
     this.links.push(l);
     this._emit("link:add");
     return l;
