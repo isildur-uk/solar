@@ -207,6 +207,25 @@ details.menu[open] > summary {
     left: 8px;
   }
   .menu-pop .btn, #ct-pop .btn, #ct-pop summary, details.menu > summary { min-height: 44px; }
+
+  /* --- phone toolbar tidy: one clean action row + a full-width search row --- */
+  #topbar {
+    align-items: center;
+    column-gap: 6px; row-gap: 6px;
+    padding: 6px 8px; padding-top: calc(6px + var(--safe-top, 0px));
+  }
+  #brand { flex: 0 0 auto; }
+  #brand .sub { display: none; }
+  #case-name { display: none !important; }   /* was clipping the action buttons on phones */
+  #menu-add, #menu-case, #menu-tools, #btn-undo { flex: 0 0 auto; }
+  #search {
+    order: 99;
+    flex: 1 0 100% !important;
+    width: 100% !important;
+    min-height: 40px;
+    margin: 0;
+    box-sizing: border-box;
+  }
 }
 
 /* Tools is built into a real <details> menu by charttools.js; #chart-tools is
