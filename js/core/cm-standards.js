@@ -595,15 +595,23 @@ function detectFromCues(text, list) {
   // alphanumerics so e.g. cue "gun" never fires inside "Burgundy", while a
   // hyphenated cue ("self-harm") still matches text "self harm".
   var t = " " + lc(text).replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ") + " ";
+  // word-boundary match of a cue, with simple singular/plural tolerance for
+  // single-word cues ("firearm" matches "firearms"; "drugs" matches "drug").
+  function hit(core) {
+    if (!core) return false;
+    if (t.indexOf(" " + core + " ") !== -1) return true;
+    if (core.indexOf(" ") === -1) {
+      if (t.indexOf(" " + core + "s ") !== -1) return true;
+      if (core.charAt(core.length - 1) === "s" && t.indexOf(" " + core.slice(0, -1) + " ") !== -1) return true;
+    }
+    return false;
+  }
   var hits = [];
   (list || []).forEach(function (item) {
     var cues = item.cues || [];
     for (var i = 0; i < cues.length; i++) {
-      var cue = " " + lc(cues[i]).replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").replace(/^ | $/g, "") + " ";
-      if (cue !== "  " && t.indexOf(cue) !== -1) {
-        hits.push({ code: item.code, label: item.label });
-        break;
-      }
+      var core = lc(cues[i]).replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").replace(/^ | $/g, "");
+      if (hit(core)) { hits.push({ code: item.code, label: item.label }); break; }
     }
   });
   return hits;
