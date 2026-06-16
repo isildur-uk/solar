@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="css/solar.css?v=20260615c">
 <link rel="stylesheet" href="css/mobile.css?v=20260615c">
 <link rel="stylesheet" href="css/enhance.css?v=20260615c">
-<link rel="stylesheet" href="css/redesign.css?v=20260615j">
+<link rel="stylesheet" href="css/redesign.css?v=20260615k">
 </head>
 <body>
 <div id="drop-overlay" aria-hidden="true">
@@ -39,6 +39,7 @@
       <button class="btn" id="btn-csv" title="Import a CSV of entities">Import CSV</button>
       <button class="btn" id="btn-scan" title="Scan a photo or screenshot — text is read out and dropped into the paste panel for extraction">Scan</button>
       <button class="btn" id="btn-files" title="Add documents (PDF, Word, .txt, .md) or a CSV / case .json — you can also drag files anywhere onto the window">Add Files</button>
+    <button class="btn" id="btn-demo" title="Load the demonstration passage">Demo</button>
     </div>
   </details>
 
@@ -47,7 +48,6 @@
     <div class="menu-pop" role="menu" aria-label="case actions">
       <button class="btn" id="btn-save" title="Download case as JSON">Save</button>
       <button class="btn" id="btn-open" title="Open a saved case">Open</button>
-      <button class="btn" id="btn-dedup" title="Scan the chart for potential duplicate entities">Deconflict</button>
       <button class="btn danger" id="btn-clear" title="Clear chart">Clear</button>
     </div>
   </details>
@@ -73,8 +73,9 @@
       </div>
     </details>
     <button class="btn" id="btn-legend" title="Legend and filters — hide by type, confidence or source; colour links">Legend</button>
-    <button class="btn" id="btn-demo" title="Load the demonstration passage">Demo</button>
     <button class="btn" id="btn-geo" title="Show or hide geographic containment links (city → country)">Geo: on</button>
+    <div class="ct-sep" aria-hidden="true"></div>
+    <button class="btn" id="btn-dedup" title="Scan the chart for potential duplicate entities">Deconflict</button>
   </div>
 
   <button class="btn" id="btn-undo" title="Undo last destructive change">Undo</button>
@@ -89,7 +90,7 @@
     <div id="legend-panel" aria-label="legend and filters"></div>
     <div id="chart-empty">
       <div class="big">Empty chart</div>
-      <div class="hint">Paste Text — or Import CSV — to begin. Try the Demo button.</div>
+      <div class="hint">Open the Add menu to paste text, import a CSV, or load the demo.</div>
     </div>
   </section>
 
@@ -304,7 +305,7 @@
 <script src="js/lib/tesseract/tesseract.min.js?v=20260613a"></script>
 <script src="js/ui/ocr.js?v=20260613b"></script>
 <script src="js/ui/mobileui.js?v=20260615d"></script>
-<script src="js/ui/charttools.js?v=20260615e"></script>
+<script src="js/ui/charttools.js?v=20260615f"></script>
 <script src="js/ui/netpanel.js?v=20260613a"></script>
 <script src="js/ui/analytics.js?v=20260613a"></script>
 <script src="js/ui/space-bg.js?v=20260615e"></script>

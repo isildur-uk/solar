@@ -227,3 +227,7 @@ details.menu[open] > summary {
     max-width: none !important; overflow: visible !important; padding: 0 !important;
   }
 }
+
+/* Tools menu: single column to match the other menus, with a view|analysis divider */
+#ct-pop.open { display: flex; flex-direction: column; gap: 3px; }
+.ct-sep { height: 1px; margin: 4px 6px; background: var(--line); border: 0; flex: 0 0 auto; }

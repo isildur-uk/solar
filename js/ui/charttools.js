@@ -27,8 +27,9 @@
     toggle.innerHTML = 'Tools <span aria-hidden="true">&#9662;</span>';
 
     function isControl(n) {
-      return n && n.nodeType === 1 && n !== toggle && n !== pop &&
-        (n.tagName === "BUTTON" || n.tagName === "SELECT" || n.tagName === "DETAILS");
+      if (!n || n.nodeType !== 1 || n === toggle || n === pop) return false;
+      if (n.classList && n.classList.contains("ct-sep")) return true;
+      return n.tagName === "BUTTON" || n.tagName === "SELECT" || n.tagName === "DETAILS";
     }
     function absorb(n) { if (isControl(n)) pop.appendChild(n); }
 
