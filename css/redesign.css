@@ -110,6 +110,7 @@ input[type="text"], input[type="search"], textarea,
 }
 .btn::before {
   content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  pointer-events: none;                         /* decorative glass must never eat taps */
   -webkit-backdrop-filter: blur(2px); backdrop-filter: url(#liquid-glass) blur(1px);
 }
 .btn:hover {
