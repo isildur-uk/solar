@@ -40,7 +40,12 @@
       <button class="btn" id="btn-csv" title="Import a CSV of entities">Import CSV</button>
       <button class="btn" id="btn-scan" title="Scan a photo or screenshot — text is read out and dropped into the paste panel for extraction">Scan</button>
       <button class="btn" id="btn-files" title="Add documents (PDF, Word, .txt, .md) or a CSV / case .json — you can also drag files anywhere onto the window">Add Files</button>
-    <button class="btn" id="btn-demo" title="Load the demonstration passage">Demo</button>
+      <div class="menu-sep" aria-hidden="true"></div>
+      <button class="btn" id="btn-demo-1" title="Demo 1 - BAINES profile">Demo 1</button>
+      <button class="btn" id="btn-demo-2" title="Demo 2 - surveillance / meeting">Demo 2</button>
+      <button class="btn" id="btn-demo-3" title="Demo 3 - financial enquiries">Demo 3</button>
+      <button class="btn" id="btn-demo-4" title="Demo 4 - travel / border">Demo 4</button>
+      <button class="btn" id="btn-demo-5" title="Demo 5 - arrests">Demo 5</button>
     </div>
   </details>
 
@@ -52,6 +57,7 @@
       <div class="menu-sep" aria-hidden="true"></div>
       <button class="btn" id="btn-png" title="Export chart as PNG">Chart PNG</button>
       <button class="btn" id="btn-anx" title="Operational exports: intel logs, profiles, IR draft, i2">Operational exports&#8230;</button>
+      <button class="btn" id="btn-diag" title="Copy a plain-text diagnostic of the whole case (entities + links)">Diagnostics</button>
       <div class="menu-sep" aria-hidden="true"></div>
       <button class="btn danger" id="btn-clear" title="Clear chart">Clear</button>
     </div>
@@ -137,6 +143,24 @@
   </div>
 </div>
 
+<!-- diagnostics modal -->
+<div class="modal-veil" id="diag-veil" role="dialog" aria-modal="true" aria-label="diagnostics">
+  <div class="modal narrow">
+    <div class="modal-head"><h2 id="diag-title">Diagnostics</h2>
+      <button class="btn x" id="diag-x" aria-label="close">✕</button></div>
+    <div class="modal-body">
+      <p style="font:11px Consolas,monospace;color:#a3a299;margin:0 0 8px">
+        Plain-text summary of what was extracted / what is on the chart. Copy it and paste it back for diagnosis.</p>
+      <textarea id="diag-text" readonly spellcheck="false" aria-label="diagnostic text"
+        style="width:100%;min-height:320px;box-sizing:border-box;font:12px Consolas,monospace;white-space:pre;overflow:auto;background:#1b1b18;color:#e8e6df;border:1px solid #3a3a34;border-radius:4px;padding:8px"></textarea>
+    </div>
+    <div class="modal-foot">
+      <span class="note">Read-only - generated from the current extraction / case</span>
+      <div class="right"><button class="btn primary" id="diag-copy">Copy</button></div>
+    </div>
+  </div>
+</div>
+
 <!-- paste modal -->
 <div class="modal-veil" id="paste-veil" role="dialog" aria-modal="true" aria-label="paste text">
   <div class="modal narrow">
@@ -170,6 +194,7 @@
         <label class="note" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="Anything left unconnected ties to the primary subject as a low-confidence dashed link">
           <input type="checkbox" id="rv-link-orphans" checked style="accent-color:#ebfc72"> link orphans to subject
         </label>
+        <button class="btn" id="review-diag" title="Copy a plain-text diagnostic of what was extracted">Diagnostics</button>
         <button class="btn primary" id="review-commit">Add to chart</button>
       </div>
     </div>
@@ -317,14 +342,15 @@
 <script src="js/ui/chartmenu.js?v=20260612g"></script>
 <script src="js/ui/mappane.js?v=20260613a"></script>
 <script src="js/ui/timeline.js?v=20260613a"></script>
-<script src="js/ui/review.js?v=20260616a"></script>
+<script src="js/ui/review.js?v=20260617a"></script>
 <script src="js/ui/urlimport.js?v=20260617b"></script>
+<script src="js/ui/diag.js?v=20260617a"></script>
 <script src="js/ui/importer.js?v=20260612d"></script>
 <script src="js/ui/dragdrop.js?v=20260616a"></script>
 <script src="js/ui/inspector.js?v=20260616b"></script>
 <script src="js/ui/profiles.js?v=20260616a"></script>
 <script src="js/ui/intelexport.js?v=20260616a"></script>
-<script src="js/ui/app.js?v=20260617a"></script>
+<script src="js/ui/app.js?v=20260617c"></script>
 <script src="js/ui/menus.js?v=20260615g"></script>
 <script src="js/ui/solar.js?v=20260615d"></script>
 <script src="js/ui/hero.js?v=20260612d"></script>

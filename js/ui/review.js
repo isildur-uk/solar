@@ -453,5 +453,9 @@
     return (s > 0 ? "…" : "") + sourceText.slice(s, e) + (e < sourceText.length ? "…" : "");
   }
 
-  window.CRReview = { init: init, open: open, commit: commit };
+  function getResult() {
+    return { result: result, cardState: cardState, relState: relState, sourceName: sourceName };
+  }
+
+  window.CRReview = { init: init, open: open, commit: commit, getResult: getResult };
 })();

@@ -26,6 +26,18 @@
     "him. Surveillance logged the IP address 81.2.69.142 accessing the booking. Mr Ronald McDonald Jr is " +
     "the registered keeper of a white Ford Transit, registration AB12 CDE.";
 
+  // Five linked demo reports (Demo 1-5): one BAINES narrative across a timeline,
+  // with deliberate overlapping entities (names, phones, email, VRMs, orgs) plus new
+  // ones each time, to exercise dedup / coreference. Demo 1 is the canonical sample.
+  var SAMPLE_REPORTS = [
+    SAMPLE_TEXT,
+    "INTELLIGENCE REPORT - 12/05/2026\nFurther to the profile of Geoffrey BAINES (DOB 20/12/1990), surveillance on 12/05/2026 observed BAINES meeting an unknown male at the Forest Glade Cafe, 14 King Street, Bristol. BAINES arrived in the black BMW, registration VK21 ABC, and was using mobile 07686 868686. The associate was identified as Tomasz NOWAK, who drives a silver Audi A4, registration LD19 TYE. NOWAK telephoned BAINES from 07700 900145. BAINES sent a photograph of a shipping container from geoff.b@gmail.com. Northgate Logistics Limited is suspected of using Apex Freight PLC to move the containers. Maria van der BERG was also present and left towards Bristol Temple Meads.",
+    "INTELLIGENCE REPORT - 28/05/2026\nFinancial enquiries into Geoff BAINES show payments from account 12345678, sort code 20-00-00, to Apex Freight PLC totalling GBP 12,000 during May 2026. A further EUR 4,000 was received from Maria van der BERG. BAINES is also believed to control a Bitcoin wallet 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa, which received three payments. A solicitor, Mr Adrian FROST of Frost and Partners LLP, has acted on BAINES's behalf. Tomasz NOWAK opened a new account 87654321 at sort code 11-22-33 in the name of Northgate Logistics Ltd.",
+    "INTELLIGENCE REPORT - 15/06/2026\nBorder records confirm Geoffrey BAINES departed Bristol airport on 11/06/2026 bound for Malaga, with a return booked for 20/06/2026. On 15/06/2026 a white Ford Transit, registration AB12 CDE, registered to Ronald McDonald Jr, was observed at the Port of Dover accompanied by Tomasz NOWAK. The Transit boarded a ferry to Calais. BAINES was contacted via Skype gee.baines88 during the crossing. A Spanish mobile, +34 612 123 123, has since been attributed to BAINES.",
+    "INTELLIGENCE REPORT - 22/06/2026\nOn 22/06/2026 officers executed a warrant at 42 Elmwood Road, Bristol, BS5 9TY, the home address of Geoffrey 'Gee' BAINES. A firearm was recovered at the scene. BAINES, his brother Darren BAINES, and Tomasz NOWAK were all arrested. Maria van der BERG remains outstanding and is believed to have travelled to Rotterdam. Northgate Logistics Limited and Apex Freight PLC have been referred for further investigation. A further associate, Karl REINHOLT, using mobile 07911 123456, was identified as the intended buyer. The black BMW, registration VK21 ABC, was seized."
+  ];
+
+
   /* ---------------- boot ---------------- */
 
   function boot() {
@@ -112,6 +124,19 @@
     U.el("url-input").addEventListener("keydown", function (e) {
       if (e.key === "Enter") { e.preventDefault(); window.CRUrlImport.run(); }
     });
+
+    var rvDiag = U.el("review-diag");
+    if (rvDiag) rvDiag.addEventListener("click", function () {
+      window.CRDiag.open("Extraction diagnostic", window.CRDiag.fromExtraction(window.CRReview.getResult()));
+    });
+    var btnDiag = U.el("btn-diag");
+    if (btnDiag) btnDiag.addEventListener("click", function () {
+      window.CRDiag.open("Case diagnostic", window.CRDiag.fromCase(store));
+    });
+    var diagCopy = U.el("diag-copy");
+    if (diagCopy) diagCopy.addEventListener("click", function () { window.CRDiag.copy(); });
+    var diagX = U.el("diag-x");
+    if (diagX) diagX.addEventListener("click", function () { U.closeModal("diag-veil"); });
 
     U.el("review-commit").addEventListener("click", function () { window.CRReview.commit(); });
     U.el("review-cancel").addEventListener("click", function () { U.closeModal("review-veil"); });
@@ -224,10 +249,16 @@
         window.CRInspector.clear();
       }
     });
-    U.el("btn-demo").addEventListener("click", function () {
-      U.el("paste-text").value = SAMPLE_TEXT;
-      U.openModal("paste-veil");
-    });
+    for (var di = 0; di < SAMPLE_REPORTS.length; di++) {
+      (function (idx) {
+        var b = U.el("btn-demo-" + (idx + 1));
+        if (b) b.addEventListener("click", function () {
+          U.el("paste-text").value = SAMPLE_REPORTS[idx];
+          U.openModal("paste-veil");
+          U.el("paste-text").focus();
+        });
+      })(di);
+    }
     // case meta
     U.el("case-name").value = store.meta.name;
     U.el("case-name").addEventListener("change", function () {
