@@ -125,4 +125,6 @@ exercises the CSV path (smart-matches against the extracted entities).
 
 ## Mobile (iOS / Android)
 This folder is the **single source of truth**. The Capacitor mobile build lives in
-`../sola
+`../solar_mobile/` and is generated from here — run `solar_mobile/sync-from-desktop.cmd`
+(or `.sh`) after editing, then `npx cap sync`. See `solar_mobile/MOBILE-BUILD.md`.
+Rebuild the desktop exe as in **Windows executable** above.
