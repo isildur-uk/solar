@@ -4,10 +4,13 @@
  * CM/i2 extractor on it. Requires an internet connection (hosted deploy only;
  * the offline exe has no /api). CM stays the authority — this only supplies text.
  *
+ * Uses linkedom (not jsdom): a single self-contained package — lighter cold
+ * starts and no dynamic-require tracing pitfalls on serverless.
+ *
  *   GET /api/fetch?url=https://...   ->   { title, byline, text, excerpt, url }
  */
 "use strict";
-var JSDOM = require("jsdom").JSDOM;
+var parseHTML = require("linkedom").parseHTML;
 var Readability = require("@mozilla/readability").Readability;
 
 function send(res, code, obj) {
@@ -43,7 +46,7 @@ module.exports = async function (req, res) {
     var html = await r.text();
     if (html.length > 4000000) html = html.slice(0, 4000000);   // sanity cap
 
-    var doc = new JSDOM(html, { url: r.url || url }).window.document;
+    var doc = parseHTML(html).document;
     var art = new Readability(doc).parse();
     if (!art || !art.textContent || art.textContent.trim().length < 80) {
       return send(res, 422, { error: "Could not extract readable article text from that page." });

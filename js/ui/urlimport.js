@@ -43,7 +43,8 @@
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
         if (!res.ok || !res.body || res.body.error || !res.body.text) {
-          var why = (res.body && res.body.error) ? res.body.error : "Could not read that page.";
+          var e = res.body && res.body.error;
+          var why = e ? (typeof e === "string" ? e : (e.message || JSON.stringify(e))) : "Could not read that page.";
           setStatus(why + " — you can paste the text instead.", "warn");
           return;
         }
