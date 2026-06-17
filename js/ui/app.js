@@ -106,6 +106,13 @@
     });
     U.el("paste-cancel").addEventListener("click", function () { U.closeModal("paste-veil"); });
 
+    U.el("btn-url").addEventListener("click", function () { window.CRUrlImport.open(); });
+    U.el("url-run").addEventListener("click", function () { window.CRUrlImport.run(); });
+    U.el("url-cancel").addEventListener("click", function () { window.CRUrlImport.close(); });
+    U.el("url-input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); window.CRUrlImport.run(); }
+    });
+
     U.el("review-commit").addEventListener("click", function () { window.CRReview.commit(); });
     U.el("review-cancel").addEventListener("click", function () { U.closeModal("review-veil"); });
 

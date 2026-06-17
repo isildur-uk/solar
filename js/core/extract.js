@@ -239,6 +239,16 @@
         m.index, m.index + m[0].length);
     }
 
+    /* ---- 1b. Crypto wallet addresses (claim early; distinctive, before numeric passes) ---- */
+    if (St && St.detectCrypto) {
+      St.detectCrypto(text).forEach(function (c) {
+        if (spans.overlaps(c.start, c.end)) return;
+        spans.claim(c.start, c.end);
+        addEntity("account", (St.cryptoLabel ? St.cryptoLabel(c.coin) : c.coin) + " " + c.address, c.address,
+          { kind: "crypto", coin: c.coin }, "high", c.start, c.end, ["crypto wallet"]);
+      });
+    }
+
     /* ---- 2. Dates (claim before phones so digits aren't eaten) ---- */
     // 2a. dd/mm/yyyy or dd-mm-yyyy or dd.mm.yyyy
     var dateHits = []; // {start,end,iso,ambiguous,raw}
@@ -337,7 +347,7 @@
       addEntity("phone", "IMEI " + imeiDigits, imeiDigits, { kind: "IMEI" }, "high", m.index, m.index + m[0].length);
     }
     // Passport: PPT 123456789 [Country]
-    var rePptPre = /\b(?:PPT|[Pp]assport)(?:\s+(?:no\.?|number))?[\s.:]*(?:is\s+)?([0-9]{6,9}|[0-9]{6}[A-Z])\b(?:\s*\(([^)]{2,40})\))?/g;
+    var rePptPre = /\b(?:PPT|[Pp]assport)(?:\s+(?:no\.?|number))?[\s.:]*(?:is\s+)?([0-9]{6,9}|[0-9]{6}[A-Z]|[A-Z]{1,2}[0-9]{6,7})\b(?:\s*\(([^)]{2,40})\))?/g;
     while ((m = rePptPre.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);
@@ -396,6 +406,22 @@
       addEntity("account", (bank ? bank + " " : "") + m[1] + " / " + m[2],
         m[1].replace(/\D/g, "") + m[2], { sortCode: m[1], account: m[2], bank: bank, kind: "account" },
         "high", m.index, m.index + m[0].length);
+    }
+    // account-first order: "account 41028833, sort code 09-01-26"
+    var reAcctSort = /\baccount\s+(\d{6,8})\s*,?\s*(?:sort\s*code|s\/c)[\s:]*(\d{2}-\d{2}-\d{2})/gi;
+    while ((m = reAcctSort.exec(text))) {
+      if (spans.overlaps(m.index, m.index + m[0].length)) continue;
+      spans.claim(m.index, m.index + m[0].length);
+      addEntity("account", "AC " + m[1] + " / SC " + m[2], m[2].replace(/\D/g, "") + m[1],
+        { account: m[1], sortCode: m[2], kind: "account" }, "high", m.index, m.index + m[0].length);
+    }
+    // IBAN (label-anchored): "IBAN CH93 0076 2011 6238 5295 7"
+    var reIban = /\bIBAN[\s:]*([A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{2,4}){2,8})/gi;
+    while ((m = reIban.exec(text))) {
+      if (spans.overlaps(m.index, m.index + m[0].length)) continue;
+      spans.claim(m.index, m.index + m[0].length);
+      var iban = m[1].replace(/\s+/g, "");
+      addEntity("account", "IBAN " + iban, iban, { kind: "iban", iban: iban }, "high", m.index, m.index + m[0].length);
     }
     // "Barclays a/c ending 4421"
     var reAccPre = /\b([A-Z][a-z]+)\s+a\/c\s+(?:ending\s+)?([0-9]{4,8})\b/g;
@@ -595,6 +621,43 @@
       if (makeM) vAttrs.make = makeM[makeM.length - 1];
       addEntity("vehicle", m[0].replace(/\s+/, " "), m[0].replace(/\s+/g, ""),
         vAttrs, "high", m.index, m.index + m[0].length);
+    }
+
+    /* ---- 6b. Plateless vehicles: "[colour] MAKE [Model]" / "[colour] TYPE" ---- */
+    var COLOURW = "black|white|silver|grey|gray|blue|red|green|gold|brown|orange|yellow|beige|maroon|dark|navy|light";
+    var MAKEW = "BMW|Audi|Mercedes(?:-Benz)?|VW|Volkswagen|Ford|Vauxhall|Toyota|Honda|Nissan|Range Rover|Land Rover|Jaguar|Kia|Hyundai|Peugeot|Renault|Citroen|Skoda|SEAT|Volvo|Lexus|Porsche|Tesla|Mini|Fiat|Mazda|Suzuki|Bentley|DAF|Scania|Iveco";
+    var MODELW = "Golf|Polo|Passat|Sprinter|Transit|Leon|Ibiza|Corsa|Astra|Insignia|Focus|Fiesta|Mondeo|Civic|Qashqai|Juke|Clio|Megane|Captur";
+    var reVehMM = new RegExp("\\b(?:(" + COLOURW + ")\\s+)?((?:" + MAKEW + ")(?:\\s+[A-Z][a-z]+)?|(?:" + MODELW + "))\\b", "g");
+    var vmm;
+    while ((vmm = reVehMM.exec(text))) {
+      var vs = vmm.index, ve = vmm.index + vmm[0].length;
+      if (spans.overlaps(vs, ve)) continue;
+      // de-dupe: a plate within ~40 chars after (e.g. "black BMW, registration VK21 ABC")
+      // means this is that plated vehicle, already captured with colour/make.
+      if (/[A-Z]{2}\d{2}\s?[A-Z]{3}\b/.test(text.slice(ve, ve + 40))) continue;
+      var colr = vmm[1] ? vmm[1].toLowerCase() : "";
+      var body = vmm[2].replace(/\s+/g, " ");
+      var parts = body.split(" ");
+      var mk = parts[0], mdl = parts.slice(1).join(" ");
+      var va = { kind: "vehicle" };
+      if (colr) va.colour = colr;
+      if (new RegExp("^(?:" + MAKEW + ")$").test(mk)) { va.make = mk; if (mdl) va.model = mdl; }
+      else { va.model = body; }
+      spans.claim(vs, ve);
+      addEntity("vehicle", (colr ? colr + " " : "") + body, body.replace(/\s+/g, ""), va, colr ? "high" : "med", vs, ve, ["prose vehicle"]);
+    }
+    /* ---- 6c. "[colour] TYPE" / "the van" plain-type vehicles ---- */
+    var reVehType = new RegExp("\\b(?:(" + COLOURW + ")\\s+|(?:the|a|an|that|same)\\s+)(van|lorry|truck|hgv|motorcycle|motorbike|moped|scooter|pickup|minibus|coach)\\b", "gi");
+    var vt;
+    while ((vt = reVehType.exec(text))) {
+      var ts = vt.index + vt[0].toLowerCase().lastIndexOf(vt[2].toLowerCase()), te = ts + vt[2].length;
+      // anchor span on the type word; include a leading colour if present
+      var s2 = vt[1] ? vt.index : ts;
+      if (spans.overlaps(s2, te)) continue;
+      var ca = { kind: "vehicle", vtype: vt[2].toLowerCase() };
+      if (vt[1]) ca.colour = vt[1].toLowerCase();
+      spans.claim(s2, te);
+      addEntity("vehicle", (vt[1] ? vt[1].toLowerCase() + " " : "") + vt[2].toLowerCase(), (vt[1] ? vt[1].toLowerCase() : "") + vt[2].toLowerCase(), ca, vt[1] ? "med" : "low", s2, te, ["prose vehicle"]);
     }
 
     /* ---- 7. Money ---- */
@@ -1159,6 +1222,23 @@
     // span (emails and addresses contain dots).
     var sentences = [];
     (function () {
+      var Seg = (typeof window !== "undefined" && window.CRSegment) || (typeof require === "function" ? require("./segment.js") : null);
+      if (Seg && Seg.available && Seg.available() && Seg.enabled) {
+        var raw = Seg.sentences(text), merged = [];
+        raw.forEach(function (sx) {
+          if (merged.length) {
+            var prev = merged[merged.length - 1];
+            // wink splits dotted tokens (emails/URLs/"Co. No."); merge a boundary
+            // that falls inside a CM-claimed entity span back into the prior sentence.
+            if (spans.overlaps(prev.end - 1, sx.start + 1)) { prev.end = sx.end; return; }
+          }
+          merged.push({ start: sx.start, end: sx.end });
+        });
+        merged.forEach(function (sx) {
+          if (text.slice(sx.start, sx.end).trim().length > 2) sentences.push({ text: text.slice(sx.start, sx.end), start: sx.start, end: sx.end });
+        });
+        if (sentences.length) return;
+      }
       var bounds = [0];
       var reB = /[.!?\n]/g;
       var bm;
@@ -1270,7 +1350,7 @@
           }
         }
       }
-      if (!subject && /\b(he|she|they)\b/i.test(sTxt)) { subject = carrySubject; carried = true; }
+      if (!subject && /\b(he|she)\b/i.test(sTxt)) { subject = carrySubject; carried = true; }  // not plural "they": a carried singular subject is the wrong referent
       // Verb-led continuation ("On 04/05/2026 used this email to...") — carry the
       // last-mentioned person forward, at reduced confidence.
       if (!subject && carrySubject && /\b(used|uses|book(ed|s)?|stay(ed|s)?|travel(led|s)?|fl(ew|ies)|purchas(ed|es)?|return(ed|s)?|retain(ed|s)?|keeps?|kept|liaison\s+with)\b/i.test(sTxt)) {
@@ -1357,6 +1437,11 @@
           }
           if (subjEnt) lastPerson = subjEnt;
           var vAbs = [s0 + cl.verb.start, s0 + cl.verb.end];
+          // A plural elided subject ("they drove off") must not inherit a singular
+          // carried subject (e.g. a first-person witness) — skip the clause.
+          if (subjEnt === carrySubject && /\b(they|them|both|the\s+men|two\s+men|the\s+pair|the\s+group|others)\s*$/i.test(text.slice(Math.max(0, vAbs[0] - 18), vAbs[0]))) return;
+          // Passive "officers were called" is a summons, not a person-to-person call.
+          if (cl.verb.lemma === "call" && /\b(?:were|was|been|being|got)\s+$/i.test(text.slice(Math.max(0, vAbs[0] - 10), vAbs[0]))) return;
 
           // "return" verbs are timeline events, not links
           if (cl.verb.group === "returnVerb") {
@@ -1779,12 +1864,27 @@
         if (toRel) toRel.modality = "occurred";
       }
 
+      // Labelled comms handles: "Skype gee.baines88", "Twitter @gee_b", etc. ->
+      // Text Block (note) nodes. Guarded so a following word isn't taken as a handle.
+      var reLab = /\b(Skype|Twitter|Telegram|Signal|Snapchat|WhatsApp|ICQ|Jabber|Wickr|Threema)\b\s*(?:handle|id|user(?:name)?)?[\s:]*?(@?[A-Za-z0-9._+\/-]{3,})/gi, lhm;
+      while ((lhm = reLab.exec(text))) {
+        var _plat = lhm[1], _h = lhm[2].replace(/[).,;:]+$/, "");
+        if (!/[._@0-9\/]/.test(_h)) continue;                  // real handle, not a trailing word ("Skype call")
+        if (/^(?:and|the|via|account|profile|messenger|app|call|chat|group)$/i.test(_h)) continue;
+        var _hs = lhm.index + lhm[0].lastIndexOf(_h), _he = _hs + _h.length;
+        if (spans.overlaps(_hs, _he)) continue;
+        spans.claim(_hs, _he);
+        addEntity("note", _plat + " " + _h.replace(/^@/, ""), _h.replace(/^@/, ""),
+          { kind: "social-account", platform: _plat.toLowerCase() }, "med", _hs, _he, ["comms handle"]);
+      }
       // OSINT/social handles as Text Block nodes, linked to attributed users where visible.
       var reHandle = /\b(?:Instagram|TikTok|Facebook)?\s*(@[A-Za-z0-9_.-]{3,}|(?:instagram|facebook|tiktok)\.com\/[A-Za-z0-9_.-]+)/gi, hm;
       while ((hm = reHandle.exec(text))) {
         var label = (hm[1] || hm[0].trim()).replace(/[).,;:]+$/, "");
         if (!/^@|(?:instagram|facebook|tiktok)\.com/i.test(label)) continue;
-        if (label.charAt(0) === "@" && /[A-Za-z0-9_.+-]$/.test(text.slice(0, hm.index))) continue;
+        if (spans.overlaps(hm.index, hm.index + hm[0].length)) continue;   // already claimed (e.g. labelled handle)
+        var _atP = hm.index + hm[0].indexOf("@");
+        if (label.charAt(0) === "@" && _atP > 0 && /[A-Za-z0-9_.+-]/.test(text.charAt(_atP - 1))) continue;
         if (label.charAt(0) === "@" && /^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/i.test(label.slice(1))) continue;
         var note = addEntity("note", label, label, { kind: "social-account" }, "med", hm.index, hm.index + hm[0].length);
         var rowStart = text.lastIndexOf("\n", hm.index);
@@ -2149,9 +2249,9 @@
         // so do NOT skip on overlap — just register it as its own entity.
         spans.claim(aS, aE);
         var adEnt = addEntity("address", addr, addr, { kind: "address" }, "high", aS, aE, ["stay address"]);
-var subjA = null, sb = -1;
-        entities.forEach(function (e) { if (e.type !== "person") return; e.spans.forEach(function (sp) { if (sp[1] <= aS && sp[1] > sb) { sb = sp[1]; subjA = e; } }); });
-        if (!subjA) subjA = (typeof mainPerson === "function" && mainPerson()) || entities.find(function (e) { return e.type === "person"; });
+var subjA = (typeof mainPerson === "function" && mainPerson()) || null;   // "stayed at X" almost always = the subject
+        if (!subjA) { var sb = -1; entities.forEach(function (e) { if (e.type !== "person") return; e.spans.forEach(function (sp) { if (sp[1] <= aS && sp[1] > sb) { sb = sp[1]; subjA = e; } }); }); }
+        if (!subjA) subjA = entities.find(function (e) { return e.type === "person"; });
         if (subjA && adEnt && !hasRelBetween(subjA, adEnt)) addRel(subjA, adEnt, "STAYS_AT", "med", sm[0].replace(/\s+/g, " ").trim().slice(0, 140), "stay cue");
       }
     })();
@@ -2177,6 +2277,46 @@ var subjA = null, sb = -1;
       }
     })();
 
+    // VIN -> attach to the nearest vehicle (CM: 17 chars, no I/O/Q); else a note.
+    (function () {
+      var reVin = /\bVIN[\s.:]*([A-HJ-NPR-Z0-9]{17})\b/gi, vm;
+      while ((vm = reVin.exec(text))) {
+        var vin = vm[1].toUpperCase(), vs = vm.index, vinAt = vm.index + vm[0].indexOf(vm[1]), ve = vinAt + vin.length;
+        var veh = null, best = Infinity;
+        entities.forEach(function (e) { if (e.type !== "vehicle") return; e.spans.forEach(function (sp) { var d = Math.abs(sp[0] - vs); if (d < best) { best = d; veh = e; } }); });
+        if (veh && best < 240) { if (!veh.attrs.vin) veh.attrs.vin = vin; veh.spans.push([vinAt, ve]); }
+        else if (!spans.overlaps(vinAt, ve)) { spans.claim(vinAt, ve); addEntity("vehicle", "VIN " + vin, vin, { kind: "vin" }, "high", vinAt, ve, ["vin"]); }
+      }
+    })();
+    // STAYS_AT specificity: if a subject stays at a full address, drop its
+    // STAYS_AT links to a bare city/country (the address already locates them).
+    (function () {
+      var hasAddr = {};
+      relationships.forEach(function (l) {
+        if (l.type !== "STAYS_AT") return;
+        var t = entities.filter(function (e) { return e.ref === l.targetRef; })[0];
+        if (t && (t.type === "address" || (/\b(hotel|hostel|inn|motel|b&b|guesthouse|lodge)\b/i.test(t.label || "")))) hasAddr[l.sourceRef] = true;
+      });
+      if (!Object.keys(hasAddr).length) return;
+      relationships = relationships.filter(function (l) {
+        if (l.type !== "STAYS_AT" || !hasAddr[l.sourceRef]) return true;
+        var t = entities.filter(function (e) { return e.ref === l.targetRef; })[0];
+        if (t && t.type === "location") return false;   // a specific stay (address/venue) supersedes any bare location
+        return true;
+      });
+    })();
+    // Reporting-verb guard: "X said/called ... Y was arrested" is speech ABOUT Y,
+    // not communication WITH Y. Drop COMMUNICATED_WITH from a reporting verb when
+    // the target is a reported clause-subject (followed by an apposition + auxiliary).
+    relationships = relationships.filter(function (l) {
+      if (l.type !== "COMMUNICATED_WITH") return true;
+      if (!/^svo:(call|say|tell|state|confirm|report|add|deny|claim|note)$/.test(l.cue || "")) return true;
+      var tgt = entities.filter(function (e) { return e.ref === l.targetRef; })[0];
+      if (!tgt) return true;
+      return !tgt.spans.some(function (sp) {
+        return /^[\s,][^.\n]{0,32}?\b(was|were|is|are|had|has|have|been)\b/.test(text.slice(sp[1], sp[1] + 44));
+      });
+    });
     // strip internal fields
     entities.forEach(function (e) { delete e._canon; delete e._parentGaz; delete e._claimedByAddress; delete e._merged; });
 

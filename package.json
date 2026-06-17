@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
     "jsdom": "^29.1.1",
-    "postject": "^1.0.0-alpha.6"
+    "postject": "^1.0.0-alpha.6",
+    "wink-eng-lite-web-model": "^1.8.1",
+    "wink-nlp": "^2.4.0"
   }
 }

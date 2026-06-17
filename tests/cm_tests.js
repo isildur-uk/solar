@@ -125,6 +125,15 @@ test("CM-ONLY: no phoneFreeText '+' convention on CRStandards", function () {
   no(typeof S.phoneFreeText === "function", "phoneFreeText (KB convention) must not exist on CRStandards");
 });
 
+/* ---------------- CRYPTO ---------------- */
+test("CRYPTO: detects ETH + BTC, maps coin label", function () {
+  var hits = S.detectCrypto("pay 0x52908400098527886E0F7030069857D2E4169EE7 or 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
+  var coins = hits.map(function (h) { return h.coin; });
+  ok(coins.indexOf("ETH") !== -1, "eth"); ok(coins.indexOf("BTC") !== -1, "btc");
+  eq(S.cryptoLabel("BTC"), "Bitcoin");
+});
+test("CRYPTO: clean prose yields none", function () { eq(S.detectCrypto("met at the cafe on Tuesday").length, 0); });
+
 /* ---------------- summary ---------------- */
 console.log("\n" + passed + " passed, " + failed + " failed");
 if (failed > 0) { process.exit(1); }

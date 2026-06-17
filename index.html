@@ -36,6 +36,7 @@
     <summary class="btn primary">Add &#9662;</summary>
     <div class="menu-pop" role="menu" aria-label="add to case">
       <button class="btn primary" id="btn-paste" title="Extract entities from pasted text">Paste Text</button>
+      <button class="btn" id="btn-url" title="Fetch a web article (news, report) and chart it — needs internet">Add from URL</button>
       <button class="btn" id="btn-csv" title="Import a CSV of entities">Import CSV</button>
       <button class="btn" id="btn-scan" title="Scan a photo or screenshot — text is read out and dropped into the paste panel for extraction">Scan</button>
       <button class="btn" id="btn-files" title="Add documents (PDF, Word, .txt, .md) or a CSV / case .json — you can also drag files anywhere onto the window">Add Files</button>
@@ -113,6 +114,28 @@
   <span title="All case data stays in this browser. The only network call is the basemap.">local-only ●</span>
 </footer>
 <div id="status-msg" class="ok" role="status" aria-live="polite"></div>
+
+<!-- url modal -->
+<div class="modal-veil" id="url-veil" role="dialog" aria-modal="true" aria-label="add from url">
+  <div class="modal narrow">
+    <div class="modal-head"><h2>Add from URL</h2>
+      <button class="btn x" id="url-cancel" aria-label="close">✕</button></div>
+    <div class="modal-body">
+      <p style="font:11px Consolas,monospace;color:#a3a299;margin:0 0 8px">
+        Paste a link to a news article or web report. The page is fetched and
+        cleaned, then its entities and relationships are extracted for your
+        review — nothing reaches the chart unapproved. Needs internet.</p>
+      <input id="url-input" type="url" inputmode="url" spellcheck="false"
+             placeholder="https://www.example.com/news/article"
+             aria-label="article url"
+             style="width:100%;box-sizing:border-box;font:13px Consolas,monospace;padding:8px;background:#1b1b18;color:#e8e6df;border:1px solid #3a3a34;border-radius:4px">
+    </div>
+    <div class="modal-foot">
+      <span class="note" id="url-status"></span>
+      <div class="right"><button class="btn primary" id="url-run">Fetch →</button></div>
+    </div>
+  </div>
+</div>
 
 <!-- paste modal -->
 <div class="modal-veil" id="paste-veil" role="dialog" aria-modal="true" aria-label="paste text">
@@ -272,7 +295,7 @@
 <script src="js/lib/papaparse.min.js?v=20260610a"></script>
 <script src="js/core/match.js?v=20260610b"></script>
 <script src="js/core/cm-vocab.js?v=20260616a"></script>
-<script src="js/core/cm-standards.js?v=20260616b"></script>
+<script src="js/core/cm-standards.js?v=20260616c"></script>
 <script src="js/core/format.js?v=20260616a"></script>
 <script src="js/core/docxzip.js?v=20260613b"></script>
 <script src="js/core/geo.js?v=20260616a"></script>
@@ -280,9 +303,12 @@
 <script src="js/core/netanalysis.js?v=20260613a"></script>
 <script src="js/core/analytics.js?v=20260613a"></script>
 <script src="js/core/lang.js?v=20260613e"></script>
-<script src="js/core/extract.js?v=20260616f"></script>
+<script src="vendor/wink-bundle.js?v=20260616a"></script>
+<script src="js/core/segment.js?v=20260616a"></script>
+<script src="js/core/extract.js?v=20260616j"></script>
 <script src="js/core/model.js?v=20260616a"></script>
 <script src="js/core/smartner.js?v=20260616a"></script>
+<script src="js/core/smartner-wink.js?v=20260616a"></script>
 <script src="js/core/fileread.js?v=20260612e"></script>
 <script src="js/ui/util.js?v=20260610b"></script>
 <script src="js/ui/icons.js?v=20260610a"></script>
@@ -292,12 +318,13 @@
 <script src="js/ui/mappane.js?v=20260613a"></script>
 <script src="js/ui/timeline.js?v=20260613a"></script>
 <script src="js/ui/review.js?v=20260616a"></script>
+<script src="js/ui/urlimport.js?v=20260617a"></script>
 <script src="js/ui/importer.js?v=20260612d"></script>
 <script src="js/ui/dragdrop.js?v=20260616a"></script>
 <script src="js/ui/inspector.js?v=20260616b"></script>
 <script src="js/ui/profiles.js?v=20260616a"></script>
 <script src="js/ui/intelexport.js?v=20260616a"></script>
-<script src="js/ui/app.js?v=20260616a"></script>
+<script src="js/ui/app.js?v=20260617a"></script>
 <script src="js/ui/menus.js?v=20260615g"></script>
 <script src="js/ui/solar.js?v=20260615d"></script>
 <script src="js/ui/hero.js?v=20260612d"></script>

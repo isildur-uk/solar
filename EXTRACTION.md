@@ -66,7 +66,35 @@ that merge strategy needs.
   brother, X") attaches to the document subject; "associated with" links org↔org.
 - **Addresses:** a comma-structured street address after a stay cue is captured
   as an Address entity and linked STAYS_AT, bounded so it doesn't run into the
-  next sentence (postcode-terminated addresses included).
+  next sentence (postcode-terminated addresses included). Foreign addresses
+  ending in a known country are also captured (digit + street-start guarded).
+- **Comms handles:** labelled Skype/Twitter/Telegram/Signal/etc. handles, and
+  `@`-handles, become Text Block (note) nodes (kind `social-account`).
+- **Vehicle VIN:** "VIN <17 chars, no I/O/Q>" attaches to the nearest vehicle.
+- **Crypto wallets:** BTC (legacy + bech32), ETH, XMR addresses are detected
+  (`cm-standards.detectCrypto`, governed by the VIRTUAL_CURRENCY vocab) and
+  become account nodes (kind `crypto`), claimed early so numeric passes don't
+  eat the hex.
+
+## Optimisation pass (measured against the 5-file acid corpus)
+
+- **Plateless vehicles:** "[colour] MAKE [Model]" and "[colour]/the TYPE" (white
+  Audi, silver Mercedes Sprinter, dark BMW, white SEAT Leon, the van) now extract
+  with colour/make/model attrs, de-duped against any adjacent number plate.
+- **Financial IDs:** "account NNNNNNNN, sort code NN-NN-NN", IBAN (label-anchored),
+  and alpha-prefixed passports ("passport P1234567").
+- **Precision filters:** a plural "they" no longer inherits a singular carried
+  subject; passive "were called" is not a comms link; a reporting verb
+  ("X said … Y was arrested") no longer mints COMMUNICATED_WITH to the reported
+  subject; STAYS_AT prefers the document subject and a specific stay supersedes a
+  bare city/country.
+- **Offline POS recall (`smartner-wink.js`):** wink-NLP POS proposes
+  person/organisation candidates the rules missed (cue-gated: title/kinship/
+  "called"/chat-line; gazetteer places and field labels excluded; orgs must be
+  multi-token). Registered as the CRSmartNER runtime so the review screen
+  union-merges them (rules win, low confidence, flagged). This lights up smart
+  mode **offline** — no model download — recovering chat handles (Tovey, Macca),
+  "Mr Vance", "brother Sean", and named institutions (Pennine Mutual Bank).
 
 ## Known limits (analyst-clearable)
 
@@ -107,6 +135,51 @@ network I/O and loads no model on its own, so the offline guarantee is intact.
    intentionally not added yet, to avoid shipping a dead control).
 
 Until those steps are done the module stays inert and changes nothing.
+
+## wink-NLP segmentation + POS (wired, on by default)
+
+`js/core/segment.js` (`window.CRSegment`) wraps **wink-NLP** (vendored browser
+bundle at `vendor/wink-bundle.js`; `npm` package for Node tests) to provide
+character-accurate **sentence segmentation** and **POS tags**, with a pure-JS
+regex fallback if wink is absent (the pipeline never hard-depends on it).
+
+`extract.js` uses wink sentence boundaries when available, but **merges any wink
+split that falls inside a CM-claimed entity span** back together — wink splits
+dotted tokens (emails, URLs, "Co. No."), and the entity layer protects them.
+A **STAYS_AT specificity** pass then drops a subject's STAYS_AT links to a bare
+city/country when it already has a STAYS_AT to a full address (wink's tighter
+sentences exposed that redundancy). Net: corpus 89/89 unchanged, demo clean.
+
+CM stays the authority — wink only decides where sentences break and what each
+token is; it never formats, types, validates, or grades. POS (`CRSegment.posTags`)
+is available for future relation/coreference work.
+
+## Add from URL (hosted path — needs internet)
+
+The chrome's **Add menu → "Add from URL"** charts a live web article (news,
+report) end-to-end. Because a browser can't fetch a third-party news site
+directly (CORS), the fetch runs server-side:
+
+1. `api/fetch.js` (Vercel serverless) takes `?url=`, validates it's `http(s)`,
+   fetches with a UA header + 15s timeout, guards the content-type is HTML,
+   caps the body, then runs **Mozilla Readability** (in `jsdom`) to strip nav /
+   ads / footers and return `{ title, byline, excerpt, text, url }`.
+2. `js/ui/urlimport.js` (`window.CRUrlImport`) calls it, prepends title/byline/
+   source to the cleaned text, and feeds it to `CRReview.open(text, title)` —
+   the **same review screen** as paste, so the CM/i2 extractor runs unchanged and
+   nothing reaches the chart unapproved.
+
+This path is **online-only** by design: it depends on `/api/fetch`, which exists
+only on the hosted deploy. On the offline exe / `file://` the call fails cleanly
+and the UI tells the analyst to paste the text instead — the air-gapped paste
+path is untouched. CM stays the authority; the URL feature only supplies text.
+
+Verified in Node by invoking the real `api/fetch.js` handler with a mocked
+`fetch` over synthetic article HTML: Readability stripped chrome, the handler
+returned HTTP 200 + clean JSON, and `CRExtract` charted persons, organisation,
+vehicle, money and relationships. Error paths return 400 (bad URL), 415
+(non-HTML), 502 (upstream failure). The only thing not verifiable in-sandbox is
+the live network fetch itself, which exercises on the Vercel deploy.
 
 ## Roadmap — the next layer, in priority order
 

@@ -669,6 +669,34 @@ function linkMeta(type) { return LINK_META[type] || { label: type || "Linked to"
 S.LINK_META = LINK_META;
 S.linkMeta = linkMeta;
 
+/* ================================================================== */
+/*  CRYPTO WALLET ADDRESSES (structural detection; maps to VIRTUAL_CURRENCY) */
+/* ================================================================== */
+/* Structural patterns only (no checksum). Returns [{coin, address, start, end}].
+ * Ported/extended from CommonRegex's BTC pattern; governed by CRVocab.VIRTUAL_CURRENCY. */
+var CRYPTO_PATTERNS = [
+  { coin: "ETH", re: /\b0x[a-fA-F0-9]{40}\b/g },
+  { coin: "BTC", re: /\bbc1[ac-hj-np-z02-9]{11,71}\b/g },              // bech32
+  { coin: "XMR", re: /\b4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}\b/g },        // Monero
+  { coin: "BTC", re: /(?<![A-Za-z0-9])[13][a-km-zA-HJ-NP-Z1-9]{25,34}(?![A-Za-z0-9])/g } // legacy base58
+];
+function detectCrypto(text) {
+  var s = str(text), hits = [], seen = {};
+  CRYPTO_PATTERNS.forEach(function (p) {
+    p.re.lastIndex = 0; var m;
+    while ((m = p.re.exec(s)) !== null) {
+      var addr = m[0], key = m.index + ":" + addr;
+      if (seen[key]) continue; seen[key] = 1;
+      hits.push({ coin: p.coin, address: addr, start: m.index, end: m.index + addr.length });
+    }
+  });
+  return hits;
+}
+function cryptoLabel(coin) { var h = byCode(V.VIRTUAL_CURRENCY, coin); return h ? h.label : coin; }
+S.detectCrypto = detectCrypto;
+S.cryptoLabel = cryptoLabel;
+S.VIRTUAL_CURRENCY = V.VIRTUAL_CURRENCY || [];
+
 /* ---- export ---- */
 if (typeof module !== "undefined" && module.exports) { module.exports = S; }
 if (typeof window !== "undefined") { window.CRStandards = S; }
