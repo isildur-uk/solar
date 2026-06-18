@@ -74,6 +74,10 @@ function ok(cond,msg){ if(cond){pass++;} else {fail++; fails.push(msg);} }
  ok(hasRel(r,/BAINES/,'HOLDS',/12345678/), "D3: account link typed HOLDS (Account holder), not OWNS");
  ok(ent(r,'organisation',/Frost and Partners/), "D3-M1: 'Frost and Partners LLP' not truncated");
  var w=ent(r,'account',/Bitcoin|1A1zP1/); ok(w&&!/^AC /.test(w.attrs.cm||''), "D3-M2: crypto CM not rendered as bank account");
+ ok(hasRel(r,/FROST/,'REPRESENTS',/BAINES/), "D3-R3: FROST acts for (REPRESENTS) BAINES");
+ ok(hasRel(r,/FROST/,'ASSOCIATE_OF',/Frost and Partners/), "D3-R3: FROST member of Frost and Partners LLP");
+ ok(hasRel(r,/Northgate/,'HOLDS',/87654321/), "D3-R3: account 87654321 in the name of Northgate (HOLDS)");
+ ok(hasRel(r,/NOWAK/,'USES',/87654321/), "D3-R3: NOWAK opened/operates account 87654321");
 })();
 
 /* ============================ DEMO 4 ============================ */
@@ -161,6 +165,14 @@ function ok(cond,msg){ if(cond){pass++;} else {fail++; fails.push(msg);} }
  ok(!ent(e,'person',/Firearms Act/), "PREC: 'Firearms Act' is not a person");
  var f=R("Victim BROWN was attacked. The suspect, found carrying a machete, fled.");
  ok(f.relationships.filter(function(x){return x.type==='POSSESSES';}).length===0, "PREC: possession does not cross a sentence boundary onto the victim");
+ var go=R("The Governor of the Bank of England spoke at length about policy.");
+ ok(go.relationships.filter(function(x){return x.type==='ASSOCIATE_OF';}).length===0, "PREC: 'Governor of the Bank of England' creates no member-of link");
+ var d4=R(D.D4);
+ ok(!hasRel(d4,/BAINES/,'TRAVELS_TO',/Calais/), "PREC: vehicle's ferry crossing not attributed to the subject");
+ var md=getRel(d4,/BAINES/,'TRAVELS_TO',/Malaga/);
+ ok(md&&md.d==='2026-06-11', "D4: Malaga dated 11/06 (journey legs share departure date)");
+ var bd=getRel(d4,/BAINES/,'DEPARTS_FROM',/Bristol Airport/);
+ ok(bd&&bd.d==='2026-06-11', "D4: Bristol departure dated 11/06 not the 15/06 report header");
 })();
 
 /* ---- report ---- */

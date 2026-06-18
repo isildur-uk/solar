@@ -1504,9 +1504,14 @@
         }
       }
       if (!subject && /\b(he|she)\b/i.test(sTxt)) { subject = carrySubject; carried = true; }  // not plural "they": a carried singular subject is the wrong referent
+      // A sentence whose explicit subject is a VEHICLE ("The Transit boarded a ferry
+      // to Calais") with no person/pronoun must NOT carry the document principal — the
+      // mover is the vehicle, not the subject (this wrongly minted BAINES -> Calais).
+      var _vehSubj = !persons.length && !/\b(he|she|they|i|we)\b/i.test(sTxt) &&
+        /^[\s.,;:]*(?:the|that|this|a|an|same)\s+(?:[a-z]{3,}\s+){0,2}(?:transit|van|lorry|truck|hgv|vehicle|car|motorcycle|motorbike|moped|scooter|pickup|minibus|coach|bmw|audi|mercedes|sprinter|golf|polo|passat|astra|corsa|focus|fiesta|insignia|qashqai|clio|megane)\b/i.test(sTxt);
       // Verb-led continuation ("On 04/05/2026 used this email to...") — carry the
       // last-mentioned person forward, at reduced confidence.
-      if (!subject && carrySubject && /\b(used|uses|book(ed|s)?|stay(ed|s)?|travel(led|s)?|fl(ew|ies|ying)|depart(?:ed|s|ing)?|left|leav(?:es|ing)|arriv(?:ed|es|ing)?|head(?:ed|s|ing)?|drove|driv(?:es|ing)|sail(?:ed|s|ing)?|board(?:ed|s)?|purchas(ed|es)?|return(ed|s)?|retain(ed|s)?|keeps?|kept|liaison\s+with)\b/i.test(sTxt)) {
+      if (!subject && carrySubject && !_vehSubj && /\b(used|uses|book(ed|s)?|stay(ed|s)?|travel(led|s)?|fl(ew|ies|ying)|depart(?:ed|s|ing)?|left|leav(?:es|ing)?|arriv(?:ed|es|ing)?|head(?:ed|s|ing)?|drove|driv(?:es|ing)|sail(?:ed|s|ing)?|board(?:ed|s)?|purchas(ed|es)?|return(ed|s)?|retain(ed|s)?|keeps?|kept|liaison\s+with)\b/i.test(sTxt)) {
         subject = carrySubject; carried = true;
       }
       if (persons.length) lastPerson = persons[persons.length - 1];
@@ -1524,7 +1529,7 @@
       var locs = entitiesInRange(s0, s1, "location");
       var addrs = entitiesInRange(s0, s1, "address");
       var vehicles = entitiesInRange(s0, s1, "vehicle");
-      var datesInSent = dateHits.filter(function (dh) { return dh.start >= s0 && dh.end <= s1 && !dh.usedRel && !dh.used; });
+      var datesInSent = dateHits.filter(function (dh) { return dh.start >= s0 && dh.end <= s1 && !dh.usedRel && !dh.used && !/\b(?:report|bulletin|memo|log|brief(?:ing)?)\b[^\n]*[-\u2013\u2014:]\s*$/i.test(text.slice(Math.max(0, dh.start - 48), dh.start)); });
       var firstDate = datesInSent.length ? datesInSent[0].iso : null;
 
       // Hotel/venue phone: phone immediately follows an address span → PHONE_OF address
@@ -1670,8 +1675,11 @@
             if (cl.verb.negated) rel.negated = true;
             if (firstDate && !cl.verb.negated &&
                 ["TRAVELS_TO", "DEPARTS_FROM", "STAYS_AT", "TRANSACTED_WITH", "COMMUNICATED_WITH"].indexOf(rf.type) !== -1) {
-              rel.dateISO = firstDate;
-              markDateUsed(datesInSent, rel);
+              // Movement legs of ONE journey (depart X -> travel Y) share the departure
+              // date — don't consume dates sequentially, which mis-dated the outbound
+              // destination with the return date. Transactions/comms still take distinct dates.
+              if (rf.type === "TRAVELS_TO" || rf.type === "DEPARTS_FROM") { rel.dateISO = firstDate; }
+              else { rel.dateISO = firstDate; markDateUsed(datesInSent, rel); }
             }
             // money rider on transactions: amount travels on the link
             if (rf.type === "TRANSACTED_WITH") {
@@ -2318,6 +2326,53 @@
         if (!who) return;
         if (!cue.test(text.slice(best, os))) return;       // precision: need an explicit possession cue between person and object
         if (!hasRelBetween(who, ob)) addRelDirect(who, ob, "POSSESSES", "med", text.slice(best, os).replace(/\s+/g, " ").trim().slice(-120), "possession");
+      });
+    })();
+
+    /* ---- 13h. Professional / account relationships (FROST acts for X; X of <firm>;
+       account opened by / in the name of <org>) — entity-adjacency guarded ---- */
+    (function () {
+      function nearestPersonBefore(pos, excl) {
+        var best = null, b = -1;
+        entities.forEach(function (e) { if (e.type !== "person") return; e.spans.forEach(function (sp) { if (sp[1] <= pos && sp[1] > b && (pos - sp[1]) < 120 && e !== excl) { b = sp[1]; best = e; } }); });
+        return best;
+      }
+      function personByName(nm) {
+        var u = String(nm).toUpperCase().split(/\s+/).pop().replace(/[^A-Z0-9]+$/, "");  // drop trailing "." / apostrophe so "VANCE." matches "Peter VANCE"
+        if (u.length < 2) return null;
+        return entities.find(function (e) { return e.type === "person" && e.label.toUpperCase().split(/\s+/).pop().replace(/[^A-Z0-9]+$/, "") === u; });
+      }
+      // REPRESENTS: "acted on <X>'s behalf" / "on behalf of <X>" / "acting for <X>"
+      var reRep = /\bon\s+(?:behalf\s+of\s+([A-Z][\w'’.-]+(?:\s+[A-Z][\w'’.-]+){0,3})|([A-Z][\w'’.-]+(?:\s+[A-Z][\w'’.-]+){0,3})['’]s\s+behalf)|\b(?:acting|acted|acts)\s+for\s+([A-Z][\w'’.-]+(?:\s+[A-Z][\w'’.-]+){0,3})/g, rm;
+      while ((rm = reRep.exec(text))) {
+        var client = personByName(rm[1] || rm[2] || rm[3]);
+        if (!client) continue;
+        var agent = nearestPersonBefore(rm.index, client);
+        if (agent && agent !== client && !hasRelBetween(agent, client))
+          addRelDirect(agent, client, "REPRESENTS", "med", text.slice(Math.max(0, rm.index - 36), rm.index + rm[0].length).replace(/\s+/g, " ").trim().slice(0, 120), "acts for");
+      }
+      // "<Person> of <Org>" (adjacent entities) -> Person ASSOCIATE_OF Org
+      entities.filter(function (e) { return e.type === "person"; }).forEach(function (per) {
+        per.spans.forEach(function (sp) {
+          if (!/^\s+of\s+/i.test(text.slice(sp[1], sp[1] + 5))) return;
+          var org = entities.find(function (o) { return o.type === "organisation" && o.spans.some(function (osp) { return osp[0] >= sp[1] && osp[0] - sp[1] <= 5; }); });
+          if (org && !hasRelBetween(per, org)) addRelDirect(per, org, "ASSOCIATE_OF", "med", (per.label + " of " + org.label).slice(0, 120), "member of");
+        });
+      });
+      // accounts: "<Person> opened ... <acct>" -> USES; "<acct> ... in the name of <Org>" -> Org HOLDS
+      entities.filter(function (e) { return e.type === "account"; }).forEach(function (ac) {
+        var as = ac.spans[0][0], ae = ac.spans[0][1];
+        var nm = /\bin\s+the\s+name\s+of\s+([A-Z][\w&'’.-]+(?:\s+[A-Z][\w&'’.-]*){0,4})/.exec(text.slice(ae, ae + 80));
+        if (nm) {
+          var orgKey = nm[1].toUpperCase();
+          var org = entities.find(function (o) { return o.type === "organisation" && orgKey.indexOf(o.label.toUpperCase().split(/\s+/)[0]) !== -1; });
+          if (org && !hasRelBetween(org, ac)) addRelDirect(org, ac, "HOLDS", "med", ("in the name of " + nm[1]).slice(0, 120), "in the name of");
+        }
+        if (/\bopen(?:ed|s|ing)?\b[^.]{0,40}$/i.test(text.slice(Math.max(0, as - 90), as))) {
+          var who = null, b = -1;
+          entities.forEach(function (e) { if (e.type !== "person") return; e.spans.forEach(function (sp) { if (sp[1] <= as && sp[1] > b && (as - sp[1]) < 90) { b = sp[1]; who = e; } }); });
+          if (who && !hasRelBetween(who, ac)) addRelDirect(who, ac, "USES", "med", "opened account", "opened account");
+        }
       });
     })();
 
