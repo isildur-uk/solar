@@ -32,6 +32,8 @@ type), and a restrained chromatic-prism entry animation.
   uppercase, enclosed in `[ BRACKETS ]` — reads as technical annotation, not prose.
   Vendored: `css/fonts/geist-mono-latin-var.woff2`.
 
+> **Build-standard note (gate 7 — documented exception).** The Product Build Standard bans Inter *as a lazy default*. SOLAR's use of Inter 300 is the opposite: a deliberate, documented type choice — weight-300 luminosity on a cosmic-void surface, per the xAI reference lineage above, paired with Geist Mono for technical annotation. This is a conscious exception to gate 7, not a default. Keep it as specified; don't "correct" it to satisfy the gate.
+
 ## Components
 - **Wordmark** — Inter 300, `clamp(3.4rem, 13vw, 9.5rem)`, white `#fff`, layered light bloom
   behind (asymmetric, white→amber→transparent). The typographic hero *is* the visual hero.
