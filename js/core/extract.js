@@ -193,6 +193,8 @@
           if (a.kind === "crypto") {
             var _coinLbl = (St.cryptoLabel ? St.cryptoLabel(a.coin) : a.coin) || "Crypto";
             a.cm = _coinLbl + " wallet " + (ent.value || ent.label);
+          } else if (a.kind === "iban") {
+            a.cm = "IBAN " + String(a.iban || ent.value || ent.label).replace(/\s+/g, "").toUpperCase();
           } else {
             a.cm = St.identifiers.account.freeText(ent.value || ent.label);
           }
@@ -415,8 +417,17 @@
       addEntity("account", "AC " + m[1] + " / SC " + m[2], m[2].replace(/\D/g, "") + m[1],
         { account: m[1], sortCode: m[2], kind: "account" }, "high", m.index, m.index + m[0].length);
     }
+    // Bare "account <6-8 digits>" with no sort code (the 'account' keyword + a 6-8 digit
+    // number is a reliable financial anchor). The sort-code form above claims first.
+    var reBareAcct = /\baccount\s+(?:number\s+|no\.?\s+)?(\d{6,8})\b/gi;
+    while ((m = reBareAcct.exec(text))) {
+      if (spans.overlaps(m.index, m.index + m[0].length)) continue;
+      if (/^\s*(?:,?\s*(?:at\s+|held\s+at\s+)?sort|\/?\s*\d{2}-\d{2}-\d{2})/i.test(text.slice(m.index + m[0].length, m.index + m[0].length + 20))) continue;
+      spans.claim(m.index, m.index + m[0].length);
+      addEntity("account", "AC " + m[1], m[1], { account: m[1], kind: "account" }, "high", m.index, m.index + m[0].length);
+    }
     // IBAN (label-anchored): "IBAN CH93 0076 2011 6238 5295 7"
-    var reIban = /\bIBAN[\s:]*([A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{2,4}){2,8})/gi;
+    var reIban = /\bIBAN[\s:]*([A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{2,4}){2,8}(?:[ ]?\d)?)/gi;
     while ((m = reIban.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);

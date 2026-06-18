@@ -124,6 +124,11 @@ function ok(cond,msg){ if(cond){pass++;} else {fail++; fails.push(msg);} }
  ok(!hasStatus(s1,/Priya Nair/,'ARRESTED') && !hasStatus(s1,/Helen Brookes/,'ARRESTED'), "ACID1: arrest status not bled onto Nair/Brookes");
  ok(hasRel(s3,/FENWICK/,'TRANSACTED_WITH',/Kestrel/), "ACID3: FENWICK->Kestrel (kept)");
  ok(hasRel(s3,/FENWICK/,'HOLDS',/CH93|IBAN/), "ACID3: FENWICK holds IBAN (Account holder)");
+ var ib=ent(s3,'account',/IBAN/); ok(ib&&/^IBAN /.test(ib.attrs.cm||''), "ACID3: IBAN renders an IBAN CM, not 'AC ...'");
+ ok(ib&&/CH\d{2}\w{17}/.test(ib.label.replace(/\s/g,'')), "ACID3: IBAN keeps its full length (trailing check digit)");
+ var ba=R("Money left account 41028833 yesterday; nothing else known.");
+ ok(ent(ba,'account',/41028833/), "OPT: bare 'account <digits>' (no sort code) extracted");
+ ok(R("In account terms the 2026 figure rose sharply.").entities.filter(function(e){return e.type==='account';}).length===0, "OPT-neg: 'account terms ... 2026' is not an account");
 })();
 
 /* ===================== OPT: entity-extraction upgrades (verified gains) ===================== */
