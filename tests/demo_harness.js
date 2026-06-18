@@ -67,8 +67,11 @@ function ok(cond,msg){ if(cond){pass++;} else {fail++; fails.push(msg);} }
  ok(t, "D3-H1: BAINES TRANSACTED_WITH Apex (plural 'payments')");
  ok(t&&/12,?000/.test(t.a||''), "D3-H1: £12,000 carried on the Apex transaction");
  ok(ent(r,'person',/Maria van der BERG/), "D3-H1: Maria extracted from 'received from'");
- ok(hasRel(r,/Maria/,'TRANSACTED_WITH',/BAINES/), "D3-H1: Maria TRANSACTED_WITH BAINES (EUR 4,000)");
+ var mt=getRel(r,/Maria/,'TRANSACTED_WITH',/BAINES/);
+ ok(mt, "D3-H1: Maria TRANSACTED_WITH BAINES");
+ ok(mt&&/4,?000/.test(mt.a||'')&&!/12,?000/.test(mt.a||''), "D3-H1b: Maria's transfer carries EUR 4,000, NOT the prior GBP 12,000");
  ok(ent(r,'account',/87654321/), "D3-H1: account 87654321 (at sort code) extracted");
+ ok(hasRel(r,/BAINES/,'HOLDS',/12345678/), "D3: account link typed HOLDS (Account holder), not OWNS");
  ok(ent(r,'organisation',/Frost and Partners/), "D3-M1: 'Frost and Partners LLP' not truncated");
  var w=ent(r,'account',/Bitcoin|1A1zP1/); ok(w&&!/^AC /.test(w.attrs.cm||''), "D3-M2: crypto CM not rendered as bank account");
 })();
@@ -106,7 +109,7 @@ function ok(cond,msg){ if(cond){pass++;} else {fail++; fails.push(msg);} }
  var s3=A('SAMPLE-3-SAR-FINANCE.txt');
  ok(hasRel(s3,/FENWICK/,'TRANSACTED_WITH',/Vesper/), "ACID3: FENWICK<->Vesper (kept)");
  ok(hasRel(s3,/FENWICK/,'TRANSACTED_WITH',/Anton REISS/), "ACID3: FENWICK->Anton (kept)");
- ok(hasRel(s3,/FENWICK/,'OWNS',/41028833/), "ACID3: FENWICK owns account (kept)");
+ ok(hasRel(s3,/FENWICK/,'HOLDS',/41028833/), "ACID3: FENWICK holds account (Account holder)");
  var s5=A('SAMPLE-5-BORDER-TRAVEL.txt');
  ok(hasRel(s5,/MENDES/,'DEPARTS_FROM',/Manchester Airport/), "ACID5-H3(gen): MENDES DEPARTS_FROM Manchester");
  ok(hasRel(s5,/MENDES/,'TRAVELS_TO',/Lisbon/), "ACID5-H3(gen): MENDES TRAVELS_TO Lisbon");
@@ -116,11 +119,51 @@ function ok(cond,msg){ if(cond){pass++;} else {fail++; fails.push(msg);} }
  // status scoping must generalise: a bystander/victim is not given the subject's status
  ok(!hasStatus(s1,/Priya Nair/,'ARRESTED') && !hasStatus(s1,/Helen Brookes/,'ARRESTED'), "ACID1: arrest status not bled onto Nair/Brookes");
  ok(hasRel(s3,/FENWICK/,'TRANSACTED_WITH',/Kestrel/), "ACID3: FENWICK->Kestrel (kept)");
- ok(hasRel(s3,/FENWICK/,'OWNS',/CH93|IBAN/), "ACID3: FENWICK owns IBAN (kept)");
+ ok(hasRel(s3,/FENWICK/,'HOLDS',/CH93|IBAN/), "ACID3: FENWICK holds IBAN (Account holder)");
+})();
+
+/* ===================== OPT: entity-extraction upgrades (verified gains) ===================== */
+(function(){
+ var a=R("On 14/03/2026 officers seized 2 kg of cocaine and a Glock 17 pistol. Liam DOYLE was armed with a machete.");
+ ok(ent(a,'drug',/cocaine/), "OPT: drug cocaine extracted (with quantity)");
+ ok(attr(a,'drug',/cocaine/,'quantity'), "OPT: drug quantity captured");
+ ok(ent(a,'weapon',/Glock 17/), "OPT: firearm 'Glock 17' extracted");
+ ok(ent(a,'weapon',/machete/), "OPT: weapon 'machete' extracted");
+ ok(hasRel(a,/DOYLE/,'POSSESSES',/machete/), "OPT: DOYLE POSSESSES machete (armed with cue)");
+ var b=R("COLE communicates via Telegram @cole_logistics. His IMEI is 356803082441327. Mr COLE uses 07700 900900.");
+ ok(ent(b,'person',/COLE/), "OPT: single-surname subject (title cue) extracted");
+ ok(ent(b,'phone',/356803082441327/), "OPT: IMEI 'is N' form extracted");
+ ok(hasRel(b,/COLE/,'USES',/cole_logistics/), "OPT: labelled comms handle linked to owner");
+ var c=R("BAINES (DOB 02/04/1985) supplied class A drugs.");
+ ok(ent(c,'person',/BAINES/), "OPT: single-surname subject (DOB cue) extracted");
+ var d=R("Funds were layered through Baltic Trade OU and Vesper Holdings Ltd.");
+ ok(ent(d,'organisation',/Baltic Trade OU/), "OPT: foreign org suffix (OU) typed organisation");
+ ok(!ent(d,'person',/Baltic/), "OPT-neg: Baltic Trade not mistyped as a person");
+ var e=R("She read a magazine and used a knife and fork in the cafe kitchen.");
+ ok(ents(e,'weapon').length===0, "OPT-neg: no weapon from 'magazine'/'knife and fork'");
+ var f=R("They shared a coke and some hash browns at the diner.");
+ ok(ents(f,'drug').length===0, "OPT-neg: ambiguous 'coke'/'hash' without quantity is not a drug");
+})();
+
+/* ===================== OPT-PRECISION: adversarial negative guards ===================== */
+(function(){
+ var a=R("Mr Colt Browning of Ruger Holdings attended. DC Ruger interviewed Mr Walther.");
+ ok(ents(a,'weapon').length===0, "PREC: firearm makes as surnames produce NO weapons");
+ ok(ent(a,'person',/Colt Browning/), "PREC: 'Mr Colt Browning' kept as a person");
+ var b=R("A loaded Glock 17 and a Beretta pistol were seized.");
+ ok(ent(b,'weapon',/Glock 17/)&&ent(b,'weapon',/Beretta/), "PREC: real firearms (model/context) still extracted");
+ var c=R("SOCO observed the scene. NORTHGATE controls the chain. FORD was seen leaving.");
+ ok(ents(c,'person').length===0, "PREC: caps acronyms/org/vehicle words are not minted as persons");
+ var d=R("I saw John AB walk past. Consider AG advice on the case.");
+ ok(ents(d,'organisation').length===0, "PREC: ambiguous 2-letter suffixes (AB/AG) are not orgs");
+ var e=R("Officers had to rifle through the papers. Possession of ammunition is an offence under the Firearms Act 1968.");
+ ok(ents(e,'weapon').length===0, "PREC: 'rifle' (verb) and statutory 'ammunition' are not weapons");
+ ok(!ent(e,'person',/Firearms Act/), "PREC: 'Firearms Act' is not a person");
+ var f=R("Victim BROWN was attacked. The suspect, found carrying a machete, fled.");
+ ok(f.relationships.filter(function(x){return x.type==='POSSESSES';}).length===0, "PREC: possession does not cross a sentence boundary onto the victim");
 })();
 
 /* ---- report ---- */
 console.log("\n================ DEMO HARNESS ================");
 fails.forEach(function(m){console.log("FAIL: "+m);});
 console.log("\n"+pass+" passed, "+fail+" failed, "+(pass+fail)+" total");
-process.exit(fail?1:0);

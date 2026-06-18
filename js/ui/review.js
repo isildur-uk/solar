@@ -438,7 +438,7 @@
             store.addLink({
               from: primaryId, to: id, type: "LINKED_TO", confidence: "low",
               origin: batch + " (orphan guard)",
-              sentence: "Auto-linked: extracted from the same passage as the subject"
+              sentence: "Provisional link (orphan guard): entity was unconnected in its passage — retype with the correct relationship or delete"
             });
           }
         });

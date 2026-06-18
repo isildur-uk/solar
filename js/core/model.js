@@ -18,6 +18,8 @@
     location:     { label: "Location",      i2: "Location",      sem: "Location",        colour: "#5fc4c0", icon: "L" },
     organisation: { label: "Organization",  i2: "Organization",  sem: "Organization",    colour: "#d8a16e", icon: "O" },
     vehicle:      { label: "Vehicle",       i2: "Vehicle",       sem: "Motor Vehicle",   colour: "#c9c36a", icon: "V" },
+    weapon:       { label: "Weapon",        i2: "Weapon",        sem: "Weapon",          colour: "#d86e6e", icon: "!" },
+    drug:         { label: "Drugs",         i2: "Object",        sem: "Object",          colour: "#b06ed8", icon: "*" },
     account:      { label: "Bank Account",  i2: "Bank Account",  sem: "Bank Account",    colour: "#d87f9b", icon: "£" },
     date:         { label: "Date",          i2: "Event",         sem: "Event",           colour: "#8d99ae", icon: "D" },
     money:        { label: "Cash",          i2: "Cash",          sem: "",                colour: "#a8c97f", icon: "£" },
@@ -30,7 +32,7 @@
   var LINK_TYPES = [
     "USES", "ASSOCIATE_OF", "COMMUNICATED_WITH", "TRANSACTED_WITH",
     "TRAVELS_TO", "DEPARTS_FROM", "STAYS_AT", "LOCATED_IN", "PHONE_OF",
-    "OWNS", "EMPLOYS", "FAMILY_OF", "CO_LOCATED_WITH", "JOURNEY_WITH", "LINKED_TO"
+    "OWNS", "HOLDS", "REPRESENTS", "POSSESSES", "EMPLOYS", "FAMILY_OF", "CO_LOCATED_WITH", "JOURNEY_WITH", "LINKED_TO"
   ];
 
   var F = (typeof window !== "undefined" && window.CRFormat) ||

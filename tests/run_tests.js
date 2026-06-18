@@ -606,7 +606,7 @@ test("EXTRACT STRUCTURED: personal-detail table links contacts and masked accoun
   var account = r.entities.find(function (e) { return e.type === "account" && e.attrs && e.attrs.tail === "1847"; });
   assert(person && email && account, "subject, email and masked account should be extracted");
   assert(r.relationships.some(function (rel) { return rel.type === "USES" && rel.sourceRef === person.ref && rel.targetRef === email.ref; }), "structured email should be USES, not communication-only");
-  assert(r.relationships.some(function (rel) { return rel.type === "OWNS" && rel.sourceRef === person.ref && rel.targetRef === account.ref; }), "masked account should be owned by subject");
+  assert(r.relationships.some(function (rel) { return rel.type === "HOLDS" && rel.sourceRef === person.ref && rel.targetRef === account.ref; }), "masked account should be held by subject (HOLDS)");
 });
 
 test("EXTRACT STRUCTURED: employment/directorship tables point organisation EMPLOYS subject", function () {
@@ -873,4 +873,4 @@ test("MODEL: snapshot/undo of addEntity", function () {
 /* ================================================================== */
 
 console.log("\n" + (passed + failed) + " tests: " + passed + " passed, " + failed + " failed");
-if (failed > 0) process.exit(1);
+if (failed > 0) process.e

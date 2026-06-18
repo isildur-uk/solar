@@ -85,7 +85,7 @@
     return !!(FIELD_LABELS[toks[0]] || FIELD_LABELS[toks[toks.length - 1]]);
   }
 
-  var ORG_SUFFIX = /\b(ltd|limited|plc|llp|llc|inc|corp|gmbh|sl|sa|bv|sarl|holdings|logistics|transport|trading|imports|exports)\.?$/i;
+  var ORG_SUFFIX = /\b(ltd|limited|plc|llp|llc|inc|corp|gmbh|sl|sa|bv|sarl|srl|spa|ou|oü|oyj|aps|holdings|logistics|transport|trading|imports|exports)\.?$/i;
 
   /* Deterministic jitter from a label so several addresses in one town don't
    * stack on the exact same map pin. ±scale/2 degrees. */
@@ -338,7 +338,7 @@
     /* ---- 2e. Prefixed identifiers (claim before phones eat the digits) ---- */
     var personIdHits = []; // {key, value, start, end} → attached after people exist
     // IMEI: 15 digits, prefixed (allow internal spaces, e.g. "35 680705 824133 2")
-    var reImeiPre = /\bIMEI[\s.:]*((?:[0-9][ ]?){15})\b/gi;
+    var reImeiPre = /\bIMEI(?:\s+(?:no\.?|number|is))?[\s.:=]*((?:[0-9][ ]?){15})\b/gi;
     while ((m = reImeiPre.exec(text))) {
       var imeiDigits = m[1].replace(/\D+/g, "");
       if (imeiDigits.length !== 15) continue;
@@ -714,6 +714,46 @@
       addEntity("organisation", m[1].trim(), m[1].trim(), { kind: "criminal group" }, "high", m.index, m.index + m[0].length);
     }
 
+    /* ---- 8c. Drugs & weapons (intelligence "objects") ---- */
+    (function () {
+      // Unambiguous drug names extract on sight; ambiguous slang (coke/hash/spice/
+      // meth/ghb...) only with a quantity, to keep precision high.
+      var UNAMBIG = /^(?:cocaine|heroin|diamorphine|cannabis|marijuana|mdma|ecstasy|amphetamines?|methamphetamine|fentanyl|ketamine|mephedrone|lsd|cannabis resin|herbal cannabis|crack cocaine)$/i;
+      var reDrug = /\b((?:\d[\d.,]*\s*(?:kg|kilo(?:gram)?s?|kilos?|g|gram(?:me)?s?|grammes?|mg|oz|ounces?|lb|pounds?|wraps?|tablets?|pills?|bags?|bricks?|deals?|litres?|ml))\s+(?:of\s+)?)?(crack cocaine|cocaine|coke|heroin|diamorphine|cannabis resin|herbal cannabis|cannabis|marijuana|skunk|hashish|hash|ketamine|mdma|ecstasy|amphetamines?|methamphetamine|crystal meth|fentanyl|mephedrone|lsd|spice|ghb|gbl|diazepam|temazepam|alprazolam|opium|morphine|anabolic steroids|steroids)\b/gi, dm;
+      while ((dm = reDrug.exec(text))) {
+        var qty = dm[1] ? dm[1].trim() : "", name = dm[2];
+        if (!qty && !UNAMBIG.test(name)) continue;
+        if (spans.overlaps(dm.index, dm.index + dm[0].length)) continue;
+        spans.claim(dm.index, dm.index + dm[0].length);
+        addEntity("drug", (qty ? qty + " " : "") + name.toLowerCase(), name.toLowerCase(),
+          qty ? { kind: "drug", quantity: qty } : { kind: "drug" }, "high", dm.index, dm.index + dm[0].length, ["drug"]);
+      }
+      // Firearm makes (+ optional model number) -> weapon
+      var reFA = /\b(Glock|Beretta|Walther|Browning|Ruger|Sig\s?Sauer|Smith\s?&\s?Wesson|Uzi|Skorpion|Baikal|Makarov|Luger|Colt|MAC-?10|AK-?47|AR-?15)(\s?\d{1,3})?\b/g, fam;
+      while ((fam = reFA.exec(text))) {
+        if (spans.overlaps(fam.index, fam.index + fam[0].length)) continue;
+        var faModel = !!fam[2];
+        var faCtx = text.slice(Math.max(0, fam.index - 30), Math.min(text.length, fam.index + fam[0].length + 30));
+        var faWeapon = /\b(pistol|handgun|revolver|firearm|gun|shotgun|rifle|round|calibre|caliber|9\s?mm|\.\d{2}|loaded|seiz|recover|silencer|ammunition|weapon|armed|cartridge)\b/i.test(faCtx);
+        var faBef = text.slice(Math.max(0, fam.index - 16), fam.index), faAft = text.slice(fam.index + fam[0].length, fam.index + fam[0].length + 5);
+        // makes double as common surnames (Colt/Browning/Ruger/Walther/Beretta) — require a model
+        // number or weapon context, never right after an honorific/rank or before " of ".
+        if ((!faModel && !faWeapon) || /(?:Mr|Mrs|Ms|Miss|Dr|Sir|Lord|Lady|Sgt|Det|Insp|Supt|Prof|Col|Capt|Maj|Lt|Gen|PC|DC|DS|DI|DCI|DCS|ACC)\.?\s+$/.test(faBef) || /^\s+of\b/.test(faAft)) continue;
+        spans.claim(fam.index, fam.index + fam[0].length);
+        addEntity("weapon", fam[0].replace(/\s+/g, " "), fam[0].replace(/\s+/g, " "), { kind: "firearm" }, "high", fam.index, fam.index + fam[0].length, ["weapon"]);
+      }
+      // Generic weapon nouns (curated for precision; bare "knife"/"blade"/"magazine"
+      // are too ambiguous and are deliberately excluded)
+      var reW = /\b(sawn-?off shotgun|shotgun|pistol|handgun|revolver|firearm|sub-?machine ?gun|machine ?gun|ammunition|silencer|suppressor|machete|stun ?gun|taser|CS (?:gas|spray)|pepper spray|grenade|knuckle ?duster|imitation firearm|bladed (?:article|weapon))\b/gi, wm;
+      while ((wm = reW.exec(text))) {
+        if (spans.overlaps(wm.index, wm.index + wm[0].length)) continue;
+        var wCtx = text.slice(Math.max(0, wm.index - 32), Math.min(text.length, wm.index + wm[0].length + 32));
+        if (/\b(?:offence|offense|contrary to|under (?:the|s(?:ection|\.)?)|Act\s+\d{4}|Firearms Act|sentencing|guideline)\b/i.test(wCtx)) continue;  // statutory text, not a seized object
+        spans.claim(wm.index, wm.index + wm[0].length);
+        addEntity("weapon", wm[0].toLowerCase().replace(/\s+/g, " "), wm[0].toLowerCase(), { kind: "weapon" }, "high", wm.index, wm.index + wm[0].length, ["weapon"]);
+      }
+    })();
+
     /* ---- 9. People & organisations ---- */
     // Names written on an "ALIAS / AKA / nickname / streetname" line (PNC/CM
     // convention, IM01 SD01) are aliases of the preceding nominal, not new people.
@@ -819,7 +859,7 @@
     }
 
     // 9b. Organisations by suffix
-    var reOrg = /\b([A-Z][\w&'’-]*(?:\s+(?:and|&|[A-Z][\w&'’-]*)){0,3}\s+(?:Ltd|LTD|Limited|LIMITED|PLC|Plc|LLP|LLC|Inc|INC|Corp|CORP|GmbH|SL|SA|BV|Holdings|HOLDINGS|Logistics|LOGISTICS|Transport|TRANSPORT|Trading|TRADING)\.?)\b/g;
+    var reOrg = /\b([A-Z][\w&'’-]*(?:\s+(?:and|&|[A-Z][\w&'’-]*)){0,3}\s+(?:Ltd|LTD|Limited|LIMITED|PLC|Plc|LLP|LLC|Inc|INC|Corp|CORP|GmbH|SL|SA|BV|SARL|SRL|SpA|OU|OÜ|OYJ|ApS|Holdings|HOLDINGS|Logistics|LOGISTICS|Transport|TRANSPORT|Trading|TRADING)\.?)\b/g;
     while ((m = reOrg.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);
@@ -920,6 +960,7 @@
       Kingdom:1,Republic:1,State:1,States:1,County:1,City:1,Town:1,Village:1,
       Borough:1,District:1,Region:1,Province:1,
       Syndrome:1,Disease:1,Disorder:1,Virus:1,Mode:1,Reading:1,Limited:1,
+      Act:1,Bill:1,Regulations:1,Statute:1,Ordinance:1,
       Holdings:1,Operation:1,Project:1,Programme:1,Program:1,
       National:1,Insurance:1,Computer:1,Crime:1,Revenue:1,Customs:1,Border:1,Immigration:1,Welfare:1,Benefit:1,Tax:1,Number:1,Record:1,System:1,Register:1,Registry:1,Database:1,
       // titles / ranks / roles (also handled as prefixes below)
@@ -1035,6 +1076,35 @@
       spans.claim(csStart, csEnd);
       addEntity("person", csLbl, csLbl, {}, "high", csStart, csEnd, ["prose name", "caps surname"]);
     }
+
+    // 9c3. Single-surname nominal: a subject named by surname ALONE, strongly cued by
+    // an explicit "SURNAME (DOB ...)" or an honorific/rank ("Mr SURNAME", "DC SURNAME").
+    // Intelligence prose routinely refers to the subject by surname only; without this
+    // the person — and every phone/email/ID/handle that hangs off them — is lost.
+    // High precision: requires the DOB/title cue, never a gazetteer place, known
+    // acronym, org suffix, or the surname of an already-extracted fuller name.
+    (function () {
+      var reSolo = /\b([A-Z][A-Z'\u2019-]{2,})\b/g, sm3;
+      while ((sm3 = reSolo.exec(text))) {
+        var su = sm3[1];
+        if (NAME_STOPWORDS[su] || FIELD_LABELS[titleWord(su)] || ORG_CAPS_TAIL[su]) continue;
+        if (G.lookup(su)) continue;                                  // gazetteer place / acronym
+        var ss = sm3.index, se = ss + su.length;
+        if (spans.overlaps(ss, se)) continue;                        // already part of a fuller name/org
+        if (entities.some(function (e) { return e.type === "person" && e.label.toUpperCase().split(/\s+/).pop() === su; })) continue; // coref of an existing nominal, not a new one
+        var aft = text.slice(se, se + 32), bef = text.slice(Math.max(0, ss - 14), ss);
+        var cueDob = /^\s*[(,]?\s*(?:DOB|D\.O\.B|born|date of birth)\b/i.test(aft);
+        var cueTitle = /(?:^|[^A-Za-z])(?:Mr|Mrs|Ms|Miss|Mx|Dr|Prof|Professor|Sir|Dame|Lord|Lady|Rev|Sgt|Sergeant|Det|Detective|Insp|Inspector|Supt|Superintendent|Constable|PC|DC|DS|DI|DCI|DCS|ACC)\.?\s+$/.test(bef);
+        // A bare surname acting as the SUBJECT of a clearly-personal criminal/action verb
+        // ("BAINES supplied...", "DOYLE was arrested") is almost certainly a nominal. Tight
+        // verb list + non-name acronym guard keep this precise; emitted at MED for review.
+        var cueVerb = !/^(?:CCTV|DNA|ANPR|OCG|NCA|HMRC|PNC|SOCA|MI5|MI6|GCHQ|UKBA|UKBF|FIU|SAR)$/.test(su) &&
+          /^\s+(?:was|were|is|are|has|had|then|later|subsequently|also|allegedly|reportedly)?\s*(?:arrested|charged|convicted|sentenced|jailed|remanded|supplied|trafficked|smuggled|laundered|possessed|found|seen|observed|identified|collected|delivered|met|contacted|telephoned|travelled|attended|drove|drives|owns|controls|controlled|uses|used|admitted|denied|pleaded|absconded|recruited|instructed|paid|received)\b/i.test(aft);
+        if (!cueDob && !cueTitle) continue;   // verb-cue path removed (false persons from caps acronyms/org names)
+        spans.claim(ss, se);
+        addEntity("person", su, su, {}, cueDob ? "high" : "med", ss, se, ["single surname"]);
+      }
+    })();
 
     // 9d0. attach stashed prefixed identifiers (PNC/CRO/NINO/PPT) to people
     personIdHits.forEach(function (hit) {
@@ -1788,7 +1858,7 @@
         } else if (e.type === "email") {
           addRel(primary, e, "USES", "high", "field-form identifier", "field-form");
         } else if (e.type === "account") {
-          addRel(primary, e, "OWNS", "med", "field-form account", "field-form");
+          addRel(primary, e, "HOLDS", "med", "field-form account", "field-form");
         } else if (e.type === "address") {
           addRel(primary, e, "STAYS_AT", "med", "field-form address", "field-form");
         }
@@ -1810,7 +1880,7 @@
         var existing = relationBetween(primary, target);
         if (existing) {
           if (existing.sourceRef === primary.ref && existing.targetRef === target.ref &&
-              /^(USES|STAYS_AT|OWNS)$/.test(type) && existing.type !== type) {
+              /^(USES|STAYS_AT|OWNS|HOLDS)$/.test(type) && existing.type !== type) {
             existing.type = type;
             existing.confidence = conf || existing.confidence || "med";
             existing.sentence = why || existing.sentence || "structured document";
@@ -1838,13 +1908,13 @@
 
       // Accounts and masked account tails in bureau/PNR/SAR style tables.
       entities.filter(function (e) { return e.type === "account"; }).forEach(function (e) {
-        link("OWNS", e, e.attrs && e.attrs.sortCode ? "high" : "med", "structured account");
+        link("HOLDS", e, e.attrs && e.attrs.sortCode ? "high" : "med", "structured account");
       });
       var reMasked = /\*{2,}(\d{4})/g, mm;
       while ((mm = reMasked.exec(text))) {
         if (spans.overlaps(mm.index, mm.index + mm[0].length)) continue;
         var acc = addEntity("account", "Account ending " + mm[1], mm[1], { kind: "account", tail: mm[1], masked: true }, "med", mm.index, mm.index + mm[0].length);
-        link("OWNS", acc, "med", "masked account");
+        link("HOLDS", acc, "med", "masked account");
       }
 
       // Employment/directorship: link an organisation to the subject only when
@@ -2166,7 +2236,8 @@
       var reFrom = /\b(?:receiv(?:e|ed|es)|credit(?:s|ed)?|deposit(?:s|ed)?|incoming|funds)\b[^.]{0,90}?\bfrom\b[^.]{0,120}/gi, fm;
       while ((fm = reFrom.exec(flat))) {
         var fStart = fm.index, fEnd = fm.index + fm[0].length;
-        var money2 = nearestMoney(fStart - 60, fEnd);
+        var _fps = flat.lastIndexOf(".", fStart - 1) + 1;       // don't cross into the previous sentence (the amount must be THIS transfer's, e.g. EUR 4,000 not the prior GBP 12,000)
+        var money2 = nearestMoney(Math.max(_fps, fStart - 60), fEnd);
         if (!money2) continue;
         var frRel = fm[0].toLowerCase().lastIndexOf(" from ");
         var frPos = fStart + (frRel >= 0 ? frRel + 6 : 0);
@@ -2231,6 +2302,24 @@
       relationships.push(rel);
       return rel;
     }
+
+    /* ---- 13g. Possession: <Person> [possession/armed/carrying/recovered/seized] <weapon|drug> ---- */
+    (function () {
+      var objs = entities.filter(function (e) { return e.type === "weapon" || e.type === "drug"; });
+      if (!objs.length) return;
+      var cue = /\b(?:in possession of|possession of|found (?:with|carrying|in possession)|recovered from|seized from|armed with|carrying|brandish\w+|concealed|had)\b/i;
+      objs.forEach(function (ob) {
+        var os = ob.spans[0][0], who = null, best = -1;
+        var ssb = Math.max(text.lastIndexOf(".", os - 1), text.lastIndexOf("\n", os - 1), text.lastIndexOf(";", os - 1), text.lastIndexOf("!", os - 1), text.lastIndexOf("?", os - 1)) + 1;
+        entities.forEach(function (pp) {
+          if (pp.type !== "person") return;
+          pp.spans.forEach(function (sp) { if (sp[1] <= os && sp[1] >= ssb && sp[1] > best && (os - sp[1]) < 160) { best = sp[1]; who = pp; } });
+        });
+        if (!who) return;
+        if (!cue.test(text.slice(best, os))) return;       // precision: need an explicit possession cue between person and object
+        if (!hasRelBetween(who, ob)) addRelDirect(who, ob, "POSSESSES", "med", text.slice(best, os).replace(/\s+/g, " ").trim().slice(-120), "possession");
+      });
+    })();
 
     /* ---- 14. Travel relationships → timeline events ---- */
     relationships.forEach(function (r) {
