@@ -9,3 +9,6 @@ _backups/
 package-lock.json
 # Large local model weights (GLiNER .onnx + tokenizer) — keep local, never commit
 models/
+
+.vercel
+.env*
