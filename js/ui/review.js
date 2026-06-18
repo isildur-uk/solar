@@ -43,7 +43,9 @@
     result.entities.forEach(initEntityCard);
     result.relationships.forEach(function (r) {
       relState[r.ref] = {
-        include: r.confidence !== "low" && !r.negated,  // denied acts need opt-in
+        // Uncertain links stay ON the chart at LOW (analyst sees & clears them),
+        // rather than being hidden — only denied/negated acts need explicit opt-in.
+        include: !r.negated,
         type: r.type,
         direction: r.direction || "->"
       };

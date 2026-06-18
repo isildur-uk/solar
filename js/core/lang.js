@@ -55,10 +55,19 @@
   var VERB_GROUPS = {
     movement: {
       lemmas: ["fly", "travel", "go", "head", "drive", "sail", "move", "visit",
-        "attend", "arrive", "cross", "enter", "leave", "depart", "relocate"],
-      prepMap: { to: "TRAVELS_TO", into: "TRAVELS_TO", towards: "TRAVELS_TO", from: "DEPARTS_FROM" },
+        "attend", "arrive", "cross", "enter", "relocate"],
+      prepMap: { to: "TRAVELS_TO", into: "TRAVELS_TO", towards: "TRAVELS_TO", "for": "TRAVELS_TO", from: "DEPARTS_FROM" },
       targetMap: { location: "TRAVELS_TO", address: "STAYS_AT", vehicle: "USES", person: "ASSOCIATE_OF" },
       def: "TRAVELS_TO"
+    },
+    // depart/leave are directionally OPPOSITE to movement: a bare location object
+    // ("departed Bristol") is the ORIGIN (DEPARTS_FROM), while an explicit
+    // destination prep ("bound for Malaga", "to Lisbon") is TRAVELS_TO.
+    departure: {
+      lemmas: ["depart", "leave", "exit"],
+      prepMap: { to: "TRAVELS_TO", "for": "TRAVELS_TO", towards: "TRAVELS_TO", into: "TRAVELS_TO", from: "DEPARTS_FROM" },
+      targetMap: { location: "DEPARTS_FROM", address: "DEPARTS_FROM", vehicle: "USES", person: "ASSOCIATE_OF" },
+      def: "DEPARTS_FROM"
     },
     communication: {
       lemmas: ["call", "phone", "text", "message", "email", "contact", "ring",

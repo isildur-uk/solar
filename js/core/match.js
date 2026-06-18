@@ -220,7 +220,12 @@
     return foldAccents(s).toLowerCase()
       .replace(/[^a-z\s'-]/g, " ")
       .replace(/[\s'-]+/g, " ")
-      .trim();
+      .trim()
+      // fold equivalent company-suffix spellings so "X Ltd" == "X Limited" across
+      // reports (kept distinct from PLC/LLP — those are genuinely different entities).
+      .replace(/\bpublic limited company\b/g, "plc")
+      .replace(/\blimited\b/g, "ltd")
+      .replace(/\bincorporated\b/g, "inc");
   }
 
   /**

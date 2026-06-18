@@ -177,15 +177,10 @@
       if (!St) return;
       var a = ent.attrs || (ent.attrs = {});
       try {
-        if (ent.type === "person") {
-          var ctx = text.slice(Math.max(0, (start || 0) - 140), Math.min(text.length, (end || 0) + 140));
-          if (ctx) {
-            var st = St.detectStatus(ctx).map(function (x) { return x.code; });
-            var wn = St.detectWarningSignals(ctx).map(function (x) { return x.code; });
-            if (st.length && !a.cmStatus) a.cmStatus = st;
-            if (wn.length && !a.cmWarnings) a.cmWarnings = wn;
-          }
-        } else if (ent.type === "phone") {
+        // NB: person status/warning signals are NOT detected here by proximity —
+        // a ±140-char window leaked "in custody"/"firearms" onto adjacent names.
+        // They are attributed grammatically inside the sentence loop (section 12).
+        if (ent.type === "phone") {
           if (a.kind !== "IMEI") a.cm = St.phoneCM(ent.value || ent.label);
         } else if (ent.type === "vehicle") {
           var vv = ent.value || ent.label;
@@ -195,7 +190,12 @@
         } else if (ent.type === "ip") {
           a.cm = St.identifiers.ip.freeText(ent.label); a.cmValid = St.identifiers.ip.validate(ent.label);
         } else if (ent.type === "account") {
-          a.cm = St.identifiers.account.freeText(ent.value || ent.label);
+          if (a.kind === "crypto") {
+            var _coinLbl = (St.cryptoLabel ? St.cryptoLabel(a.coin) : a.coin) || "Crypto";
+            a.cm = _coinLbl + " wallet " + (ent.value || ent.label);
+          } else {
+            a.cm = St.identifiers.account.freeText(ent.value || ent.label);
+          }
         } else if (ent.type === "date") {
           if (a.iso) a.cmDate = St.ddmmyyyy(a.iso);
         }
@@ -220,9 +220,9 @@
       // "passport ... number 503842156" / NINO / NHS / licence are not mis-read as phones.
       if (/\b(?:passport|national\s+insurance|NINO|NHS\s+(?:no\.?|number)|driving\s+licen[cs]e)\b[^0-9\n]{0,44}$/i.test(text.slice(Math.max(0, start - 48), start))) return true;
       var joined = before + raw + after;
-      if (/(?:SAR|CD|CNX|HMRC|PND|NBTC|IR|URN|REF|REFERENCE|DISCLOSURE|CASE|REQ)[\s/:#-]*$/i.test(before)) return true;
+      if (/\b(?:SAR|CD|CNX|HMRC|PND|NBTC|IR|URN|REF|REFERENCE|DISCLOSURE|CASE|REQ)(?![A-Za-z])[\s/:#-]*$/i.test(before)) return true;
       if (/[A-Z]{2,}[-/][0-9]{4}[-/A-Z0-9]*$/i.test(before + raw)) return true;
-      if (/\b(?:UTR|VAT|PAYE|Co\.?\s*No\.?|Company\s+No\.?|PNR|PNCID|CRO|PPT|IMSI|ICCID|IMEI)[^0-9\n]{0,40}$/i.test(before)) return true;
+      if (/\b(?:UTR|VAT|PAYE|Co\.?\s*No\.?|Company\s+No\.?|PNR|PNCID|CRO|PPT|IMSI|ICCID|IMEI)(?![A-Za-z])[^0-9\n]{0,40}$/i.test(before)) return true;
       if (/\b(?:UTR|VAT|PAYE|VAT\s+number|Company\s+number|Disclosure\s+ref)\b[^\n]*\n\s*(?:GB\s*)?$/i.test(before)) return true;
       if (/\b(?:ref|reference|case|disclosure|requirement)\b/i.test(joined) && /[-/]/.test(joined)) return true;
       return false;
@@ -408,7 +408,7 @@
         "high", m.index, m.index + m[0].length);
     }
     // account-first order: "account 41028833, sort code 09-01-26"
-    var reAcctSort = /\baccount\s+(\d{6,8})\s*,?\s*(?:sort\s*code|s\/c)[\s:]*(\d{2}-\d{2}-\d{2})/gi;
+    var reAcctSort = /\baccount\s+(\d{6,8})\s*(?:,|at|held\s+at)?\s*(?:sort\s*code|s\/c)[\s:]*(\d{2}-\d{2}-\d{2})/gi;
     while ((m = reAcctSort.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);
@@ -472,7 +472,23 @@
     while ((m = reAddr.exec(text))) {
       var sA = m.index, raw = m[0];
       raw = raw.split(/\s+(?:and|who|which|but|where|while)\s+/)[0];
+      // An address ends before a contact label — otherwise the greedy match runs INTO
+      // a following phone ("...Spain, telephone +34 965 06 43 61"), overlaps the
+      // already-claimed phone span and the whole address is dropped (then the phone is
+      // mis-attributed to the subject instead of the venue).
+      raw = raw.split(/[\s,;]*\b(?:tel(?:ephone)?|phone|mob(?:ile)?|fax|contact)\b/i)[0];
       raw = raw.replace(/[\s,;]+$/, "");
+      // A UK postcode ENDS an address. Trim any sentence run-on AFTER it BEFORE the
+      // span is claimed — otherwise the greedy match (e.g. "...BS5 9TY, the home
+      // address of Geoffrey 'Gee' BAINES") is claimed in full and HIDES the trailing
+      // person from later passes. Non-UK postcodes (Spanish "29016 Málaga, Spain")
+      // PRECEDE the locality, so they are not trimmed here. The claimed span is then
+      // recomputed from the trimmed text so it never exceeds the real address.
+      var pcUK = raw.match(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/);
+      if (pcUK) {
+        var _pcEnd = raw.indexOf(pcUK[0]);
+        if (_pcEnd !== -1) { _pcEnd += pcUK[0].length; if (_pcEnd < raw.length) raw = raw.slice(0, _pcEnd).trim(); }
+      }
       var eA = sA + raw.length;
       if (spans.overlaps(sA, eA)) continue;
 
@@ -482,7 +498,6 @@
         var g = G.lookup(tok);
         if (g && (g.t === "city" || g.t === "port")) { parent = g; ccA = g.cc; }
       });
-      var pcUK = raw.match(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/);
       var pcES = raw.match(/\b(0[1-9]|[1-4]\d|5[0-2])\d{3}\b/);
       // ATLAS addresses carry a building number and/or postcode (IM01 SD01). A bare
       // street-suffix phrase with no number, postcode or locality ("Crown Court",
@@ -498,15 +513,6 @@
       else if (pcES && parent && parent.cc === "ES") attrsA.postcode = pcES[0];
       if (parent) { attrsA.locality = parent.n; attrsA.cc = parent.cc; }
       applyAddressGeo(attrsA, raw, parent, pcUK ? pcUK[0] : null);
-      // An address that carries a postcode ends AT the postcode — trim any
-      // sentence continuation the matcher over-ran into ("...M14 7QP, having relocated").
-      // UK postcodes END an address, so trim any sentence run-on after them. Non-UK
-      // postcodes (e.g. Spanish "29016 Málaga, Spain") PRECEDE the locality — do not
-      // trim there or the city/country is lost.
-      if (pcUK) {
-        var _pcEnd = raw.indexOf(pcUK[0]);
-        if (_pcEnd !== -1) { _pcEnd += pcUK[0].length; if (_pcEnd < raw.length) raw = raw.slice(0, _pcEnd).trim(); }
-      }
       var entA = addEntity("address", raw, raw, attrsA,
         (pcUK || pcES || parent) ? "high" : (hasEvidence ? "med" : "low"), sA, eA);
       entA._parentGaz = parent || null;
@@ -643,6 +649,18 @@
       if (colr) va.colour = colr;
       if (new RegExp("^(?:" + MAKEW + ")$").test(mk)) { va.make = mk; if (mdl) va.model = mdl; }
       else { va.model = body; }
+      // "The Transit"/"the BMW" referring back to an already-named vehicle is anaphora,
+      // not a new vehicle — skip if a known vehicle shares this make/model.
+      if (/\b(?:the|that|this|same)\s+$/i.test(text.slice(Math.max(0, vs - 6), vs))) {
+        var _bU = body.toUpperCase();
+        var _known = entities.some(function (e) {
+          return e.type === "vehicle" && (
+            (e.attrs.make && e.attrs.make.toUpperCase() === _bU) ||
+            (e.attrs.model && e.attrs.model.toUpperCase() === _bU) ||
+            String(e.label || "").toUpperCase().indexOf(_bU) !== -1);
+        });
+        if (_known) { spans.claim(vs, ve); continue; }
+      }
       spans.claim(vs, ve);
       addEntity("vehicle", (colr ? colr + " " : "") + body, body.replace(/\s+/g, ""), va, colr ? "high" : "med", vs, ve, ["prose vehicle"]);
     }
@@ -801,7 +819,7 @@
     }
 
     // 9b. Organisations by suffix
-    var reOrg = /\b([A-Z][\w&'’-]*(?:\s+[A-Z][\w&'’-]*){0,3}\s+(?:Ltd|LTD|Limited|LIMITED|PLC|Plc|LLP|LLC|Inc|INC|Corp|CORP|GmbH|SL|SA|BV|Holdings|HOLDINGS|Logistics|LOGISTICS|Transport|TRANSPORT|Trading|TRADING)\.?)\b/g;
+    var reOrg = /\b([A-Z][\w&'’-]*(?:\s+(?:and|&|[A-Z][\w&'’-]*)){0,3}\s+(?:Ltd|LTD|Limited|LIMITED|PLC|Plc|LLP|LLC|Inc|INC|Corp|CORP|GmbH|SL|SA|BV|Holdings|HOLDINGS|Logistics|LOGISTICS|Transport|TRANSPORT|Trading|TRADING)\.?)\b/g;
     while ((m = reOrg.exec(text))) {
       if (spans.overlaps(m.index, m.index + m[0].length)) continue;
       spans.claim(m.index, m.index + m[0].length);
@@ -917,7 +935,7 @@
     var ORG_TRAIL = /^\s*(?:Party|Company|Theatre|Theater|Group|Services?|Department|Police|Hospital|University|College|School|Academy|Club|Airport|Council|Court|Committee|Commission|Association|Trust|Bank|Force|Office|Ministry|Agency|Authority|Board|Centre|Center|Institute|Foundation|Society|Union|League|Federation|Corporation|Limited|Ltd|Holdings|Syndrome|Estate)\b/;
     // A Title-Case run that NAMES an organisation/venue (ends with an org word)
     // or a bank/hotel/etc. (starts with one) — type it as organisation, not person.
-    var ORG_END = /\b(?:Gazette|Times|Herald|Post|Tribune|Chronicle|Courier|Mail|News|Journal|Observer|Express|Telegraph|Guardian|Bank|Trust|Holdings|Freight|Logistics|Imports|Exports|Trading|Theatre|Theater|Company|Club|Society|Association|Federation|Foundation|Institute|Academy|College|University|Hospital|Clinic|Church|Cathedral|Mosque|Temple|Synagogue|Group|Partners|Partnership|Chambers|Solicitors|Services|Systems|Solutions|Industries|Enterprises|Ventures|Investments|Insurance|Press|Media|Studios|Records|Brewery|Distillery|Mills|Works|Depot|Warehouse|Market|Exchange|Council|Authority|Agency|Bureau|Ministry|Commission|Committee|Board|Union|League|Centre|Center|Corporation)$/;
+    var ORG_END = /\b(?:Caf[eé]|Restaurant|Bar|Pub|Inn|Bistro|Diner|Grill|Tavern|Brasserie|Eatery|Hotel|Motel|Lodge|Hostel|Guesthouse|Gazette|Times|Herald|Post|Tribune|Chronicle|Courier|Mail|News|Journal|Observer|Express|Telegraph|Guardian|Bank|Trust|Holdings|Freight|Logistics|Imports|Exports|Trading|Theatre|Theater|Company|Club|Society|Association|Federation|Foundation|Institute|Academy|College|University|Hospital|Clinic|Church|Cathedral|Mosque|Temple|Synagogue|Group|Partners|Partnership|Chambers|Solicitors|Services|Systems|Solutions|Industries|Enterprises|Ventures|Investments|Insurance|Press|Media|Studios|Records|Brewery|Distillery|Mills|Works|Depot|Warehouse|Market|Exchange|Council|Authority|Agency|Bureau|Ministry|Commission|Committee|Board|Union|League|Centre|Center|Corporation)$/;
     var ORG_START = /^(?:Hotel|Motel|Inn|Lodge|Resort|Hostel|Banca|Banco|Banque|Bank|Caf[e\u00e9]|Bar|Restaurant|Bistro|Brasserie|Cinema|Theatre|Theater|Museum|Gallery|University|College|Hospital|Church|Mosque|Temple|Synagogue)\b/;
     var STREET_START = /^(?:Avenida|Avenue|Ave|Calle|Rua|Rue|Stra(?:ss|\u00df)e|Via|Piazza|Plaza|Pra[c\u00e7]a|Street|Road|Lane|Drive|Close|Court|Way|Place|Square|Terrace|Crescent|Walk|Row|Gardens|Boulevard|Highway|Parade|Wharf|Quay)\b/;
     var NAME_TITLE = /(?:^|[^A-Za-z])(?:Mr|Mrs|Ms|Miss|Mx|Dr|Prof|Professor|Sir|Dame|Lord|Lady|Rev|Reverend|Fr|Imam|Rabbi|Sheikh|Sgt|Sergeant|Det|Detective|Insp|Inspector|Supt|Superintendent|Constable|Officer|Cmsr|Commissioner|Cmdr|Commander|Cllr|Councillor|President|Minister|Chancellor|Secretary|Senator|Governor|Mayor|Judge|Justice|Capt|Captain|Col|Colonel|Maj|Major|Lt|Lieutenant|Gen|General|Brig|Brigadier|PC|DC|DS|DI|DCI|DSI|DCS|ACC|CC)\.?\s+$/;
@@ -1007,7 +1025,12 @@
       var PERSON_NOUN = /\b(?:associate|colleague|friend|brother|sister|mother|father|son|daughter|wife|husband|partner|cousin|relative|suspect|victim|witness|accomplice|nominal|subject|individual|keeper|driver|owner|director|employee|boyfriend|girlfriend|neighbou?r|contact|man|woman|male|female)\b/i;
       var appoCued = appos && PERSON_NOUN.test(csPre);         // apposition alone is too weak — need a person noun
       var strongPost = PERSON_VERB.test(csPost) && !/^[\s,]*(?:was|is|are|were|had|has|have|been|being|will|would|who|whose)\b/i.test(csPost); // copulas follow anything, incl. places
-      var cued = NAME_TITLE.test(csPre) || PERSON_PREVERB.test(csPre) || strongPost || appoCued;
+      // An ALL-CAPS surname carrying a nobiliary particle ("van der BERG", "de SOUSA")
+      // is a person with very high reliability — places/orgs do not take that shape —
+      // so it needs no further cue. This rescues "received from Maria van der BERG",
+      // "Maria van der BERG remains outstanding", etc. where no verb/title cue exists.
+      var hasParticle = /\b(?:de|del|della|van|von|der|den|da|di|du|dos|das|bin|al|ibn|ter|ten|la|le)\s+[A-Z]/.test(csLbl);
+      var cued = NAME_TITLE.test(csPre) || PERSON_PREVERB.test(csPre) || strongPost || appoCued || hasParticle;
       if (!cued) continue;                                     // precision: only with a person cue
       spans.claim(csStart, csEnd);
       addEntity("person", csLbl, csLbl, {}, "high", csStart, csEnd, ["prose name", "caps surname"]);
@@ -1230,7 +1253,11 @@
             var prev = merged[merged.length - 1];
             // wink splits dotted tokens (emails/URLs/"Co. No."); merge a boundary
             // that falls inside a CM-claimed entity span back into the prior sentence.
-            if (spans.overlaps(prev.end - 1, sx.start + 1)) { prev.end = sx.end; return; }
+            // Merge ONLY when a claimed entity STRADDLES the boundary (a genuine
+            // mid-entity split, e.g. wink breaking "Co. | No. 12345678"). Do NOT merge
+            // just because the previous sentence ENDS on an email/URL span — that
+            // over-merged distinct sentences and bled the next clause's subject in.
+            if (spans.taken.some(function (t) { return t[0] < prev.end && t[1] > sx.start; })) { prev.end = sx.end; return; }
           }
           merged.push({ start: sx.start, end: sx.end });
         });
@@ -1321,6 +1348,12 @@
       }
 
       var persons = entitiesInRange(s0, s1, "person");
+      // entitiesInRange returns CREATION order (principal first), which made the
+      // document principal win over the sentence's real subject — e.g. "NOWAK
+      // telephoned BAINES from <phone>" attributed the phone to BAINES. Order by
+      // first in-sentence mention so subject resolution is positional.
+      function _firstInSent(p) { var best = Infinity; p.spans.forEach(function (sp) { if (sp[0] >= s0 && sp[1] <= s1 && sp[0] < best) best = sp[0]; }); return best; }
+      persons.sort(function (a, b) { return _firstInSent(a) - _firstInSent(b); });
       function _nonPronounSubj(p) {
         return p.spans.some(function (sp) { return sp[0] >= s0 && sp[1] <= s1 && !pronounSpanKeys[p.ref + ":" + sp[0] + ":" + sp[1]]; });
       }
@@ -1336,6 +1369,56 @@
       // never just the most-recently-NAMED person (that caused identifiers to land
       // on the wrong nominal).
       var carrySubject = lastSubject || principalPerson || lastPerson;
+
+      // ---- CM status / warning-signal attribution (sentence-scoped, subject-bound) ----
+      // Detect within THIS sentence only (no cross-sentence bleed), then predicate it
+      // of the named persons that PRECEDE the cue ("X, Y and Z were all arrested"),
+      // or — failing a named subject — of the carried subject behind a subject pronoun
+      // ("He ... has access to firearms"). An agentless/existential clause with no
+      // named person and no subject pronoun ("A firearm was recovered") attaches to
+      // nobody, so warnings never leak onto co-present associates.
+      if (St) {
+        var _stItems = St.detectStatus(sTxt);
+        var _wnItems = St.detectWarningSignals(sTxt);
+        var _stHits = _stItems.map(function (x) { return x.code; });
+        var _wnHits = _wnItems.map(function (x) { return x.code; });
+        if (_stHits.length || _wnHits.length) {
+          // Position the cue using CM's OWN vocabulary (cm-vocab cue strings), never a
+          // parallel word list: locate the earliest matched cue's offset so the
+          // status/warning is predicated only of persons BEFORE it. If no cue can be
+          // located, fall back to start-of-sentence (subject only) — never whole
+          // sentence, which would tag trailing objects/associates after the cue.
+          var _lc = sTxt.toLowerCase();
+          var _cuePos = -1;
+          [{ items: _stItems, vocab: St.STATUS_OF_SUBJECT || [] },
+           { items: _wnItems, vocab: St.WARNING_SIGNALS || [] }].forEach(function (grp) {
+            grp.items.forEach(function (h) {
+              var v = grp.vocab.filter(function (x) { return x.code === h.code; })[0];
+              var cues = (v && v.cues) || [h.label];
+              cues.forEach(function (c) {
+                var parts = String(c).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
+                  .map(function (w) { return w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); });
+                if (!parts.length) return;
+                var last = parts[parts.length - 1];
+                if (last.charAt(last.length - 1) === "s") parts[parts.length - 1] = last.slice(0, -1);
+                var mC = new RegExp("\\b" + parts.join("[^a-z0-9]+") + "s?\\b", "i").exec(_lc);
+                if (mC && (_cuePos === -1 || mC.index < _cuePos)) _cuePos = mC.index;
+              });
+            });
+          });
+          if (_cuePos === -1) _cuePos = 0;
+          var _named = persons.filter(function (p) {
+            return p.spans.some(function (sp) { return sp[0] >= s0 && sp[1] <= s1 && (sp[0] - s0) <= _cuePos; });
+          });
+          var _tg = _named;
+          if (!_tg.length && /\b(he|she|they|i|we)\b/i.test(sTxt.slice(0, _cuePos + 1)) && carrySubject) _tg = [carrySubject];
+          _tg.forEach(function (p) {
+            var pa = p.attrs || (p.attrs = {});
+            if (_stHits.length) { if (!Array.isArray(pa.cmStatus)) pa.cmStatus = pa.cmStatus ? [pa.cmStatus] : []; _stHits.forEach(function (c) { if (pa.cmStatus.indexOf(c) === -1) pa.cmStatus.push(c); }); }
+            if (_wnHits.length) { if (!Array.isArray(pa.cmWarnings)) pa.cmWarnings = pa.cmWarnings ? [pa.cmWarnings] : []; _wnHits.forEach(function (c) { if (pa.cmWarnings.indexOf(c) === -1) pa.cmWarnings.push(c); }); }
+          });
+        }
+      }
       // Bare ALL-CAPS surname mention ("BAINES retains his UK number…") —
       // resolve against people already extracted: full confidence, not a carry.
       if (!subject) {
@@ -1353,7 +1436,7 @@
       if (!subject && /\b(he|she)\b/i.test(sTxt)) { subject = carrySubject; carried = true; }  // not plural "they": a carried singular subject is the wrong referent
       // Verb-led continuation ("On 04/05/2026 used this email to...") — carry the
       // last-mentioned person forward, at reduced confidence.
-      if (!subject && carrySubject && /\b(used|uses|book(ed|s)?|stay(ed|s)?|travel(led|s)?|fl(ew|ies)|purchas(ed|es)?|return(ed|s)?|retain(ed|s)?|keeps?|kept|liaison\s+with)\b/i.test(sTxt)) {
+      if (!subject && carrySubject && /\b(used|uses|book(ed|s)?|stay(ed|s)?|travel(led|s)?|fl(ew|ies|ying)|depart(?:ed|s|ing)?|left|leav(?:es|ing)|arriv(?:ed|es|ing)?|head(?:ed|s|ing)?|drove|driv(?:es|ing)|sail(?:ed|s|ing)?|board(?:ed|s)?|purchas(ed|es)?|return(ed|s)?|retain(ed|s)?|keeps?|kept|liaison\s+with)\b/i.test(sTxt)) {
         subject = carrySubject; carried = true;
       }
       if (persons.length) lastPerson = persons[persons.length - 1];
@@ -1377,13 +1460,25 @@
       // Hotel/venue phone: phone immediately follows an address span → PHONE_OF address
       phones.forEach(function (ph) {
         var phStart = ph.spans[ph.spans.length - 1][0];
-        var prior = text.slice(Math.max(0, phStart - 12), phStart);
         var addrJustBefore = addrs.find(function (ad) {
-          return ad.spans.some(function (sp) { return phStart - sp[1] >= 0 && phStart - sp[1] < 12; });
+          return ad.spans.some(function (sp) { var gap = phStart - sp[1]; return gap >= 0 && gap < 26; });
         });
-        if (addrJustBefore && /[•|,\-\s]*$/.test(prior)) {
-          addRel(ph, addrJustBefore, "PHONE_OF", "med", sTxt, "adjacency");
-          ph._claimedByAddress = true;
+        if (addrJustBefore) {
+          var _aEnd = addrJustBefore.spans[addrJustBefore.spans.length - 1][1];
+          var between = text.slice(_aEnd, phStart);
+          // The number belongs to the VENUE if only a connective sits between the
+          // address and it: punctuation/marker bullets, an optional contact label
+          // ("telephone"/"tel"/"phone"/"mob"/"fax"/"contact") and an optional short
+          // marker number (e.g. "Spain•19 +34…"). Real next-clause text ("…Spain.
+          // Call John on 0770…") leaves residual words -> not the venue's phone.
+          var _b2 = between
+            .replace(/^[\s,;:•|()\/.#\-]+/, "")
+            .replace(/^(?:tel(?:ephone)?|phone|mob(?:ile)?|fax|contact)\b[\s.:#\-]*/i, "")
+            .replace(/^\d{1,3}\b[\s.:#\-]*/, "");
+          if (_b2.trim() === "") {
+            addRel(ph, addrJustBefore, "PHONE_OF", "med", sTxt, "adjacency");
+            ph._claimedByAddress = true;
+          }
         }
       });
 
@@ -1477,8 +1572,20 @@
             var target = rg2._ent;
             if (target === subjEnt || target._claimedByAddress) return;
             if (target.type === "date") return;   // dates belong to the timeline
+            // Object beyond a sentence boundary: the segmenter sometimes merges a
+            // sentence that ENDS on an email/URL span into the next one, so a verb
+            // ("sent ... from <email>. Northgate Ltd is suspected...") wrongly grabs
+            // the next clause's subject. Don't link a verb across a "." boundary.
+            var _objAbs = s0 + (entRanges[ob.entityIdx] ? entRanges[ob.entityIdx].start : 0);
+            if (_objAbs > vAbs[1] && /[.!?]\s/.test(text.slice(vAbs[1], _objAbs))) return;
             var rf = L.relFor(cl.verb.group, ob.prep, target.type);
             if (!rf || rf.type === "_RETURN_EVENT") return;
+            // A phone/email reached via "from/on/via" is the instrument the subject
+            // USES (you ring someone FROM your phone; you send a photo FROM your email)
+            // — not a comms/transaction target. Leave it to the USES fallback so the
+            // owner (the sentence subject) is correct, not mistyped as TRANSACTED_WITH.
+            if ((target.type === "phone" || target.type === "email") &&
+                ob.prep && /^(from|on|via)$/.test(ob.prep)) return;
             // A bare "LINKED_TO" between a person and a place is noise — real
             // location ties come from the travel/stay/containment logic.
             if (rf.type === "LINKED_TO" &&
@@ -1545,7 +1652,7 @@
             "email cue", null, emSpan || useSpan);
         });
 
-        var travelTo   = /\b(?:book(?:ed|ing|s)?\s+(?:a\s+)?flights?\s+to|fl(?:y|ies|ying|ew)\s+to|flights?\s+to|travel(?:s|led|ling)?\s+to|(?:day\s+)?trip\s+to|visit(?:s|ed|ing)?|heading\s+to|en\s?route\s+to|via)\b/i;
+        var travelTo   = /\b(?:book(?:ed|ing|s)?\s+(?:a\s+)?flights?\s+to|fl(?:y|ies|ying|ew)\s+to|flights?\s+to|travel(?:s|led|ling)?\s+to|(?:day\s+)?trip\s+to|visit(?:s|ed|ing)?|heading\s+to|en\s?route\s+to|bound\s+for|headed\s+for|via)\b/i;
         var departFrom = /\b(?:fl(?:y|ies|ying|ew)(?:ing)?\s+from|is\s+flying\s+from|depart(?:s|ed|ing)?(?:\s+from)?|leav(?:es|ing)\s+from|out\s+of)\b/i;
         var stayRe     = /\b(?:stay(?:s|ed|ing)?\s+at|will\s+be\s+staying|resid(?:es|ing)\s+at|lives?\s+at|based\s+at|address(?:ed)?\s+(?:at|is))\b/i;
         var returnRe   = /\b(?:will\s+)?(?:return(?:s|ed|ing)?(?:\s+on)?|back\s+on|comes?\s+back)\b/i;
@@ -1558,7 +1665,12 @@
           var lcStart = (_inSent[0] || lc.spans[lc.spans.length - 1])[0];
           var dep = cueSpanBefore(departFrom, lcStart);
           var trv = cueSpanBefore(travelTo, lcStart);
-          if (dep && (!trv || dep[0] > trv[0])) {
+          // A bare "to/for/into/towards <place>" immediately before the location is a
+          // destination cue even without a travel verb ("flight TP1337 to Lisbon"); it
+          // outranks a distant "departed" so origin and destination are not swapped.
+          var directTo = /\b(?:to|into|towards?)\s*$/i.test(text.slice(Math.max(0, lcStart - 9), lcStart));
+          if (directTo && !trv) trv = [Math.max(0, lcStart - 3), lcStart];
+          if (dep && (!trv || dep[0] > trv[0]) && !directTo) {
             var rel = addRel(subject, lc, "DEPARTS_FROM", demote("high"), sTxt, "depart cue", firstDate, dep);
             if (rel && firstDate) markDateUsed(datesInSent, rel);
           } else if (trv) {
@@ -1662,6 +1774,7 @@
 
       entities.forEach(function (e) {
         if (e === primary || hasRelBetween(primary, e)) return;
+        if (e._claimedByAddress) return;   // venue phone (PHONE_OF an address) — not the subject's
         var inAttachBlock = e.spans.some(function (sp) { return sp[0] >= attachStart && sp[0] <= attachEnd; });
         if (!inAttachBlock && mainIdx >= 0) return;
         if (e.type === "phone") {
@@ -1717,7 +1830,7 @@
       if (/\b(?:Personal Details|Best Match|Person\s+Field\s+Value|Individual -|Subject API|Current address|Mobile on file|Telephone \(matched\)|Phones)\b/i.test(text)) {
         entities.forEach(function (e) {
           if (e === primary) return;
-          if (e.type === "phone" && !(e.attrs && /^(IMEI|IMSI|ICCID)$/.test(e.attrs.kind || "")) && !(e.attrs && e.attrs.valid === false)) link("USES", e, "high", "structured contact");
+          if (e.type === "phone" && !e._claimedByAddress && !(e.attrs && /^(IMEI|IMSI|ICCID)$/.test(e.attrs.kind || "")) && !(e.attrs && e.attrs.valid === false)) link("USES", e, "high", "structured contact");
           else if (e.type === "email") link("USES", e, "high", "structured contact");
           else if (e.type === "address") link("STAYS_AT", e, "med", "structured address");
         });
@@ -1874,8 +1987,11 @@
         var _hs = lhm.index + lhm[0].lastIndexOf(_h), _he = _hs + _h.length;
         if (spans.overlaps(_hs, _he)) continue;
         spans.claim(_hs, _he);
-        addEntity("note", _plat + " " + _h.replace(/^@/, ""), _h.replace(/^@/, ""),
+        var _hEnt = addEntity("note", _plat + " " + _h.replace(/^@/, ""), _h.replace(/^@/, ""),
           { kind: "social-account", platform: _plat.toLowerCase() }, "med", _hs, _he, ["comms handle"]);
+        // attribute the handle to its user: nearest preceding person, else the principal.
+        var _hOwner = nearestEntityBefore("person", _hs) || primary;
+        if (_hOwner && _hEnt && !hasRelBetween(_hOwner, _hEnt)) addRel(_hOwner, _hEnt, "USES", "med", "comms handle", "structured");
       }
       // OSINT/social handles as Text Block nodes, linked to attributed users where visible.
       var reHandle = /\b(?:Instagram|TikTok|Facebook)?\s*(@[A-Za-z0-9_.-]{3,}|(?:instagram|facebook|tiktok)\.com\/[A-Za-z0-9_.-]+)/gi, hm;
@@ -2032,7 +2148,7 @@
       // lines — as in real PDFs/emails — still matches as one segment.
       var flat = text.replace(/[\r\n]/g, " ");
       // OUTGOING: "transfer/payment/paid/sent/wired of <money> ... to <person/org>"
-      var reTo = /\b(?:transfer(?:red|s|ed)?|payment|paid|sent|wired|remitted)\b[^.]{0,90}?\bto\b[^.]{0,140}/gi, xm;
+      var reTo = /\b(?:transfer(?:red|s|ed)?|payments?|paid|pays?|sent|sends?|wir(?:ed|es?)|remit(?:ted|s)?)\b[^.]{0,90}?\bto\b[^.]{0,140}/gi, xm;
       while ((xm = reTo.exec(flat))) {
         var segStart = xm.index, segEnd = xm.index + xm[0].length;
         var _ps = flat.lastIndexOf(".", segStart - 1) + 1;      // don't cross into the previous sentence
@@ -2319,6 +2435,14 @@ var subjA = (typeof mainPerson === "function" && mainPerson()) || null;   // "st
     });
     // strip internal fields
     entities.forEach(function (e) { delete e._canon; delete e._parentGaz; delete e._claimedByAddress; delete e._merged; });
+
+    // Collapse duplicate ambiguity notes (the same date appearing twice in a
+    // report produced two identical "read as DD/MM" warnings).
+    var _seenAmb = {};
+    ambiguities = ambiguities.filter(function (x) {
+      var k = (x.kind || "") + "|" + (x.message || "");
+      if (_seenAmb[k]) return false; _seenAmb[k] = 1; return true;
+    });
 
     // The document's primary subject — review/import should hub on this,
     // never on "first person extracted".
