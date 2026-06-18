@@ -9,7 +9,7 @@
 var path = require("path"), fs = require("fs");
 var base = path.join(__dirname, "..");
 var X = require(path.join(base, "js/core/extract.js"));
-var ACID = path.join(base, "..", "acid-test-corpus");
+var ACID = path.join(base, "..", "test-data", "acid-test-corpus");
 
 /* ---- demo corpus (verbatim from Demo/Demo_Results.md inputs) ---- */
 var D = {
