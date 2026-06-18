@@ -873,4 +873,4 @@ test("MODEL: snapshot/undo of addEntity", function () {
 /* ================================================================== */
 
 console.log("\n" + (passed + failed) + " tests: " + passed + " passed, " + failed + " failed");
-if (failed > 0) process.e
+if (failed > 0) process.exit(1);
