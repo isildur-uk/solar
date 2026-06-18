@@ -58,6 +58,15 @@
           "value": "application/octet-stream"
         }
       ]
+    },
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
     }
   ],
   "installCommand": "npm install"
