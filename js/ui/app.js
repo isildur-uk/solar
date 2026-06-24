@@ -42,7 +42,22 @@
 
   function boot() {
     store = new window.CRModel.CaseStore();
+    if (window.CRRecords) window.CRRecords.attach(store);
+    if (window.CRCollab) window.CRCollab.init(store);
     var hadLocal = store.loadLocal();
+
+    // Registry handoff: if the Registry stashed a SOLAR case for "Open full chart
+    // in SOLAR", load it now (then clear the key so it only happens once). Guarded
+    // so a malformed/absent payload never breaks normal charting startup.
+    var pendingCase = false;
+    try {
+      var _pc = window.localStorage && window.localStorage.getItem("solar_pending_case");
+      if (_pc) {
+        window.localStorage.removeItem("solar_pending_case");
+        store.fromJSON(JSON.parse(_pc));
+        pendingCase = true;
+      }
+    } catch (e) { pendingCase = false; /* ignore — fall back to whatever loadLocal gave us */ }
 
     window.CRGraph.init(U.el("chart"), store, onChartSelect);
     window.CRMapPane.init("map", store, selectEntity);
@@ -52,6 +67,7 @@
     window.CRImporter.init(store);
     if (window.CRDragDrop) window.CRDragDrop.init(store);
     if (window.CRProfiles) window.CRProfiles.init(store);
+    if (window.CRLogPanel) window.CRLogPanel.init(store);
     if (window.CRIntelExport) window.CRIntelExport.init(store);
     if (window.CRLegend) window.CRLegend.init(store);
     if (window.CRChartMenu) window.CRChartMenu.init(store, U.el("chart"));
@@ -67,6 +83,12 @@
     // landing experience; it feeds extraction directly. Keep the sample
     // handy in the paste panel either way.
     if (!hadLocal) U.el("paste-text").value = SAMPLE_TEXT;
+    // A freshly handed-off Registry case: persist it, announce it, and fit the chart.
+    if (pendingCase) {
+      try { store.saveLocal(); } catch (e) { /* noop */ }
+      status("Loaded case from Registry handoff");
+      setTimeout(function () { try { window.CRGraph.fit(); window.CRMapPane.fitToData(); } catch (e) { /* noop */ } }, 400);
+    }
     if (hadLocal && store.entities.length) {
       var hinted = false;
       try { hinted = sessionStorage.getItem("solar_cover_hint") === "1"; } catch (e) { /* noop */ }
