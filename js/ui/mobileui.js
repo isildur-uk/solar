@@ -41,6 +41,37 @@
       drawer = el("more-drawer");
     }
 
+    // Touch-only floating action: add an entity to the chart. On desktop this is
+    // right-click background -> "Add entity here…"; on touch there is no right
+    // click, so a discoverable "+" FAB opens the same editor at canvas centre.
+    if (!el("chart-fab")) {
+      var fab = document.createElement("button");
+      fab.id = "chart-fab";
+      fab.type = "button";
+      fab.setAttribute("aria-label", "add entity to chart");
+      fab.title = "Add entity to chart";
+      fab.innerHTML = '<span aria-hidden="true">+</span>';
+      document.body.appendChild(fab);
+      fab.addEventListener("click", function () {
+        var G = window.CRGraph, app = window.CRApp;
+        if (!G || !window.CREditEntity || !app) return;
+        var store = app.getStore();
+        if (!store) return;
+        var pos = null;
+        try {
+          var c = el("chart");
+          if (c && G.canvasPos) {
+            var r = c.getBoundingClientRect();
+            pos = G.canvasPos(r.width / 2, r.height / 2);
+          }
+        } catch (e) { pos = null; }
+        window.CREditEntity.open({ store: store, defaultType: "person", onCreate: function (ent) {
+          if (pos) { ent.chart = { x: Math.round(pos.x), y: Math.round(pos.y), fixed: true }; }
+          store._emit("layout");
+        } });
+      });
+    }
+
     if (!el("bottom-nav")) {
       bottomNav = document.createElement("nav");
       bottomNav.id = "bottom-nav";

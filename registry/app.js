@@ -1,0 +1,1153 @@
+/* app.js — Registry capture & store UI (Phase 1).
+ * Consumes the Registry core (window.Registry*) and SOLAR's cm-standards.
+ * No framework. All rendered values are HTML-escaped.
+ * Inline mini network chart on the report detail uses SOLAR's vendored vis-network. */
+"use strict";
+(function () {
+  var M = window.RegistryModel, V = window.RegistryValidate, G = window.RegistryGrading,
+      N = window.RegistryNormalise, T = window.RegistryThreatAreas, RR = window.RegistryRepository,
+      SI = window.RegistrySI, MX = window.RegistryMatching,
+      W = window.RegistryWorkflow, D = window.RegistryDeletion, H = window.RegistryHandoff, O = window.RegistryOperations,
+      Q = window.RegistryQuery;
+
+  if (!M || !V || !G || !N || !T || !RR || !SI || !MX || !W || !D || !H || !O || !Q) {
+    document.getElementById("main").textContent =
+      "Registry failed to load. Ensure SOLAR's cm-vocab.js and cm-standards.js are reachable at ../js/core/.";
+    return;
+  }
+
+  // Desktop (Tauri) build injects a SQLite-backed repo via window.RegistryDesktopRepo;
+  // the web build falls back to IndexedDB / in-memory. Same async interface either way.
+  var repo = (typeof window !== "undefined" && window.RegistryDesktopRepo) || RR.createRepository();
+  // Query/cache layer: hold the dataset in memory and invalidate on any write, so
+  // faceted search/sort/paginate run against RAM (fast) instead of re-reading the DB.
+  var dataCache = null;
+  var filterState = { text: "", filters: {}, dateFrom: "", dateTo: "", page: 1, pageSize: 50 };
+  (function () { var _s = repo.save.bind(repo), _r = repo.remove.bind(repo);
+    repo.save = function (ir) { return _s(ir).then(function (x) { dataCache = null; return x; }); };
+    repo.remove = function (u) { return _r(u).then(function (x) { dataCache = null; return x; }); }; })();
+  function allRows() { return dataCache ? Promise.resolve(dataCache) : repo.list().then(function (r) { dataCache = r; return r; }); }
+  function buildCriteria(extra) {
+    var c = { text: filterState.text, filters: filterState.filters, dateFrom: filterState.dateFrom, dateTo: filterState.dateTo,
+              sort: sortState, page: filterState.page, pageSize: filterState.pageSize };
+    if (extra) for (var k in extra) c[k] = extra[k];
+    return c;
+  }
+  var els = {
+    main: document.getElementById("main"),
+    list: document.getElementById("report-list"),
+    listEmpty: document.getElementById("list-empty"),
+    search: document.getElementById("search"),
+    status: document.getElementById("statusline"),
+    banner: document.getElementById("marking-banner")
+  };
+  var formItems = [];          // working item array while editing
+  var editingUrn = null;       // urn when editing an existing record
+  var activeOp = "";           // selected operation tab ("" = All)
+  var sortState = { key: "dateOfCollection", dir: -1 };  // overview sort (default newest first)
+  var view = "home";          // "home" | "results" | "detail"
+  var cameFromResults = false; // detail back-target: true => return to results, else home
+  var lastDetailUrn = null;    // currently-open report (for sidebar "you are here")
+
+  // --- Mini-chart (inline structured-intelligence network) ----------------
+  // Colour each entity by POLE type, matching SOLAR's CRModel palette. SOLAR's
+  // ENTITY_TYPES aren't reachable here (CRModel isn't loaded in Registry), so we
+  // mirror its exact hex values, mapped via the Registry->SOLAR type map.
+  var SI_TYPE_COLOUR = {
+    person:            "#6ea8d8",   // SOLAR person
+    organisation:      "#d8a16e",   // SOLAR organisation
+    vehicle:           "#c9c36a",   // SOLAR vehicle
+    account:           "#d87f9b",   // SOLAR account
+    communication:     "#79c98f",   // SOLAR phone
+    cyber:             "#7fb0c9",   // SOLAR ip
+    firearm:           "#d86e6e",   // SOLAR weapon
+    official_document: "#b1a08d",   // SOLAR document
+    location:          "#5fc4c0"    // SOLAR location
+  };
+  function siColour(type) { return SI_TYPE_COLOUR[type] || "#9aa5b1"; }
+  // rgba glow from a #rrggbb hex (mirrors graph.js glowOf).
+  function siGlow(hex, a) {
+    var h = String(hex || "#9aa5b1").replace("#", "");
+    return "rgba(" + parseInt(h.slice(0, 2), 16) + "," + parseInt(h.slice(2, 4), 16) +
+      "," + parseInt(h.slice(4, 6), 16) + "," + a + ")";
+  }
+  var miniNetwork = null; // current vis.Network instance (so we can dispose on re-render)
+  function prefersReducedMotion() {
+    try { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
+    catch (e) { return false; }
+  }
+
+  // Move focus to the new view's heading and reset scroll, so keyboard/SR users
+  // land in the new context on every view swap (open/close a report, etc.).
+  function focusView() {
+    var h = els.main.querySelector("h1");
+    if (h) { if (!h.hasAttribute("tabindex")) h.setAttribute("tabindex", "-1"); try { h.focus({ preventScroll: true }); } catch (e) { h.focus(); } }
+    els.main.scrollTop = 0;
+  }
+  // Reflect the open report in the sidebar list ("you are here").
+  function markActiveReport() {
+    if (!els.list) return;
+    Array.prototype.forEach.call(els.list.querySelectorAll(".report-item"), function (li) {
+      if (li.getAttribute("data-urn") === lastDetailUrn) li.setAttribute("aria-current", "true");
+      else li.removeAttribute("aria-current");
+    });
+  }
+
+  /* ---------- helpers ---------- */
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function setStatus(msg, kind) {
+    if (!msg) { els.status.hidden = true; els.status.textContent = ""; els.status.className = "statusline"; return; }
+    els.status.hidden = false;
+    els.status.textContent = msg;
+    els.status.className = "statusline" + (kind ? " " + kind : "");
+  }
+  function setBanner(mk) {
+    var m = (M.PROTECTIVE_MARKING.indexOf(mk) !== -1) ? mk : "OFFICIAL";
+    els.banner.textContent = m;
+    els.banner.setAttribute("data-mk", m);
+  }
+  function opt(value, label, sel) {
+    return '<option value="' + esc(value) + '"' + (sel === value ? " selected" : "") + ">" + esc(label) + "</option>";
+  }
+  // Alphabetise a list of keys by their display label, but always pin "Other" last.
+  function alphaPinOther(keys, labelFn) {
+    return keys.slice().sort(function (a, b) {
+      var la = String(labelFn(a)), lb = String(labelFn(b));
+      var ao = /^other$/i.test(la) ? 1 : 0, bo = /^other$/i.test(lb) ? 1 : 0;
+      if (ao !== bo) return ao - bo;
+      return la.localeCompare(lb);
+    });
+  }
+  function download(filename, text) {
+    try {
+      var blob = new Blob([text], { type: "application/json" });
+      var url = (window.URL || window.webkitURL).createObjectURL(blob);
+      var a = document.createElement("a"); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { (window.URL || window.webkitURL).revokeObjectURL(url); }, 1000);
+      return true;
+    } catch (e) { setStatus("Download is not available in this environment.", "err"); return false; }
+  }
+
+  /* ---------- sidebar list (removed in the page-based model; kept null-safe
+   * so any legacy caller is a harmless no-op when the rail is absent) ---------- */
+  function renderSidebar(all) {
+    if (!els.list || !els.listEmpty) return;
+    if (view === "home") {
+      els.list.innerHTML = ""; els.listEmpty.hidden = false;
+      els.listEmpty.textContent = "Pick an operation, or search/filter, to list reports.";
+      return;
+    }
+    var res = Q.run(all, buildCriteria({ page: 1, pageSize: 100000 }));
+    els.list.innerHTML = "";
+    els.listEmpty.hidden = res.total !== 0;
+    els.listEmpty.textContent = "No matching reports.";
+    res.rows.slice(0, 300).forEach(function (ir) {
+      var li = document.createElement("li");
+      var nItems = (ir.items || []).filter(function (i) { return !i.isProvenance; }).length;
+      li.className = "report-item"; li.tabIndex = 0; li.setAttribute("role", "button"); li.setAttribute("data-urn", ir.urn);
+      if (ir.urn === lastDetailUrn) li.setAttribute("aria-current", "true");
+      li.innerHTML =
+        '<div class="ri-top"><span class="ri-urn">' + esc(ir.urn) + '</span>' +
+        (ir.operation ? '<span class="pill" style="color:var(--accent)">' + esc(ir.operation) + '</span>' : '') + '</div>' +
+        '<div class="ri-title">' + esc(ir.title || "(untitled)") + '</div>' +
+        '<div class="ri-meta"><span>' + nItems + ' item' + (nItems === 1 ? "" : "s") + '</span>' +
+        '<span>' + esc((ir.updatedAt || "").slice(0, 10)) + '</span></div>';
+      function open() { showDetail(ir.urn); }
+      li.addEventListener("click", open);
+      li.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+      els.list.appendChild(li);
+    });
+  }
+  function refreshList() { return allRows().then(function (all) { renderSidebar(all); }).then(function () { return renderOpTabs(); }); }
+
+  /* ---------- capture form ---------- */
+  function blankItem() { return { sourceType: "PND", text: "", sourceEval: "", intelEval: "" }; }
+
+  function gradeText(it, hcode) {
+    if (G.isSourceEval(it.sourceEval) && G.isAssessment(it.intelEval)) {
+      return G.code(it.sourceEval, it.intelEval, hcode === "C" ? "C" : "P");
+    }
+    return "[ - ]";
+  }
+
+  // Source-reliability colour key for a grade code like "[3CC]". Returns the
+  // attribute ` data-rel="N"` for N in {1,2,3} (1 Reliable -> ok, 2 Untested
+  // -> warn, 3 Not reliable -> bad); empty for ungraded "[ - ]". Decorative
+  // on top of text: the grade still reads its full code for AA / colour-blind.
+  function relAttr(code) {
+    var m = String(code).match(/\[\s*([1-3])/);
+    return m ? ' data-rel="' + m[1] + '"' : '';
+  }
+  // Live-update sibling of relAttr for grade spans whose text we rewrite
+  // in place (form preview); keeps the reliability colour matching the code.
+  function setRel(el, code) {
+    var m = String(code).match(/\[\s*([1-3])/);
+    if (m) el.setAttribute("data-rel", m[1]); else el.removeAttribute("data-rel");
+  }
+
+  function updateProvGrade() {
+    var se = (document.getElementById("f-prov-se") || {}).value;
+    var ie = (document.getElementById("f-prov-ie") || {}).value;
+    var hc = (document.querySelector('input[name="f-hcode"]:checked') || {}).value || "P";
+    var g = document.getElementById("prov-grade");
+    if (g) { var gc = gradeText({ sourceEval: se, intelEval: ie }, hc); g.textContent = gc; setRel(g, gc); }
+  }
+
+  function itemHTML(it, idx, hcode) {
+    var st = alphaPinOther(M.SOURCE_TYPES, function (s) { return s; }).map(function (s) { return opt(s, s, it.sourceType); }).join("");
+    var se = ['<option value="">—</option>']
+      .concat(G.sourceEvalCodes().map(function (c) { return opt(c, c + " " + G.SOURCE_EVAL[c], it.sourceEval); })).join("");
+    var ie = ['<option value="">—</option>']
+      .concat(G.assessmentCodes().map(function (c) { return opt(c, c + " " + G.ASSESSMENT[c], it.intelEval); })).join("");
+    return '' +
+      '<div class="item-card" data-idx="' + idx + '">' +
+        '<div class="item-head"><span class="item-no">Item ' + (idx + 1) + '</span>' +
+          '<span>Grade <span class="grade" data-grade="' + idx + '"' + relAttr(gradeText(it, hcode)) + '>' + esc(gradeText(it, hcode)) + '</span> ' +
+          '<button type="button" class="btn danger" data-rm="' + idx + '" aria-label="Remove item ' + (idx + 1) + '">Remove</button></span>' +
+        '</div>' +
+        '<div class="field"><label for="it-src-' + idx + '">Source / system</label>' +
+          '<select id="it-src-' + idx + '" data-f="sourceType" data-i="' + idx + '">' + st + '</select></div>' +
+        '<div class="field"><label for="it-text-' + idx + '">Item text</label>' +
+          '<textarea id="it-text-' + idx + '" data-f="text" data-i="' + idx + '">' + esc(it.text) + '</textarea></div>' +
+        '<div class="row">' +
+          '<div class="field"><label for="it-se-' + idx + '">Source evaluation (1–3)</label>' +
+            '<select id="it-se-' + idx + '" data-f="sourceEval" data-i="' + idx + '">' + se + '</select></div>' +
+          '<div class="field"><label for="it-ie-' + idx + '">Intelligence evaluation (A–E)</label>' +
+            '<select id="it-ie-' + idx + '" data-f="intelEval" data-i="' + idx + '">' + ie + '</select></div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderItems() {
+    var hcode = (document.querySelector('input[name="f-hcode"]:checked') || {}).value || "P";
+    var wrap = document.getElementById("items");
+    wrap.innerHTML = formItems.map(function (it, i) { return itemHTML(it, i, hcode); }).join("");
+  }
+
+  function showForm(existing) {
+    if (existing && (existing.status === "AUTHORISED" || existing.status === "SUPPRESSED")) {
+      setStatus("Authorised or suppressed reports cannot be edited.", "err"); showDetail(existing.urn); return;
+    }
+    editingUrn = existing ? existing.urn : null;
+    formItems = existing && existing.items
+      ? existing.items.filter(function (i) { return !i.isProvenance; }).map(function (i) {
+          return { sourceType: i.sourceType, text: i.text, sourceEval: i.sourceEval, intelEval: i.intelEval };
+        })
+      : [blankItem()];
+    if (!formItems.length) formItems = [blankItem()];
+
+    var e = existing || {};
+    var h = e.handling || {};
+    var ss = e.sensitiveSource || {};
+    var mk = e.protectiveMarking || "OFFICIAL";
+    setBanner(mk);
+
+    var threatOpts = ['<option value="">— select —</option>']
+      .concat(alphaPinOther(T.list(), function (t) { return t; }).map(function (t) { return opt(t, t, e.threatArea); })).join("");
+    var markingOpts = M.PROTECTIVE_MARKING.map(function (m) { return opt(m, m, mk); }).join("");
+    var confOpts = ['<option value="">— select —</option>']
+      .concat(M.CONFIDENCE.map(function (c) { return opt(c, c, e.confidence); })).join("");
+    var opOpts = ['<option value="">— unassigned —</option>']
+      .concat(O.list().slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
+        .map(function (o) { return opt(o.name, o.name + " — " + o.threatArea.split(" - ")[0], e.operation); })).join("");
+    var actionOpts = ['<option value="">— select —</option>']
+      .concat(Object.keys(M.ACTION_CODES).map(function (k) { return opt(k, k + " " + M.ACTION_CODES[k], h.actionCode); })).join("");
+    var sanOpts = ['<option value="">— select —</option>']
+      .concat(Object.keys(M.SANITISATION_CODES).map(function (k) { return opt(k, k + " " + M.SANITISATION_CODES[k], h.sanitisationCode); })).join("");
+    var pv = M.coerceProvenance(e.provenance);
+    var provSe = ['<option value="">—</option>']
+      .concat(G.sourceEvalCodes().map(function (c) { return opt(c, c + " " + G.SOURCE_EVAL[c], pv.sourceEval); })).join("");
+    var provIe = ['<option value="">—</option>']
+      .concat(G.assessmentCodes().map(function (c) { return opt(c, c + " " + G.ASSESSMENT[c], pv.intelEval); })).join("");
+    var isC = h.code === "C";
+    var provGrade = gradeText(pv, isC ? "C" : "P");
+
+    els.main.innerHTML =
+      '<form class="form" id="ir-form" novalidate>' +
+      '<h1 tabindex="-1">' + (existing ? "Edit report " + esc(existing.urn) : "New intelligence report") + '</h1>' +
+      '<div id="error-summary"></div>' +
+
+      '<fieldset><legend>Report</legend>' +
+        '<div class="field"><label for="f-title">Title</label>' +
+          '<input id="f-title" type="text" value="' + esc(e.title) + '"></div>' +
+        '<div class="field"><label for="f-operation">Operation</label>' +
+          '<select id="f-operation">' + opOpts + '</select></div>' +
+        '<div class="row">' +
+          '<div class="field"><label for="f-date">Date of collection</label>' +
+            '<p class="hint" id="f-date-hint">Format DD/MM/YYYY</p>' +
+            '<input id="f-date" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" aria-describedby="f-date-hint" value="' + esc(e.dateOfCollection) + '"></div>' +
+          '<div class="field"><span class="label" id="f-self-lbl" style="font-weight:600;display:block;margin-bottom:.25rem">Are you the submitter?</span>' +
+            '<div class="radio-row" role="radiogroup" aria-labelledby="f-self-lbl">' +
+              '<label><input type="radio" name="f-self" value="yes"' + (e.submittedBySelf === false ? "" : " checked") + '> Yes</label>' +
+              '<label><input type="radio" name="f-self" value="no"' + (e.submittedBySelf === false ? " checked" : "") + '> No</label>' +
+            '</div></div>' +
+        '</div>' +
+        '<div class="row">' +
+          '<div class="field"><label for="f-threat">Threat area</label><select id="f-threat">' + threatOpts + '</select></div>' +
+          '<div class="field"><label for="f-confidence">Confidence level</label><select id="f-confidence">' + confOpts + '</select></div>' +
+          '<div class="field"><label for="f-marking">Protective marking</label><select id="f-marking">' + markingOpts + '</select></div>' +
+        '</div>' +
+      '</fieldset>' +
+
+      '<fieldset><legend>Handling</legend>' +
+        '<div class="field"><span class="label" id="f-hcode-lbl" style="font-weight:600;display:block;margin-bottom:.25rem">Handling code</span>' +
+          '<div class="radio-row" role="radiogroup" aria-labelledby="f-hcode-lbl">' +
+            '<label><input type="radio" name="f-hcode" value="P"' + (isC ? "" : " checked") + '> P — Lawful sharing permitted</label>' +
+            '<label><input type="radio" name="f-hcode" value="C"' + (isC ? " checked" : "") + '> C — Permitted with conditions</label>' +
+          '</div></div>' +
+        '<div id="cond-block"' + (isC ? "" : " hidden") + '>' +
+          '<div class="field"><label for="f-hinstructions">Detailed handling instructions</label>' +
+            '<textarea id="f-hinstructions">' + esc(h.instructions) + '</textarea></div>' +
+          '<div class="row">' +
+            '<div class="field"><label for="f-action">Action code (C only)</label><select id="f-action">' + actionOpts + '</select></div>' +
+            '<div class="field"><label for="f-sanitisation">Sanitisation code (C only)</label><select id="f-sanitisation">' + sanOpts + '</select></div>' +
+          '</div>' +
+        '</div>' +
+      '</fieldset>' +
+
+      '<fieldset><legend>Sensitive source</legend>' +
+        '<div class="row">' +
+          '<div class="field"><label for="f-ss-source">Source</label><input id="f-ss-source" type="text" value="' + esc(ss.source) + '"></div>' +
+          '<div class="field"><label for="f-ss-subtype">Subtype</label><input id="f-ss-subtype" type="text" value="' + esc(ss.subtype) + '"></div>' +
+          '<div class="field"><label for="f-ss-reference">Reference</label><input id="f-ss-reference" type="text" value="' + esc(ss.reference) + '"></div>' +
+        '</div>' +
+      '</fieldset>' +
+
+      '<fieldset><legend>Intelligence items</legend>' +
+        '<div id="items"></div>' +
+        '<button type="button" id="btn-add-item" class="btn secondary">+ Add item</button>' +
+      '</fieldset>' +
+
+      '<fieldset><legend>Provenance</legend>' +
+        '<div class="field"><label for="f-provenance">Provenance statement</label>' +
+          '<textarea id="f-provenance">' + esc(pv.text) + '</textarea></div>' +
+        '<div class="row">' +
+          '<div class="field"><label for="f-prov-se">Source evaluation (1–3)</label><select id="f-prov-se">' + provSe + '</select></div>' +
+          '<div class="field"><label for="f-prov-ie">Intelligence evaluation (A–E)</label><select id="f-prov-ie">' + provIe + '</select></div>' +
+          '<div class="field"><span style="font-weight:600;display:block;margin-bottom:.25rem">Grade</span><span class="grade" id="prov-grade"' + relAttr(provGrade) + '>' + esc(provGrade) + '</span></div>' +
+        '</div>' +
+        '<div class="provenance-note">Not charted.</div>' +
+      '</fieldset>' +
+
+      '<div class="toolbar">' +
+        '<button type="submit" class="btn">Save report</button>' +
+        '<button type="button" id="btn-cancel" class="btn secondary">Cancel</button>' +
+      '</div>' +
+      '</form>';
+
+    renderItems();
+    wireForm();
+    focusView();
+  }
+
+  function wireForm() {
+    document.getElementById("f-marking").addEventListener("change", function (e) { setBanner(e.target.value); });
+    Array.prototype.forEach.call(document.getElementsByName("f-hcode"), function (r) {
+      r.addEventListener("change", function () {
+        document.getElementById("cond-block").hidden = (document.querySelector('input[name="f-hcode"]:checked').value !== "C");
+        renderItems();
+        updateProvGrade();
+      });
+    });
+    document.getElementById("btn-add-item").addEventListener("click", function () {
+      syncItemsFromDom(); formItems.push(blankItem()); renderItems();
+    });
+    var itemsWrap = document.getElementById("items");
+    itemsWrap.addEventListener("click", function (e) {
+      var rm = e.target.getAttribute && e.target.getAttribute("data-rm");
+      if (rm != null) { syncItemsFromDom(); formItems.splice(+rm, 1); if (!formItems.length) formItems = [blankItem()]; renderItems(); }
+    });
+    itemsWrap.addEventListener("input", function (e) {
+      var f = e.target.getAttribute && e.target.getAttribute("data-f");
+      if (!f) return;
+      var i = +e.target.getAttribute("data-i");
+      formItems[i][f] = e.target.value;
+      if (f === "sourceEval" || f === "intelEval") {
+        var hcode = document.querySelector('input[name="f-hcode"]:checked').value;
+        var g = document.querySelector('[data-grade="' + i + '"]');
+        if (g) { var gc = gradeText(formItems[i], hcode); g.textContent = gc; setRel(g, gc); }
+      }
+    });
+    document.getElementById("f-prov-se").addEventListener("change", updateProvGrade);
+    document.getElementById("f-prov-ie").addEventListener("change", updateProvGrade);
+    document.getElementById("btn-cancel").addEventListener("click", function () { showWelcome(); });
+    document.getElementById("ir-form").addEventListener("submit", function (e) { e.preventDefault(); save(); });
+  }
+
+  function syncItemsFromDom() {
+    Array.prototype.forEach.call(document.querySelectorAll("#items [data-f]"), function (el) {
+      var i = +el.getAttribute("data-i"), f = el.getAttribute("data-f");
+      if (formItems[i]) formItems[i][f] = el.value;
+    });
+  }
+
+  function collectForm() {
+    syncItemsFromDom();
+    var hcode = document.querySelector('input[name="f-hcode"]:checked').value;
+    var ir = M.createIR({
+      urn: editingUrn || undefined,
+      operation: document.getElementById("f-operation").value,
+      title: document.getElementById("f-title").value,
+      dateOfCollection: document.getElementById("f-date").value,
+      submittedBySelf: document.querySelector('input[name="f-self"]:checked').value === "yes",
+      threatArea: document.getElementById("f-threat").value,
+      confidence: document.getElementById("f-confidence").value,
+      protectiveMarking: document.getElementById("f-marking").value,
+      handling: {
+        code: hcode,
+        instructions: hcode === "C" ? document.getElementById("f-hinstructions").value : "",
+        actionCode: hcode === "C" ? (document.getElementById("f-action").value || null) : null,
+        sanitisationCode: hcode === "C" ? (document.getElementById("f-sanitisation").value || null) : null
+      },
+      sensitiveSource: {
+        source: document.getElementById("f-ss-source").value,
+        subtype: document.getElementById("f-ss-subtype").value,
+        reference: document.getElementById("f-ss-reference").value
+      },
+      provenance: {
+        text: document.getElementById("f-provenance").value,
+        sourceEval: document.getElementById("f-prov-se").value,
+        intelEval: document.getElementById("f-prov-ie").value
+      }
+    });
+    formItems.forEach(function (it) { M.addItem(ir, it); });
+    return ir;
+  }
+
+  var FIELD_IDS = {
+    "operation": "f-operation", "title": "f-title", "dateOfCollection": "f-date", "submittedBySelf": "f-self",
+    "threatArea": "f-threat", "confidence": "f-confidence", "protectiveMarking": "f-marking",
+    "handling.code": "f-hcode", "handling.instructions": "f-hinstructions",
+    "handling.actionCode": "f-action", "handling.sanitisationCode": "f-sanitisation",
+    "provenance": "f-provenance", "provenance.text": "f-provenance",
+    "provenance.sourceEval": "f-prov-se", "provenance.intelEval": "f-prov-ie", "items": "items"
+  };
+  function fieldId(errField) {
+    if (FIELD_IDS[errField]) return FIELD_IDS[errField];
+    var m = errField.match(/^items\[(\d+)\]\.(\w+)$/);
+    if (m) {
+      var i = m[1], f = m[2];
+      if (f === "text") return "it-text-" + i;
+      if (f === "sourceEval") return "it-se-" + i;
+      if (f === "intelEval") return "it-ie-" + i;
+    }
+    return null;
+  }
+
+  function showErrors(errors) {
+    var sum = document.getElementById("error-summary");
+    if (!errors.length) { sum.innerHTML = ""; return; }
+    var items = errors.map(function (er) {
+      var id = fieldId(er.field);
+      return "<li>" + (id ? '<a href="#' + esc(id) + '">' + esc(er.message) + "</a>" : esc(er.message)) + "</li>";
+    }).join("");
+    sum.innerHTML = '<div class="error-summary" role="alert"><h2>There ' +
+      (errors.length === 1 ? "is 1 problem" : "are " + errors.length + " problems") +
+      " with the report</h2><ul>" + items + "</ul></div>";
+    sum.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        var t = document.getElementById(a.getAttribute("href").slice(1));
+        if (t) { t.focus(); if (t.scrollIntoView) t.scrollIntoView({ block: "center" }); }
+      });
+    });
+    if (sum.scrollIntoView) sum.scrollIntoView({ block: "start" });
+  }
+
+  function save() {
+    var raw = collectForm();
+    var ir = N.normaliseIR(raw);
+    var res = V.validateIR(ir);
+    if (!res.valid) {
+      showErrors(res.errors);
+      setStatus(res.errors.length + " problem(s) — report not saved.", "err");
+      return;
+    }
+    showErrors([]);
+    var prior = editingUrn ? repo.get(editingUrn) : Promise.resolve(null);
+    prior.then(function (prev) {
+      if (prev) {                         // editing: preserve immutable history + lifecycle
+        ir.createdAt = prev.createdAt || ir.createdAt;
+        ir.status = prev.status || ir.status;
+        ir.audit = (prev.audit || []).slice();
+        ir.structuredIntelligence = prev.structuredIntelligence || ir.structuredIntelligence;
+      }
+      M.addAudit(ir, "user", editingUrn ? "updated" : "submitted", editingUrn ? "Edited via Registry UI" : "Created via Registry UI");
+      return repo.save(ir);
+    }).then(function () {
+      setStatus("Saved " + ir.urn + ".", "ok");
+      return refreshList();
+    }).then(function () {
+      showDetail(ir.urn);
+    }).catch(function (err) {
+      setStatus("Save failed: " + (err && err.message), "err");
+    });
+  }
+
+  /* ---------- detail view ---------- */
+  function showDetail(urn) {
+    view = "detail";
+    repo.get(urn).then(function (ir) {
+      if (!ir) { showWelcome(); return; }
+      setBanner(ir.protectiveMarking);
+      var h = ir.handling || {}, ss = ir.sensitiveSource || {};
+      var pvd = M.coerceProvenance(ir.provenance);
+      var pvGrade = (G.isSourceEval(pvd.sourceEval) && G.isAssessment(pvd.intelEval)) ? V.itemGrade(ir, pvd) : "[ - ]";
+      var items = (ir.items || []).filter(function (i) { return !i.isProvenance; });
+      var itemsHTML = items.map(function (it, i) {
+        var grade = V.itemGrade(ir, it);
+        return '<div class="item-block"><div class="ib-head"><strong>Item ' + (i + 1) + '</strong>' +
+          '<span class="ib-src">' + esc(it.sourceType) + '</span>' +
+          '<span class="grade"' + relAttr(grade) + '>' + esc(grade) + '</span></div>' +
+          '<pre>' + esc(it.text) + '</pre></div>';
+      }).join("");
+      // Sensitive source as a distinct, protected block (not a plain dl row).
+      var ssParts = [];
+      if (ss.source) ssParts.push(['Source', ss.source]);
+      if (ss.subtype) ssParts.push(['Subtype', ss.subtype]);
+      if (ss.reference) ssParts.push(['Reference', ss.reference]);
+      var ssBody = ssParts.length
+        ? '<div class="ss-grid">' + ssParts.map(function (p) {
+            return '<div class="ss-cell"><span class="ss-k">' + esc(p[0]) + '</span><span class="ss-v">' + esc(p[1]) + '</span></div>';
+          }).join("") + '</div>'
+        : '<p class="ss-none">None recorded.</p>';
+      function metaCell(label, value) {
+        return '<div class="meta-cell"><span class="meta-k">' + esc(label) + '</span><span class="meta-v">' + value + '</span></div>';
+      }
+      var auditHTML = (ir.audit || []).slice().reverse().map(function (a) {
+        return "<li>" + esc(a.ts) + " · " + esc(a.actor) + " · " + esc(a.action) + (a.detail ? " — " + esc(a.detail) : "") + "</li>";
+      }).join("");
+      var cond = h.code === "C"
+        ? esc(h.actionCode || "—") + " / " + esc(h.sanitisationCode || "—")
+        : "n/a (code P)";
+
+      var backLabel = cameFromResults ? (activeOp ? esc(activeOp) : "All reports") : "Overview";
+      els.main.innerHTML =
+        '<div class="detail page">' +
+        '<div class="detail-head">' +
+        '<div class="crumbs">' +
+          '<button type="button" class="linklike" id="dt-back">\u2190 Back to ' + backLabel + '</button>' +
+          '<span class="sep">/</span>' +
+          '<button type="button" class="linklike" id="dt-home">Overview</button>' +
+        '</div>' +
+        '<h1 tabindex="-1">' + esc(ir.title || "(untitled)") + '</h1>' +
+        '<div class="detail-facts">' +
+          '<span class="fact"><span class="grade">' + esc(ir.urn) + '</span></span>' +
+          (ir.operation ? '<span class="fact"><b>' + esc(ir.operation) + '</b></span>' : '') +
+          '<span class="fact"><span class="pill mk-' + esc(ir.protectiveMarking) + '">' + esc(ir.protectiveMarking) + '</span></span>' +
+          '<span class="fact">Status <b class="wf-tag"' + (' data-status="' + esc(ir.status) + '"') + '>' + esc(ir.status) + '</b></span>' +
+          '<span class="fact">' + items.length + ' item' + (items.length === 1 ? '' : 's') + '</span>' +
+        '</div>' +
+        '</div>' +
+        '<div class="meta-grid">' +
+          metaCell('Date of collection', esc(ir.dateOfCollection)) +
+          metaCell('Submitter is author', (ir.submittedBySelf ? "Yes" : "No")) +
+          metaCell('Threat area', esc(ir.threatArea)) +
+          metaCell('Confidence', esc(ir.confidence)) +
+          metaCell('Handling code', esc(h.code)) +
+          metaCell('Action / sanitisation', cond) +
+        '</div>' +
+        '<div class="meta-cell meta-wide"><span class="meta-k">Handling instructions</span><span class="meta-v">' + esc(h.instructions || "—") + '</span></div>' +
+        '<section class="sensitive-source" role="note" aria-label="Sensitive source — protected, handle with care">' +
+          '<div class="ss-label"><span class="ss-mark" aria-hidden="true">▲</span>SENSITIVE SOURCE</div>' +
+          ssBody +
+        '</section>' +
+        '<h2>Items (' + items.length + ')</h2>' +
+        (itemsHTML ? '<div class="items-grid">' + itemsHTML + '</div>' : '<p class="empty">No items.</p>') +
+        '<h2>Provenance</h2>' +
+        '<div class="item-block"><div class="ib-head"><strong>Provenance</strong><span class="grade"' + relAttr(pvGrade) + '>' + esc(pvGrade) + '</span></div><pre>' + esc(pvd.text || "—") + '</pre></div>' +
+        '<h2>Workflow</h2>' +
+        '<div class="wf-status">Status: <span class="pill status" data-status="' + esc(ir.status) + '">' + esc(ir.status) + '</span>' +
+          (ir.rejectionReason ? ' · <em>rejected:</em> ' + esc(ir.rejectionReason) : '') +
+          (ir.suppressionReason ? ' · <em>suppressed:</em> ' + esc(ir.suppressionReason) : '') +
+          (ir.pndShareAuthorisedAt ? ' · PND authorised ' + esc(String(ir.pndShareAuthorisedAt).slice(0,16).replace("T"," ")) : '') + '</div>' +
+        '<div class="toolbar" id="wf-bar"></div>' +
+        '<div id="pnd-review"></div>' +
+        '<h2>Structured intelligence</h2><div id="si-panel"></div>' +
+        '<h3 class="si-chart-h">Network chart</h3>' +
+        '<div id="si-chart" class="si-chart" role="img" aria-label="Network chart of this report’s entities and links"></div>' +
+        '<h2>Handoff to SOLAR</h2>' +
+        '<div class="toolbar">' +
+          '<button type="button" class="btn secondary" id="hx-contract">Export contract</button>' +
+          '<button type="button" class="btn secondary" id="hx-solar">Export SOLAR case</button>' +
+          '<button type="button" class="btn" id="hx-open">Open full chart in SOLAR</button>' +
+        '</div>' +
+        '</div>';
+
+      var _bk = document.getElementById("dt-back");
+      if (_bk) _bk.addEventListener("click", function () { if (cameFromResults) showResults(); else showHome(); });
+      var _hm = document.getElementById("dt-home");
+      if (_hm) _hm.addEventListener("click", function () { showHome(); });
+      lastDetailUrn = ir.urn;
+      markActiveReport();
+      focusView();
+      renderWfBar(ir);
+      renderSI(ir);
+      renderMiniChart(ir);
+      document.getElementById("hx-contract").addEventListener("click", function () {
+        download(ir.urn + ".system.ir.v1.json", JSON.stringify(H.toHandoff(ir), null, 2));
+        setStatus("Exported contract for " + ir.urn + ".", "ok");
+      });
+      document.getElementById("hx-solar").addEventListener("click", function () {
+        download(ir.urn + ".chartroom.json", JSON.stringify(H.toSolarCase(ir), null, 2));
+        setStatus("Exported SOLAR case for " + ir.urn + ". Open it in SOLAR Charting (Enter \u2192 Charting) to chart it.", "ok");
+      });
+      document.getElementById("hx-open").addEventListener("click", function () {
+        try {
+          window.localStorage.setItem("solar_pending_case", JSON.stringify(H.toSolarCase(ir)));
+        } catch (e) {
+          setStatus("Could not stash the case for SOLAR \u2014 use Export SOLAR case instead.", "err");
+          return;
+        }
+        window.location.href = "../index.html";
+      });
+    });
+  }
+
+  // NOTE: returns RAW text — callers MUST wrap in esc() before inserting into HTML.
+  function entLabel(e){ return e.label + " [" + (SI.ENTITY_TYPES[e.type] ? SI.ENTITY_TYPES[e.type].label : e.type) + "]"; }
+
+  function persistSI(ir) {
+    var res = SI.validateSI(ir);
+    M.addAudit(ir, "user", "si-updated", "structured intelligence edited");
+    repo.save(ir).then(function () {
+      setStatus(res.valid ? "Structured intelligence saved." : ("Saved with issue: " + res.errors[0].message), res.valid ? "ok" : "err");
+      return refreshList();
+    }).then(function () { renderSI(ir); });
+  }
+
+  function computeMaster(ir) {
+    repo.list().then(function (rows) {
+      var all = [];
+      rows.forEach(function (r) {
+        var ents = (r.structuredIntelligence && r.structuredIntelligence.entities) || [];
+        ents.forEach(function (e) { all.push(e); });
+      });
+      var masters = MX.buildMasterIndex(all);
+      var byMember = {};
+      masters.forEach(function (m) { m.members.forEach(function (id) { byMember[id] = m; }); });
+      var out = document.getElementById("si-master-out");
+      var mine = (ir.structuredIntelligence && ir.structuredIntelligence.entities) || [];
+      if (!mine.length) { out.innerHTML = '<p class="empty">Add entities to see Master/Lower aggregation.</p>'; return; }
+      out.innerHTML = '<h3>Master/Lower preview</h3><ul class="si-list">' + mine.map(function (e) {
+        var m = byMember[e.id]; var n = m ? m.memberCount : 1;
+        var by = (m && m.matchedBy.length) ? (' · matched by ' + esc(m.matchedBy.join(", "))) : '';
+        return '<li><span>' + esc(e.label) + ' → Master of ' + n + ' Lower' + (n === 1 ? '' : 's') + ' across reports' + by + '</span></li>';
+      }).join('') + '</ul>';
+    });
+  }
+
+  function renderSI(ir) {
+    var panel = document.getElementById("si-panel"); if (!panel) return;
+    if (!ir.structuredIntelligence) ir.structuredIntelligence = { entities: [], links: [] };
+    var ro = (ir.status === "AUTHORISED" || ir.status === "SUPPRESSED");
+    var S = ir.structuredIntelligence;
+    var byId = {}; S.entities.forEach(function (e) { byId[e.id] = e; });
+    var entTypeOpts = alphaPinOther(Object.keys(SI.ENTITY_TYPES), function (k) { return SI.ENTITY_TYPES[k].label; }).map(function (k) { return opt(k, SI.ENTITY_TYPES[k].label, "person"); }).join("");
+    var roleOpts = ['<option value="">— role —</option>'].concat(alphaPinOther(Object.keys(SI.ROLES), function (k) { return SI.ROLES[k]; }).map(function (k) { return opt(k, SI.ROLES[k]); })).join("");
+    var pndOpts = SI.PND_SHARE.map(function (x) { return opt(x, x, "Unknown"); }).join("");
+    var linkTypeOpts = alphaPinOther(Object.keys(SI.LINK_TYPES), function (k) { return SI.LINK_TYPES[k]; }).map(function (k) { return opt(k, SI.LINK_TYPES[k]); }).join("");
+    var entOpts = ['<option value="">— entity —</option>'].concat(S.entities.map(function (e) { return opt(e.id, entLabel(e)); })).join("");
+
+    var entList = S.entities.length ? '<ul class="si-list">' + S.entities.map(function (e) {
+        return '<li><span>' + esc(entLabel(e)) + (e.role ? ' · ' + esc(SI.ROLES[e.role] || e.role) : '') + ' · PND:' + esc(e.pndShare) + (e.isAlias ? ' · <em>alias</em>' : '') + '</span>' +
+          (ro ? '' : '<button type="button" class="btn danger" data-del-ent="' + esc(e.id) + '" aria-label="Delete entity">×</button>') + '</li>';
+      }).join('') + '</ul>' : '<p class="empty">No entities yet.</p>';
+    var linkList = S.links.length ? '<ul class="si-list">' + S.links.map(function (l) {
+        var f = byId[l.from], t = byId[l.to];
+        return '<li><span>' + esc(f ? f.label : l.from) + ' —' + esc(SI.LINK_TYPES[l.type] || l.type) + '→ ' + esc(t ? t.label : l.to) + ' · PND:' + esc(l.pndShare) + '</span>' +
+          (ro ? '' : '<button type="button" class="btn danger" data-del-lnk="' + esc(l.id) + '" aria-label="Delete link">×</button>') + '</li>';
+      }).join('') + '</ul>' : '<p class="empty">No links yet.</p>';
+
+    panel.innerHTML =
+      (ro ? '<p class="provenance-note">This report is ' + esc(ir.status) + ' — structured intelligence is read-only.</p>' : '') +
+      '<div class="si-cols">' +
+        '<div><h3>Entities</h3>' + entList + (ro ? '' :
+          '<div class="si-add">' +
+            '<label class="visually-hidden" for="si-ent-type">Entity type</label><select id="si-ent-type">' + entTypeOpts + '</select>' +
+            '<label class="visually-hidden" for="si-ent-label">Entity label</label><input id="si-ent-label" type="text" placeholder="label e.g. John SMITH">' +
+            '<label class="visually-hidden" for="si-ent-dob">Date of birth</label><input id="si-ent-dob" type="text" placeholder="DoB DD/MM/YYYY">' +
+            '<label class="visually-hidden" for="si-ent-role">Role</label><select id="si-ent-role">' + roleOpts + '</select>' +
+            '<label class="visually-hidden" for="si-ent-pnd">PND share</label><select id="si-ent-pnd">' + pndOpts + '</select>' +
+            '<label class="si-inline"><input type="checkbox" id="si-ent-alias"> alias</label>' +
+            '<button type="button" class="btn secondary" id="si-add-ent">Add entity</button>' +
+          '</div>') +
+        '</div>' +
+        '<div><h3>Links</h3>' + linkList + (ro ? '' :
+          '<div class="si-add">' +
+            '<label class="visually-hidden" for="si-lnk-from">Link from</label><select id="si-lnk-from">' + entOpts + '</select>' +
+            '<label class="visually-hidden" for="si-lnk-type">Link type</label><select id="si-lnk-type">' + linkTypeOpts + '</select>' +
+            '<label class="visually-hidden" for="si-lnk-to">Link to</label><select id="si-lnk-to">' + entOpts + '</select>' +
+            '<label class="visually-hidden" for="si-lnk-pnd">PND share</label><select id="si-lnk-pnd">' + pndOpts + '</select>' +
+            '<button type="button" class="btn secondary" id="si-add-lnk">Add link</button>' +
+          '</div>') +
+        '</div>' +
+      '</div>' +
+      '<div class="si-add"><button type="button" class="btn" id="si-master">Compute Master/Lower preview (all reports)</button></div>' +
+      '<div id="si-master-out"></div>';
+
+    if (!ro) {
+    document.getElementById("si-add-ent").addEventListener("click", function () {
+      var e = { type: document.getElementById("si-ent-type").value,
+        label: document.getElementById("si-ent-label").value.trim(),
+        role: document.getElementById("si-ent-role").value || null,
+        pndShare: document.getElementById("si-ent-pnd").value,
+        isAlias: document.getElementById("si-ent-alias").checked, attrs: {} };
+      var dob = document.getElementById("si-ent-dob").value.trim(); if (dob) e.attrs.dob = dob;
+      if (!e.label) { setStatus("Entity label required.", "err"); return; }
+      SI.addEntity(ir, e); persistSI(ir);
+    });
+    document.getElementById("si-add-lnk").addEventListener("click", function () {
+      var from = document.getElementById("si-lnk-from").value, to = document.getElementById("si-lnk-to").value;
+      if (!from || !to || from === to) { setStatus("Pick two different entities to link.", "err"); return; }
+      SI.addLink(ir, { from: from, to: to, type: document.getElementById("si-lnk-type").value, pndShare: document.getElementById("si-lnk-pnd").value });
+      persistSI(ir);
+    });
+    panel.querySelectorAll("[data-del-ent]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-del-ent");
+        repo.list().then(function (rows) {
+          var imp = D.deletionImpact(ir, rows, "entity", id);
+          var msg = imp.action === "detach"
+            ? "This entity also appears on other report(s): " + imp.elsewhere.join(", ") + ".\nIt will be DETACHED from this report (kept on the others)."
+            : "This entity exists only on this report and will be DELETED.";
+          if (imp.cascadeLinks.length) msg += "\n" + imp.cascadeLinks.length + " link(s) on this report will also be removed.";
+          if (!window.confirm(msg + "\n\nContinue?")) return;
+          D.applyDeletion(ir, "entity", id); persistSI(ir);
+        });
+      });
+    });
+    panel.querySelectorAll("[data-del-lnk]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-del-lnk");
+        if (!window.confirm("Delete this link from the report?")) return;
+        D.applyDeletion(ir, "link", id); persistSI(ir);
+      });
+    });
+    }
+    document.getElementById("si-master").addEventListener("click", function () { computeMaster(ir); });
+  }
+
+  // Inline read-only network of THIS report's entities + links, rendered with
+  // SOLAR's vendored vis-network. Feature-detects window.vis so Node/jsdom (where
+  // the lib is absent) never throws — it just leaves the container empty/with a note.
+  function renderMiniChart(ir) {
+    var box = document.getElementById("si-chart");
+    if (!box) return;
+    // dispose any previous instance (re-render on workflow/SI changes)
+    if (miniNetwork) { try { miniNetwork.destroy(); } catch (e) { /* noop */ } miniNetwork = null; }
+    box.innerHTML = "";
+    var S = (ir && ir.structuredIntelligence) || { entities: [], links: [] };
+    var ents = S.entities || [], links = S.links || [];
+    if (!ents.length) {
+      box.classList.add("is-empty");
+      box.removeAttribute("role");
+      box.innerHTML = '<p class="empty si-chart-none">No structured intelligence to chart.</p>';
+      return;
+    }
+    box.classList.remove("is-empty");
+    box.setAttribute("role", "img");
+    // Graph library only exists in the browser — skip cleanly if missing.
+    if (typeof window === "undefined" || !window.vis || !window.vis.Network) {
+      box.innerHTML = '<p class="empty si-chart-none">Chart unavailable (graph library not loaded).</p>';
+      return;
+    }
+    var reduce = prefersReducedMotion();
+    var byId = {}; ents.forEach(function (e) { byId[e.id] = e; });
+    var visNodes = ents.map(function (e) {
+      var c = siColour(e.type);
+      var lbl = (e.label || "") + (e.isAlias ? " (alias)" : "");
+      var typeLabel = (SI.ENTITY_TYPES[e.type] && SI.ENTITY_TYPES[e.type].label) || e.type;
+      var roleLabel = e.role ? (SI.ROLES[e.role] || e.role) : "";
+      return {
+        id: e.id,
+        label: lbl,
+        title: typeLabel + (roleLabel ? " · " + roleLabel : ""),
+        shape: "dot",
+        size: e.type === "person" ? 16 : 13,
+        color: { background: "#131c28", border: c, highlight: { background: "#1d2a3a", border: c } },
+        shadow: { enabled: !reduce, color: siGlow(c, 0.42), size: 14, x: 0, y: 0 },
+        font: { color: "#c9d4e0", size: 12, face: "Inter, Segoe UI, sans-serif", strokeWidth: 0 }
+      };
+    });
+    // only links whose endpoints are present on this report
+    var visEdges = links.filter(function (l) { return byId[l.from] && byId[l.to]; }).map(function (l) {
+      return {
+        id: l.id,
+        from: l.from,
+        to: l.to,
+        label: SI.LINK_TYPES[l.type] || l.type,
+        arrows: { to: { enabled: true, scaleFactor: 0.6 } },
+        color: { color: "#3d4d61", highlight: "#bacd31", hover: "#9bb1c9" },
+        font: { color: "#7d8a99", size: 9, face: "Geist Mono, Consolas, monospace", strokeWidth: 4, strokeColor: "#0b1017", align: "middle" },
+        smooth: { enabled: !reduce, type: "dynamic" }
+      };
+    });
+    try {
+      var data = { nodes: new window.vis.DataSet(visNodes), edges: new window.vis.DataSet(visEdges) };
+      var opts = {
+        autoResize: true,
+        interaction: { hover: true, dragNodes: true, dragView: true, zoomView: true,
+          selectable: true, tooltipDelay: 220, navigationButtons: false, keyboard: false },
+        // read-only: vis-network has no built-in editing unless manipulation is on
+        manipulation: { enabled: false },
+        physics: {
+          enabled: !reduce,
+          solver: "barnesHut",
+          barnesHut: { gravitationalConstant: -5200, springLength: 130, springConstant: 0.03, damping: 0.4, avoidOverlap: 0.5 },
+          stabilization: { enabled: true, iterations: reduce ? 0 : 140, fit: true }
+        },
+        nodes: { borderWidth: 2 },
+        edges: { selectionWidth: 1 }
+      };
+      miniNetwork = new window.vis.Network(box, data, opts);
+      // once settled, freeze physics so the chart sits still (no perpetual motion)
+      miniNetwork.once("stabilized", function () {
+        try { miniNetwork.setOptions({ physics: { enabled: false } }); miniNetwork.fit({ animation: false }); } catch (e) { /* noop */ }
+      });
+      // reduced-motion or tiny graphs may not emit "stabilized" — fit shortly after
+      setTimeout(function () { if (miniNetwork) { try { miniNetwork.fit({ animation: false }); if (reduce) miniNetwork.setOptions({ physics: { enabled: false } }); } catch (e) { /* noop */ } } }, reduce ? 0 : 600);
+    } catch (e) {
+      box.innerHTML = '<p class="empty si-chart-none">Chart could not be rendered.</p>';
+    }
+  }
+
+  function wfPersist(ir, msg) {
+    repo.save(ir).then(function () { if (msg) setStatus(msg, "ok"); return refreshList(); }).then(function () { showDetail(ir.urn); });
+  }
+  function deleteReport(ir) {
+    if (!window.confirm("Delete report " + ir.urn + "? This cannot be undone.")) return;
+    repo.remove(ir.urn).then(function () { setStatus("Deleted " + ir.urn + ".", "ok"); return refreshList(); }).then(showWelcome);
+  }
+  function renderWfBar(ir) {
+    var bar = document.getElementById("wf-bar"); if (!bar) return;
+    var s = ir.status, out = [];
+    function b(id, label, cls) { return '<button type="button" class="btn ' + (cls || "") + '" id="' + id + '">' + esc(label) + '</button>'; }
+    if (s === "DRAFT") out.push(b("wf-edit","Edit","secondary"), b("wf-submit","Submit for authorisation"), b("wf-suppress","Suppress","danger"), b("wf-delete","Delete report","danger"));
+    else if (s === "PENDING_AUTH") out.push(b("wf-review","Review PND & authorise"), b("wf-reject","Reject","danger"), b("wf-suppress","Suppress","danger"));
+    else if (s === "REJECTED") out.push(b("wf-return","Return to draft"), b("wf-edit","Edit","secondary"), b("wf-suppress","Suppress","danger"), b("wf-delete","Delete report","danger"));
+    else if (s === "AUTHORISED") out.push(b("wf-suppress","Suppress","danger"));
+    bar.innerHTML = out.join("");
+    function on(id, fn) { var el = document.getElementById(id); if (el) el.addEventListener("click", fn); }
+    on("wf-edit", function () { showForm(ir); });
+    on("wf-delete", function () { deleteReport(ir); });
+    on("wf-submit", function () { var r = W.transition(ir, "SUBMIT", { actor:"user" }); if (!r.ok) { setStatus(r.error, "err"); return; } wfPersist(ir, "Submitted for authorisation."); });
+    on("wf-return", function () { var r = W.transition(ir, "RETURN_TO_DRAFT", { actor:"user" }); if (!r.ok) { setStatus(r.error, "err"); return; } wfPersist(ir, "Returned to draft."); });
+    on("wf-reject", function () { var reason = window.prompt("Reason for rejection:"); if (reason === null) return; var r = W.transition(ir, "REJECT", { actor:"user", reason:reason }); if (!r.ok) { setStatus(r.error, "err"); return; } wfPersist(ir, "Rejected."); });
+    on("wf-suppress", function () { var reason = window.prompt("Reason for suppression:"); if (reason === null) return; var r = W.transition(ir, "SUPPRESS", { actor:"user", reason:reason }); if (!r.ok) { setStatus(r.error, "err"); return; } wfPersist(ir, "Suppressed."); });
+    on("wf-review", function () { renderPndReview(ir); });
+  }
+  function pndRow(kind, id, label, share, confirmed, note) {
+    var opts = SI.PND_SHARE.map(function (p) { return '<option value="' + esc(p) + '"' + (share === p ? ' selected' : '') + '>' + esc(p) + '</option>'; }).join("");
+    return '<li class="pnd-row"><span>' + esc(label) + '</span>' +
+      '<label class="si-inline">PND <select aria-label="PND share for ' + esc(label) + '" data-pnd-kind="' + kind + '" data-pnd-id="' + esc(id) + '">' + opts + '</select></label>' +
+      '<label class="si-inline"><input type="checkbox" aria-label="Confirm ' + esc(label) + '" data-conf-kind="' + kind + '" data-conf-id="' + esc(id) + '"' + (confirmed ? ' checked' : '') + '> confirmed</label>' +
+      (note ? '<span class="pnd-note">' + esc(note) + '</span>' : '') + '</li>';
+  }
+  function renderPndReview(ir) {
+    var host = document.getElementById("pnd-review"); if (!host) return;
+    if (!ir.structuredIntelligence) ir.structuredIntelligence = { entities: [], links: [] };
+    var S = ir.structuredIntelligence, byId = {}; S.entities.forEach(function (e) { byId[e.id] = e; });
+    var eff = W.computeEffectivePndShare(ir), effL = {}; eff.links.forEach(function (x) { effL[x.id] = x; });
+    var entRows = S.entities.map(function (e) { return pndRow("entity", e.id, entLabel(e), e.pndShare, e.authoriserConfirmed, ""); }).join("");
+    var lnkRows = S.links.map(function (l) { var f = byId[l.from], t = byId[l.to]; var note = effL[l.id] && effL[l.id].blockedReason; return pndRow("link", l.id, (f ? f.label : l.from) + " —" + (SI.LINK_TYPES[l.type] || l.type) + "→ " + (t ? t.label : l.to), l.pndShare, l.authoriserConfirmed, note); }).join("");
+    host.innerHTML = '<div class="pnd-panel"><h3>PND share review</h3>' +
+      '<p class="hint">Set each entity/link PND share, then confirm. A link is only sent to PND if both its entities are shared.</p>' +
+      '<h4>Entities</h4><ul class="pnd-list">' + (entRows || '<li class="empty">None</li>') + '</ul>' +
+      '<h4>Links</h4><ul class="pnd-list">' + (lnkRows || '<li class="empty">None</li>') + '</ul>' +
+      '<div class="toolbar"><button type="button" class="btn" id="pnd-authorise">Authorise charting &amp; PND share</button></div>' +
+      '<div id="pnd-msg"></div></div>';
+    host.querySelectorAll("[data-pnd-id]").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var kind = sel.getAttribute("data-pnd-kind"), id = sel.getAttribute("data-pnd-id");
+        var coll = kind === "entity" ? S.entities : S.links; var el = coll.filter(function (x) { return x.id === id; })[0];
+        if (el) el.pndShare = sel.value;
+        repo.save(ir).then(function () { renderPndReview(ir); });
+      });
+    });
+    host.querySelectorAll("[data-conf-id]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var kind = cb.getAttribute("data-conf-kind"), id = cb.getAttribute("data-conf-id");
+        var coll = kind === "entity" ? S.entities : S.links; var el = coll.filter(function (x) { return x.id === id; })[0];
+        if (el) el.authoriserConfirmed = cb.checked;
+        repo.save(ir);
+      });
+    });
+    document.getElementById("pnd-authorise").addEventListener("click", function () {
+      var r = W.transition(ir, "AUTHORISE", { actor:"user" });
+      if (!r.ok) {
+        document.getElementById("pnd-msg").innerHTML = '<div class="error-summary" role="alert"><h2>Cannot authorise</h2><ul>' +
+          (r.reasons || [r.error]).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></div>';
+        return;
+      }
+      wfPersist(ir, "Authorised. PND share recorded.");
+    });
+  }
+
+  function renderOpTabs() {
+    var host = document.getElementById("op-tabs"); if (!host) return Promise.resolve();
+    var q = ((document.getElementById("op-search") || {}).value || "").toLowerCase();
+    return allRows().then(function (rows) {
+      var counts = {}; rows.forEach(function (ir) { if (ir.operation) counts[ir.operation] = (counts[ir.operation] || 0) + 1; });
+      var names = O.names().slice().sort();
+      if (q) names = names.filter(function (nm) { return nm.toLowerCase().indexOf(q) !== -1; });
+      var selAll = (view === "results" && activeOp === "");
+      var html = '<button type="button" class="op-tab" role="tab" data-op="" aria-selected="' + (selAll ? "true" : "false") + '">All<span class="c">' + rows.length + '</span></button>';
+      html += names.map(function (nm) {
+        var sel = (view === "results" && activeOp === nm);
+        return '<button type="button" class="op-tab" role="tab" data-op="' + esc(nm) + '" aria-selected="' + (sel ? "true" : "false") + '">' + esc(nm) + '<span class="c">' + (counts[nm] || 0) + '</span></button>';
+      }).join("");
+      host.innerHTML = html;
+      host.querySelectorAll("[data-op]").forEach(function (b) {
+        b.addEventListener("click", function () { selectOp(b.getAttribute("data-op")); });
+      });
+    });
+  }
+  function selectOp(name) {
+    activeOp = name || "";
+    if (activeOp) filterState.filters.operation = [activeOp]; else delete filterState.filters.operation;
+    filterState.page = 1;
+    showResults();
+  }
+  function highestMarking(markings) {
+    var o = { "OFFICIAL": 0, "OFFICIAL-SENSITIVE": 1 }, hi = "OFFICIAL";
+    (markings || []).forEach(function (mk) { if ((o[mk] || 0) > o[hi]) hi = mk; });
+    return hi;
+  }
+  function activeFilterChips() {
+    var chips = [];
+    Object.keys(filterState.filters).forEach(function (key) {
+      (filterState.filters[key] || []).forEach(function (v) {
+        chips.push('<button type="button" class="chip" data-rmfilter="' + esc(key) + '" data-rmval="' + esc(v) + '">' + esc(v) + ' &times;</button>');
+      });
+    });
+    if (filterState.dateFrom) chips.push('<button type="button" class="chip" data-rmdate="from">from ' + esc(filterState.dateFrom) + ' &times;</button>');
+    if (filterState.dateTo) chips.push('<button type="button" class="chip" data-rmdate="to">to ' + esc(filterState.dateTo) + ' &times;</button>');
+    if (filterState.text) chips.push('<button type="button" class="chip" data-rmtext="1">\u201c' + esc(filterState.text) + '\u201d &times;</button>');
+    return chips;
+  }
+  function showHome() {
+    view = "home"; activeOp = "";
+    filterState.filters = {}; filterState.text = ""; filterState.dateFrom = ""; filterState.dateTo = ""; filterState.page = 1;
+    if (els.search) els.search.value = "";
+    cameFromResults = false; lastDetailUrn = null;
+    return allRows().then(function (all) {
+      setBanner(highestMarking(all.map(function (r) { return r.protectiveMarking; })));
+      renderHome(all); renderSidebar(all); return renderOpTabs();
+    }).then(function () { focusView(); });
+  }
+  function renderHome(all) {
+    var q = ((document.getElementById("op-search") || {}).value || "").toLowerCase();
+    var counts = {}; all.forEach(function (ir) { if (ir.operation) counts[ir.operation] = (counts[ir.operation] || 0) + 1; });
+    var names = O.names().slice().sort();
+    var shown = q ? names.filter(function (nm) { return nm.toLowerCase().indexOf(q) !== -1 || String(O.threatOf(nm)).toLowerCase().indexOf(q) !== -1; }) : names;
+    var cards = shown.map(function (nm) {
+      var c = counts[nm] || 0;
+      return '<button type="button" class="op-card" data-op="' + esc(nm) + '">' +
+        '<span class="oc-name">' + esc(nm) + '</span>' +
+        '<span class="oc-threat">' + esc(O.threatOf(nm)) + '</span>' +
+        '<span class="oc-count">' + c + ' report' + (c === 1 ? "" : "s") + '</span></button>';
+    }).join("");
+    els.main.innerHTML = '<div class="detail home">' +
+      '<h1 tabindex="-1">Operations' + (q ? ' \u00b7 matching \u201c' + esc(q) + '\u201d' : '') + '</h1>' +
+      '<div class="toolbar">' +
+        '<button type="button" class="btn" id="home-new">+ New report</button> ' +
+        '<button type="button" class="btn secondary" id="home-all">View all reports &rarr;</button> ' +
+        '<button type="button" class="btn secondary" id="home-export">Export authorised &rarr; SOLAR case</button> ' +
+        '<button type="button" class="btn secondary" id="home-reload">Reload demo</button> ' +
+        '<button type="button" class="btn danger" id="home-clear">Clear all reports</button></div>' +
+      '<div class="op-grid">' + (cards || '<p class="empty">No operations match.</p>') + '</div>' +
+      '</div>';
+    els.main.querySelectorAll(".op-card").forEach(function (c) { c.addEventListener("click", function () { selectOp(c.getAttribute("data-op")); }); });
+    var hn = document.getElementById("home-new"); if (hn) hn.addEventListener("click", function () { showForm(null); });
+    var ha = document.getElementById("home-all"); if (ha) ha.addEventListener("click", function () { selectOp(""); });
+    var he = document.getElementById("home-export"); if (he) he.addEventListener("click", exportAllAuthorised);
+    var hr = document.getElementById("home-reload"); if (hr) hr.addEventListener("click", loadDemo);
+    var hc = document.getElementById("home-clear"); if (hc) hc.addEventListener("click", clearAllReports);
+  }
+  function showResults() {
+    view = "results"; cameFromResults = true; lastDetailUrn = null;
+    return allRows().then(function (all) { renderMain(all); renderSidebar(all); return renderOpTabs(); })
+      .then(function () { focusView(); });
+  }
+  function renderMain(all) {
+    var res = Q.run(all, buildCriteria());
+    setBanner(highestMarking(res.markings));
+    var withOp = !activeOp;
+    var header = '<div class="crumbs"><button type="button" class="linklike" id="ov-home">\u2190 Overview</button></div>' + (activeOp
+      ? '<h1 tabindex="-1">' + esc(activeOp) + '</h1><p class="hint">' + esc(O.threatOf(activeOp)) + '</p>'
+      : '<h1 tabindex="-1">All reports</h1>');
+    // In-page operation switch (replaces the removed sidebar op-tabs rail).
+    var opSwitch = '<label class="op-switch"><span class="op-switch-k">Operation</span>' +
+      '<select id="ov-op"><option value="">All reports</option>' +
+      O.names().slice().sort().map(function (nm) { return opt(nm, nm, activeOp); }).join("") +
+      '</select></label>';
+    var toolbar = '<div class="toolbar">' + opSwitch +
+      '<button type="button" class="btn" id="ov-new">+ New report</button> ' +
+      '<button type="button" class="btn secondary" id="ov-load">Reload demo</button> ' +
+      '<button type="button" class="btn secondary" id="ov-export">Export authorised &rarr; SOLAR case</button> ' +
+      '<button type="button" class="btn danger" id="ov-clear">Clear all reports</button></div>';
+    var facetHtml = res.facets.filter(function (f) { return f.key !== "operation" && f.values.length > 1; }).map(function (f) {
+      if (!f.values.length) return "";
+      var sel = (filterState.filters[f.key] || []);
+      var opts = f.values.map(function (v) {
+        return '<label class="facet-opt"><input type="checkbox" data-facet="' + esc(f.key) + '" data-val="' + esc(v.value) + '"' + (v.selected ? " checked" : "") + '> ' +
+          '<span class="fv">' + esc(v.value) + '</span><span class="c">' + v.count + '</span></label>';
+      }).join("");
+      return '<details class="facet"' + (sel.length ? " open" : "") + '><summary>' + esc(f.label) + (sel.length ? ' <span class="c">' + sel.length + '</span>' : '') + '</summary><div class="facet-opts">' + opts + '</div></details>';
+    }).join("");
+    var dateHtml = '<details class="facet"' + ((filterState.dateFrom || filterState.dateTo) ? " open" : "") + '><summary>Date of collection</summary><div class="facet-opts daterange">' +
+      '<label>From <input type="date" id="f-date-from" value="' + esc(filterState.dateFrom) + '"></label>' +
+      '<label>To <input type="date" id="f-date-to" value="' + esc(filterState.dateTo) + '"></label></div></details>';
+    var chips = activeFilterChips();
+    var chipBar = (chips.length ? '<div class="chips">' + chips.join("") + '<button type="button" class="chip clear" id="clear-filters">Clear all</button></div>' : "");
+    var countLine = '<div class="result-count">' + (res.total
+      ? ('Showing <strong>' + res.start + '\u2013' + res.end + '</strong> of <strong>' + res.total + '</strong>' + (res.total !== all.length ? ' (filtered from ' + all.length + ')' : ''))
+      : 'No matching reports') + '</div>';
+    function th(key, label) {
+      var act = sortState.key === key, arrow = act ? (sortState.dir > 0 ? " \u25B2" : " \u25BC") : "";
+      return '<th data-sort="' + key + '" tabindex="0" role="button" aria-sort="' + (act ? (sortState.dir > 0 ? "ascending" : "descending") : "none") + '">' + esc(label) + arrow + '</th>';
+    }
+    var head = '<tr>' + th("urn", "URN") + th("title", "Title") + (withOp ? th("operation", "Operation") : "") +
+      th("dateOfCollection", "Date") + th("protectiveMarking", "Marking") + th("items", "Items") + '</tr>';
+    var body = res.rows.map(function (ir) {
+      return '<tr data-urn="' + esc(ir.urn) + '" tabindex="0" role="button">' +
+        '<td class="grade">' + esc(ir.urn) + '</td>' +
+        '<td>' + esc(ir.title || "(untitled)") + '</td>' +
+        (withOp ? ('<td>' + esc(ir.operation || "\u2014") + '</td>') : "") +
+        '<td>' + esc(ir.dateOfCollection) + '</td>' +
+        '<td><span class="pill mk-' + esc(ir.protectiveMarking) + '">' + esc(ir.protectiveMarking) + '</span></td>' +
+        '<td>' + ((ir.items || []).length) + '</td></tr>';
+    }).join("");
+    var table = res.total ? ('<table class="op-table"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>') : '';
+    var sizeOpts = [25, 50, 100, 200].map(function (nn) { return '<option value="' + nn + '"' + (filterState.pageSize === nn ? " selected" : "") + '>' + nn + '</option>'; }).join("");
+    var pager = res.total ? ('<div class="pager">' +
+      '<button type="button" class="btn secondary" id="pg-prev"' + (res.page <= 1 ? " disabled" : "") + '>&larr; Prev</button>' +
+      '<span class="pg-info">Page ' + res.page + ' of ' + res.pages + '</span>' +
+      '<button type="button" class="btn secondary" id="pg-next"' + (res.page >= res.pages ? " disabled" : "") + '>Next &rarr;</button>' +
+      '<label class="pg-size">Per page <select id="pg-size">' + sizeOpts + '</select></label></div>') : "";
+    els.main.innerHTML = '<div class="detail results">' + header + toolbar +
+      '<div class="filters"><p class="filters-label">Filters</p><div class="facet-bar">' + facetHtml + dateHtml + '</div>' + chipBar + countLine + '</div>' +
+      table + pager + '</div>';
+    els.main.querySelectorAll("th[data-sort]").forEach(function (h) {
+      function go() { var k = h.getAttribute("data-sort"); if (sortState.key === k) sortState.dir = -sortState.dir; else { sortState.key = k; sortState.dir = (k === "dateOfCollection") ? -1 : 1; } showResults(); }
+      h.addEventListener("click", go);
+      h.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
+    els.main.querySelectorAll("tr[data-urn]").forEach(function (tr) {
+      function open() { showDetail(tr.getAttribute("data-urn")); }
+      tr.addEventListener("click", open);
+      tr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+    });
+    els.main.querySelectorAll("input[data-facet]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var key = cb.getAttribute("data-facet"), val = cb.getAttribute("data-val");
+        var arr = filterState.filters[key] || (filterState.filters[key] = []);
+        var i = arr.indexOf(val);
+        if (cb.checked && i === -1) arr.push(val); else if (!cb.checked && i !== -1) arr.splice(i, 1);
+        if (!arr.length) delete filterState.filters[key];
+        filterState.page = 1; showResults();
+      });
+    });
+    var dF = document.getElementById("f-date-from"); if (dF) dF.addEventListener("change", function () { filterState.dateFrom = dF.value; filterState.page = 1; showResults(); });
+    var dT = document.getElementById("f-date-to"); if (dT) dT.addEventListener("change", function () { filterState.dateTo = dT.value; filterState.page = 1; showResults(); });
+    els.main.querySelectorAll("[data-rmfilter]").forEach(function (c) { c.addEventListener("click", function () {
+      var key = c.getAttribute("data-rmfilter"), val = c.getAttribute("data-rmval");
+      var arr = filterState.filters[key] || []; var i = arr.indexOf(val); if (i !== -1) arr.splice(i, 1);
+      if (!arr.length) delete filterState.filters[key];
+      if (key === "operation") activeOp = "";
+      filterState.page = 1; showResults();
+    }); });
+    els.main.querySelectorAll("[data-rmdate]").forEach(function (c) { c.addEventListener("click", function () {
+      if (c.getAttribute("data-rmdate") === "from") filterState.dateFrom = ""; else filterState.dateTo = "";
+      filterState.page = 1; showResults();
+    }); });
+    var rmText = els.main.querySelector("[data-rmtext]"); if (rmText) rmText.addEventListener("click", function () { filterState.text = ""; if (els.search) els.search.value = ""; filterState.page = 1; showResults(); });
+    var clr = document.getElementById("clear-filters"); if (clr) clr.addEventListener("click", function () { filterState.filters = {}; filterState.dateFrom = ""; filterState.dateTo = ""; filterState.text = ""; if (els.search) els.search.value = ""; activeOp = ""; filterState.page = 1; showResults(); });
+    var pp = document.getElementById("pg-prev"); if (pp) pp.addEventListener("click", function () { if (filterState.page > 1) { filterState.page--; showResults(); } });
+    var pn = document.getElementById("pg-next"); if (pn) pn.addEventListener("click", function () { filterState.page++; showResults(); });
+    var ps = document.getElementById("pg-size"); if (ps) ps.addEventListener("change", function () { filterState.pageSize = parseInt(ps.value, 10) || 50; filterState.page = 1; showResults(); });
+    var nb = document.getElementById("ov-new"); if (nb) nb.addEventListener("click", function () { showForm(null); });
+    var lb = document.getElementById("ov-load"); if (lb) lb.addEventListener("click", loadDemo);
+    var eb = document.getElementById("ov-export"); if (eb) eb.addEventListener("click", exportAllAuthorised);
+    var cb = document.getElementById("ov-clear"); if (cb) cb.addEventListener("click", clearAllReports);
+    var hb = document.getElementById("ov-home"); if (hb) hb.addEventListener("click", showHome);
+    var ob = document.getElementById("ov-op"); if (ob) ob.addEventListener("change", function () { selectOp(ob.value); });
+  }
+  function autoSeed() {
+    if (!window.RegistryDemo) { showWelcome(); return refreshList(); }
+    var ds; try { ds = window.RegistryDemo.buildDemoDataset(); } catch (e) { showWelcome(); return refreshList(); }
+    setStatus("Loading demo dataset…");
+    els.main.innerHTML = '<div class="loading-state"><span class="dot"></span>Loading the demo dataset (480 reports)…</div>';
+    return repo.clear()
+      .then(function () { return ds.reduce(function (p, ir) { return p.then(function () { return repo.save(N.normaliseIR(ir)); }); }, Promise.resolve()); })
+      .then(function () { dataCache = null; markSeed(); return showHome(); })
+      .then(function () { setStatus(repo.fellBack ? "Using an in-memory store (IndexedDB unavailable)." : ""); })
+      .catch(function (e) { setStatus("Auto-load failed: " + (e && e.message), "err"); showWelcome(); });
+  }
+  function clearAllReports() {
+    if (!window.confirm("Remove ALL reports from the store? This cannot be undone.")) return;
+    repo.clear().then(function () {
+      dataCache = null; filterState.filters = {}; filterState.dateFrom = ""; filterState.dateTo = ""; filterState.text = "";
+      if (els.search) els.search.value = ""; activeOp = ""; filterState.page = 1; view = "home";
+      showWelcome(); return refreshList();
+    }).then(function () { setStatus("All reports cleared.", "ok"); });
+  }
+  function loadDemo() {
+    if (!window.RegistryDemo) { setStatus("Demo module not loaded.", "err"); return; }
+    if (!window.confirm("Load the demo dataset (24 operations × 20 reports = 480)? This REPLACES everything currently in the store.")) return;
+    var ds;
+    try { ds = window.RegistryDemo.buildDemoDataset(); }
+    catch (e) { setStatus("Demo build failed: " + (e && e.message), "err"); return; }
+    setStatus("Loading " + ds.length + " demo reports…");
+    repo.clear().then(function () { return ds.reduce(function (p, ir) { return p.then(function () { return repo.save(N.normaliseIR(ir)); }); }, Promise.resolve()); })  // wipe then re-seed through the SAME ingest seam
+      .then(function () { dataCache = null; markSeed(); return repo.list(); })
+      .then(function (rows) { return showHome().then(function () { return rows.length; }); })
+      .then(function (count) { setStatus(count + " reports loaded." + (repo.fellBack ? " In-memory store (IndexedDB unavailable)." : ""), "ok"); })
+      .catch(function (e) { setStatus("Demo load failed: " + (e && e.message) + ". If opened via file://, run it from a local web server instead.", "err"); });
+  }
+  function exportAllAuthorised() {
+    repo.list().then(function (rows) {
+      var auth = rows.filter(function (r) { return r.status === "AUTHORISED"; });
+      if (!auth.length) { setStatus("No authorised reports to export.", "err"); return; }
+      download("registry-authorised.chartroom.json", JSON.stringify(H.toSolarCase(auth, { onlyAuthorised: true, caseName: "Registry — all authorised" }), null, 2));
+      setStatus("Exported " + auth.length + " authorised report(s). Open the .chartroom.json in SOLAR Charting to chart them.", "ok");
+    });
+  }
+
+  function showWelcome() {
+    setBanner("OFFICIAL");
+    els.main.innerHTML =
+      '<div class="detail page"><h1 tabindex="-1">No reports</h1>' +
+      '<div class="toolbar">' +
+      '<button type="button" class="btn" id="w-new">+ New report</button> ' +
+      '<button type="button" class="btn secondary" id="w-load-demo">Load demo dataset</button> ' +
+      '<button type="button" class="btn secondary" id="w-export-all">Export all authorised &rarr; SOLAR case</button> ' +
+      '<button type="button" class="btn danger" id="w-clear">Clear all reports</button></div></div>';
+    document.getElementById("w-new").addEventListener("click", function () { showForm(null); });
+    var _ld = document.getElementById("w-load-demo"); if (_ld) _ld.addEventListener("click", loadDemo);
+    var _ex = document.getElementById("w-export-all"); if (_ex) _ex.addEventListener("click", exportAllAuthorised);
+    var _cl = document.getElementById("w-clear"); if (_cl) _cl.addEventListener("click", clearAllReports);
+    focusView();
+  }
+
+  /* ---------- boot ---------- */
+  document.getElementById("btn-new").addEventListener("click", function () { showForm(null); });
+  var _searchT;
+  els.search.addEventListener("input", function () { filterState.text = els.search.value; filterState.page = 1; clearTimeout(_searchT); _searchT = setTimeout(showResults, 150); });
+  (function () { var sb = document.getElementById("op-search"); if (sb) sb.addEventListener("input", function () { renderOpTabs(); if (view === "home") { allRows().then(renderHome); } }); })();
+  (function () { var br = document.querySelector(".masthead .brand"); if (br) { br.style.cursor = "pointer"; br.setAttribute("role", "button"); br.setAttribute("tabindex", "0"); br.addEventListener("click", showHome); br.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showHome(); } }); } })();
+  var SEED_VERSION = (window.RegistryDemo && window.RegistryDemo.SEED_VERSION) || "";
+  function storedSeed(){ try { return localStorage.getItem("registry.seedVersion"); } catch(e){ return null; } }
+  function markSeed(){ try { localStorage.setItem("registry.seedVersion", SEED_VERSION); } catch(e){} }
+  allRows().then(function (rows) {
+    if (rows.length && storedSeed() === SEED_VERSION) { return showHome().then(function () { setStatus(""); }); }
+    return autoSeed();  // empty store OR the demo generator changed -> rebuild from current demo-seed.js
+  });
+})();
+/*REGEOF*/

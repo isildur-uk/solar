@@ -26,6 +26,8 @@
           (typeof require === "function" ? require("./lang.js") : null);
   var St = (typeof window !== "undefined" && window.CRStandards) ||
           (typeof require === "function" ? require("./cm-standards.js") : null);
+  var Rec = (typeof window !== "undefined" && window.CRRecognisers) ||
+          (typeof require === "function" ? require("./cm-recognisers.js") : null);
 
   var MONTHS = {
     jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3, apr: 4, april: 4,
@@ -230,6 +232,53 @@
       return false;
     }
 
+    var personIdHits = []; // {key,value,start,end} -> attached to nearest person after people exist
+    var cmGrading = null, cmOperation = null; // report metadata captured by the cmFirst pass
+    /* ---- 0. CM typed recognisers. Identifiers + comms IDs become PERSON ATTRIBUTES
+       (i2/ATLAS model), NOT chart nodes; report metadata (grading/operation/tier) is
+       not charted; only a genuine financial identifier (IBAN) becomes a node. This
+       keeps the narrative-recall + canonical-v6 win without polluting the chart with
+       entity types model.js ENTITY_TYPES does not support. ---- */
+    if (opts.cmFirst !== false && Rec && Rec.detectTyped) {
+      /* skype/twitter/icq/jabber are NOT here: extract.js handles them natively as comms
+         nodes the subject USES (per the golden oracle). Only true person-identifier
+         attributes belong here. */
+      var REC_ATTR = { nino:"nino", passport:"passport", cro:"cro", pnc:"pnc", vat:"vat",
+        driverLicence:"driverLicence" };
+      var _typed = Rec.detectTyped(text) || [];
+      for (var _ti = 0; _ti < _typed.length; _ti++) {
+        var ty = _typed[_ti];
+        if (ty.type === "grading") {           // report 3x5x2 grade -> metadata, not a node
+          var _gp = String(ty.value || "").replace(/[^1-3A-Ea-ePCpc]/g, "");
+          if (_gp.length >= 3 && !cmGrading) cmGrading = { source: _gp.charAt(0), assessment: _gp.charAt(1).toUpperCase(), handling: _gp.charAt(2).toUpperCase() };
+          continue;
+        }
+        if (ty.type === "operation") { if (!cmOperation) cmOperation = ty.value; continue; } // report op name -> metadata
+        if (spans.overlaps(ty.start, ty.end)) continue;
+        if (ty.type === "person" && ty.kind === "structured-person") { // "SURNAME, Forename" CM field-form: claim so the heuristic pass cannot mangle it
+          spans.claim(ty.start, ty.end);
+          addEntity("person", ty.value || ty.raw, ty.value || ty.raw,
+            { recogniser: "person", band: ty.band }, ty.band === "HIGH" ? "high" : "med", ty.start, ty.end, []);
+          continue;
+        }
+        if (REC_ATTR[ty.type]) {                       // -> person attribute, never a node
+          spans.claim(ty.start, ty.end);
+          personIdHits.push({ key: REC_ATTR[ty.type], value: ty.value || ty.raw, start: ty.start, end: ty.end });
+          continue;
+        }
+        if (ty.type === "iban") {                      // foreign bank account -> account NODE
+          var rcf = ty.band === "HIGH" ? "high" : (ty.band === "MED" ? "med" : "low");
+          spans.claim(ty.start, ty.end);
+          addEntity("account", ty.freeText || ty.raw, ty.value || ty.raw,
+            { cm: ty.freeText, cmValid: ty.cmValid, band: ty.band, needsConfirm: ty.needsConfirm,
+              rationale: ty.rationale, recogniser: ty.type }, rcf, ty.start, ty.end, ty.cmValid ? [] : ["cm-invalid"]);
+          continue;
+        }
+        // dob/imei -> extract's native passes; grading/operation/tier/website -> not charted;
+        // node types (phone/vehicle/account/org/address/money/ip/email/person/group) -> LATE pass.
+      }
+    }
+
     /* ---- 1. Emails (most specific, claim first) ---- */
     var reEmail = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
     var m;
@@ -324,6 +373,7 @@
     var grading = null;
     var gm = /\[\s*([1-3])\s*[·.\s]*([A-E])\s*[·.\s]*([PC])\s*\]/.exec(text);
     if (gm) grading = { source: gm[1], assessment: gm[2], handling: gm[3] };
+    if (!grading && cmGrading) grading = cmGrading; // narrative 'Grading: 2C / P' form
 
     /* ---- 2d3. PNR / booking locators (claim before the postcode pass —
        "K7T2QL" is postcode-shaped and was misfiring) ---- */
@@ -338,7 +388,7 @@
     }
 
     /* ---- 2e. Prefixed identifiers (claim before phones eat the digits) ---- */
-    var personIdHits = []; // {key, value, start, end} → attached after people exist
+    // personIdHits is declared above (also fed by the cmFirst attribute pass).
     // IMEI: 15 digits, prefixed (allow internal spaces, e.g. "35 680705 824133 2")
     var reImeiPre = /\bIMEI(?:\s+(?:no\.?|number|is))?[\s.:=]*((?:[0-9][ ]?){15})\b/gi;
     while ((m = reImeiPre.exec(text))) {
@@ -2601,12 +2651,63 @@ var subjA = (typeof mainPerson === "function" && mainPerson()) || null;   // "st
 
     // The document's primary subject — review/import should hub on this,
     // never on "first person extracted".
+    /* ---- Person precision gate: drop capitalisation-only "persons" that are really
+       descriptors/places/objects (the pre-existing heuristic false positives). Runs
+       before primary selection so primary is chosen from clean persons; prunes any
+       relationships that referenced a dropped person. ---- */
+    if (opts.cmFirst !== false && Rec && Rec.looksLikePerson) {
+      var _pdrop = {};
+      entities = entities.filter(function (e) {
+        if (e.type === "person" && !Rec.looksLikePerson(e.label)) { _pdrop[e.ref] = 1; return false; }
+        return true;
+      });
+      var _pn = 0, _pk; for (_pk in _pdrop) _pn++;
+      if (_pn) {
+        relationships = relationships.filter(function (r) {
+          return !_pdrop[r.sourceRef] && !_pdrop[r.targetRef];
+        });
+        events = events.filter(function (ev) {
+          if (!ev.entityRefs || !ev.entityRefs.length) return true;
+          for (var _ei = 0; _ei < ev.entityRefs.length; _ei++) { if (_pdrop[ev.entityRefs[_ei]]) return false; }
+          return true;
+        });
+      }
+    }
     var primaryEnt = mainPerson();
+
+    /* ---- Deferred relationship-feeding recognisers (opts.cmFirstAll): run LATE,
+       AFTER extract's own passes + relationship/primary inference. extract has
+       already claimed its spans into `spans`, so the overlap check means this only
+       ADDS genuinely-new narrative mentions extract missed; existing entities keep
+       extract's labels/links/primary. No claim, no disruption. ---- */
+    if (opts.cmFirst !== false && Rec && Rec.detectTyped) { // deferred types now DEFAULT-ON (late, non-disruptive)
+      /* Only chart-renderable relationship nodes (must exist in model.js ENTITY_TYPES).
+         Identifiers/comms-IDs are person attributes (top pass); alias -> extract aka;
+         company number / website / online IDs are not charted as nodes. */
+      var DEF_TYPE = { phone: "phone", vrm: "vehicle", postcode: "address",
+        sortCode: "account", creditCard: "account", organisation: "organisation",
+        criminalGroup: "organisation", person: "person", money: "money", ip: "ip", email: "email" };
+      var _dt = Rec.detectTyped(text) || [];
+      for (var _di = 0; _di < _dt.length; _di++) {
+        var dy = _dt[_di];
+        var det = DEF_TYPE[dy.type];
+        if (!det) continue;
+        if (spans.overlaps(dy.start, dy.end)) continue;
+        var dconf = dy.band === "HIGH" ? "high" : (dy.band === "MED" ? "med" : "low");
+        spans.claim(dy.start, dy.end);
+        addEntity(det, dy.freeText || dy.raw, dy.value || dy.raw,
+          { cm: dy.freeText, cmValid: dy.cmValid, band: dy.band, kind: dy.kind || undefined,
+            country: dy.country || undefined, needsConfirm: dy.needsConfirm,
+            rationale: dy.rationale, recogniser: dy.type },
+          dconf, dy.start, dy.end, dy.cmValid ? [] : ["cm-invalid"]);
+      }
+    }
 
     return { entities: entities, relationships: relationships, events: events,
              ambiguities: ambiguities, cues: cues,
              primary: primaryEnt ? primaryEnt.ref : null,
              grading: grading,        // 3×5×2 lifted from the document, e.g. {source:"2",assessment:"A",handling:"P"}
+             operation: cmOperation,  // operation/development name lifted from the report header
              tags: tags };            // glossary codes (XX-CASH …)
   }
 

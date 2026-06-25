@@ -700,6 +700,116 @@ S.detectCrypto = detectCrypto;
 S.cryptoLabel = cryptoLabel;
 S.VIRTUAL_CURRENCY = V.VIRTUAL_CURRENCY || [];
 
+/* ================================================================== */
+/*  W7 additions (2026-06-23) — checksum/format validators that cut    */
+/*  false positives. Additive; existing validate() bodies unchanged.   */
+/* ================================================================== */
+
+/* UK VAT 9-digit checksum: valid if mod-97 OR mod-9755 (post-2010).
+   weighted sum of first 7 digits (weights 8..2) + the 2 check digits,
+   divisible by 97 (mod-9755 adds 55 first). */
+S.vatChecksum = function (raw) {
+  var d = digitsOnly(raw);
+  if (d.length < 9) return false;
+  var c = d.slice(0, 9), w = [8, 7, 6, 5, 4, 3, 2], sum = 0, i;
+  for (i = 0; i < 7; i++) sum += (c.charCodeAt(i) - 48) * w[i];
+  var chk = parseInt(c.slice(7, 9), 10);
+  return ((sum + chk) % 97 === 0) || ((sum + chk + 55) % 97 === 0);
+};
+
+/* IMEI: 15 digits + Luhn check digit (IMEISV 16-digit has no Luhn). */
+S.imeiValid = function (raw) {
+  var d = digitsOnly(raw);
+  return d.length === 15 && S.luhn(d);
+};
+
+/* UK company number: exactly 8 chars — 8 digits, or a known 2-letter
+   prefix + 6 digits, or R + 7 digits (NI pre-1922). */
+S.COMPANY_PREFIXES = "SC NI OC SO NC FC SF NF GE GS GN IP SP NP RC SR NR AC SA NA SE ES PC CE RS NO NZ IC SI NV LP SL NL".split(" ");
+S.companyNumberValid = function (raw) {
+  var s = alnumUpper(raw);
+  if (s.length !== 8) return false;
+  if (/^\d{8}$/.test(s)) return true;
+  if (/^R\d{7}$/.test(s)) return true;
+  var p = s.slice(0, 2);
+  return /^\d{6}$/.test(s.slice(2)) && S.COMPANY_PREFIXES.indexOf(p) !== -1;
+};
+
+/* URL / website: require an explicit scheme, www., or a clear TLD to
+   avoid matching ordinary dotted text. Returns a normalised value. */
+S.URL_TLD = "com co.uk org org.uk net gov.uk ac.uk io info biz me tv online site app dev uk eu de fr es nl ru cn onion".split(" ");
+S.urlValid = function (raw) {
+  var s = str(raw).trim();
+  if (/^(https?|ftp):\/\/\S+\.\S+/i.test(s)) return true;
+  if (/^www\.\S+\.\S{2,}/i.test(s)) return true;
+  return false;
+};
+S.urlNormalise = function (raw) {
+  var s = str(raw).trim().replace(/[).,;]+$/, "");
+  return s;
+};
+
 /* ---- export ---- */
+/* ================================================================== */
+/*  W1 additions (2026-06-23) — checksum/format helpers consumed by    */
+/*  the cm-recognisers typed layer. ADDITIVE: existing validate()      */
+/*  bodies are left unchanged to protect the golden harness; the       */
+/*  recogniser layer calls these for false-positive control.           */
+/* ================================================================== */
+
+/* Luhn mod-10 (payment card). Additive; creditCard.validate left as-is. */
+S.luhn = function (raw) {
+  var d = digitsOnly(raw);
+  if (d.length < 12 || d.length > 19) return false;
+  var sum = 0, alt = false;
+  for (var i = d.length - 1; i >= 0; i--) {
+    var n = d.charCodeAt(i) - 48;
+    if (alt) { n *= 2; if (n > 9) n -= 9; }
+    sum += n; alt = !alt;
+  }
+  return (sum % 10) === 0;
+};
+
+/* IBAN ISO 13616 mod-97 — valid iff remainder === 1. New identifier. */
+S.identifiers.iban = {
+  label: "IBAN",
+  canonical: function (raw) { return alnumUpper(raw); },
+  validate: function (raw) {
+    var s = alnumUpper(raw);
+    if (s.length < 15 || s.length > 34) return false;
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(s)) return false;
+    var re = s.slice(4) + s.slice(0, 4), expanded = "", i, c;
+    for (i = 0; i < re.length; i++) { c = re.charCodeAt(i); expanded += (c >= 65 && c <= 90) ? String(c - 55) : re.charAt(i); }
+    var rem = 0;
+    for (i = 0; i < expanded.length; i++) { rem = (rem * 10 + (expanded.charCodeAt(i) - 48)) % 97; }
+    return rem === 1;
+  },
+  freeText: function (raw) { return "IBAN " + alnumUpper(raw).replace(/(.{4})/g, "$1 ").trim(); }
+};
+
+/* UK postcode — official GOV.UK Bulk Data Transfer regex. Additive. */
+S.POSTCODE_RE = /\b(GIR ?0AA|[A-Z][0-9]{1,2}|[A-Z][A-HJ-Y][0-9]{1,2}|[A-Z][0-9][A-Z]|[A-Z][A-HJ-Y][0-9][A-Z]) ?[0-9][A-Z]{2}\b/i;
+S.postcodeValid = function (raw) {
+  var s = str(raw).toUpperCase().replace(/\s+/g, " ").trim();
+  var m = S.POSTCODE_RE.exec(s);
+  return !!m && m[0].replace(/\s+/g, "") === s.replace(/\s+/g, "");
+};
+S.postcodeCanonical = function (raw) {
+  var s = str(raw).toUpperCase().replace(/\s+/g, "");
+  if (s.length < 5) return s;
+  return s.slice(0, s.length - 3) + " " + s.slice(-3);
+};
+
+/* DVLA VRM format (tighter than identifiers.vrm.validate's length-only).
+   Additive; identifiers.vrm.validate left as-is pending golden review. */
+S.vrmFormatValid = function (raw) {
+  var s = alnumUpper(raw);
+  return /^[A-Z]{2}[0-9]{2}[A-Z]{3}$/.test(s)
+      || /^[A-Z][0-9]{1,3}[A-Z]{3}$/.test(s)
+      || /^[A-Z]{3}[0-9]{1,3}[A-Z]$/.test(s)
+      || /^[A-Z]{1,3}[0-9]{1,4}$/.test(s)
+      || /^[0-9]{1,4}[A-Z]{1,3}$/.test(s);
+};
+
 if (typeof module !== "undefined" && module.exports) { module.exports = S; }
 if (typeof window !== "undefined") { window.CRStandards = S; }

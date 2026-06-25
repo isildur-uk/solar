@@ -162,7 +162,7 @@
     });
 
     html += '<div class="row-btns">' +
-      '<button class="btn" id="insp-rename">Rename</button>' +
+      '<button class="btn" id="insp-edit">Edit…</button>' +
       (e.geo || (e.attrs && typeof e.attrs.lat === "number")
         ? '<button class="btn" id="insp-map">Show on map</button>' : "") +
       '<button class="btn danger" id="insp-del">Delete</button>' +
@@ -306,10 +306,8 @@
       store.updateEntity(id, { provenance: np }, "3x5x2 regraded to " + np.source + np.assessment + np.handling);
     }
 
-    U.el("insp-rename").addEventListener("click", function () {
-      U.promptModal("New label for this entity", e.label, function (nv) {
-        if (nv && nv.trim()) { store.snapshot(); store.updateEntity(id, { label: nv.trim().slice(0, 200) }, "renamed"); }
-      });
+    U.el("insp-edit").addEventListener("click", function () {
+      window.CREditEntity.open({ store: store, id: id });
     });
     var mapBtn = U.el("insp-map");
     if (mapBtn) mapBtn.addEventListener("click", function () { window.CRMapPane.selectEntity(id); });

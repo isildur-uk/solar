@@ -103,13 +103,11 @@
     var G = window.CRGraph;
     show(x, y, [
       { label: "Add entity here…", fn: function () {
-          var label = window.prompt("Entity label:");
-          if (!label) return;
-          store.snapshot();
-          var ent = store.addEntity({ type: "person", label: label, origin: "manual" });
           var c = G.canvasPos(domX, domY);
-          ent.chart = { x: Math.round(c.x), y: Math.round(c.y), fixed: true };
-          store._emit("layout");
+          window.CREditEntity.open({ store: store, defaultType: "person", onCreate: function (ent) {
+            ent.chart = { x: Math.round(c.x), y: Math.round(c.y), fixed: true };
+            store._emit("layout");
+          } });
         } },
       { label: "Fit chart", fn: function () { G.fit(); } },
       { label: "Clear highlight / time filter", fn: function () {
@@ -135,6 +133,62 @@
       if (lid) { edgeMenu(lid, ev.clientX, ev.clientY, dx, dy); return; }
       bgMenu(ev.clientX, ev.clientY, dx, dy);
     });
+
+    // ---- touch: long-press == right-click. Opens the same context menus at the
+    // touch point (node / edge / bend / background). Reuses the desktop builders
+    // so behaviour is identical; only the gesture differs. Additive — mouse path
+    // is untouched. A small move budget keeps it from firing during a pan/drag.
+    function resolveTarget(clientX, clientY) {
+      var rect = chartContainer.getBoundingClientRect();
+      var dx = clientX - rect.left, dy = clientY - rect.top;
+      var bend = G.bendAtDOM(dx, dy);
+      if (bend) return { kind: "bend", id: bend, dx: dx, dy: dy };
+      var nid = G.nodeAtDOM(dx, dy);
+      if (nid) return { kind: "node", id: nid, dx: dx, dy: dy };
+      var lid = G.edgeAtDOM(dx, dy);
+      if (lid) return { kind: "edge", id: lid, dx: dx, dy: dy };
+      return { kind: "bg", dx: dx, dy: dy };
+    }
+    function ctxAtPoint(clientX, clientY, target) {
+      // target is captured at touchstart so a node that vis starts dragging
+      // doesn't slip out from under the press before the menu resolves.
+      var t = target || resolveTarget(clientX, clientY);
+      if (t.kind === "bend") { bendMenu(t.id, clientX, clientY); return; }
+      if (t.kind === "node") { nodeMenu(t.id, clientX, clientY); return; }
+      if (t.kind === "edge") { edgeMenu(t.id, clientX, clientY, t.dx, t.dy); return; }
+      bgMenu(clientX, clientY, t.dx, t.dy);
+    }
+    var lpTimer = null, lpStart = null, lpFired = false, lpTarget = null;
+    function lpClear() {
+      if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+      lpStart = null; lpTarget = null;
+    }
+    chartContainer.addEventListener("touchstart", function (ev) {
+      if (ev.touches.length !== 1) { lpClear(); return; } // pinch/multi -> let vis handle
+      var t = ev.touches[0];
+      lpStart = { x: t.clientX, y: t.clientY };
+      lpTarget = resolveTarget(t.clientX, t.clientY); // freeze hit-test at press time
+      lpFired = false;
+      lpTimer = setTimeout(function () {
+        lpTimer = null;
+        lpFired = true;
+        try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* noop */ }
+        ctxAtPoint(lpStart.x, lpStart.y, lpTarget);
+      }, 480);
+    }, { capture: true, passive: true });
+    chartContainer.addEventListener("touchmove", function (ev) {
+      if (!lpStart || !ev.touches.length) return;
+      var t = ev.touches[0];
+      var mdx = t.clientX - lpStart.x, mdy = t.clientY - lpStart.y;
+      if ((mdx * mdx + mdy * mdy) > 100) lpClear(); // moved >10px -> it's a pan/drag
+    }, { capture: true, passive: true });
+    chartContainer.addEventListener("touchend", function (ev) {
+      // If the long-press menu opened, swallow the trailing synthetic click so it
+      // doesn't immediately dismiss the menu or trigger a select.
+      if (lpFired) { lpFired = false; if (ev.cancelable) ev.preventDefault(); }
+      lpClear();
+    }, { capture: true });
+    chartContainer.addEventListener("touchcancel", lpClear, { capture: true });
 
     // complete a pending "link from here"
     chartContainer.addEventListener("click", function (ev) {

@@ -1,0 +1,13 @@
+/* CHART ROOM — logpanel.css
+ * Responsive + token-aligned rules for the intelligence-logs panel
+ * (js/ui/logpanel.js). Inline styles cannot express media queries; these can.
+ * Loaded after redesign.css so the responsive rules win.
+ */
+.lp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.lp-grid.one { grid-template-columns: 1fr; }
+.lp-tablewrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 760px) {
+  .lp-grid { grid-template-columns: 1fr; }        /* stack form + preview */
+  .lp-tablewrap > table { min-width: 560px; }     /* keep columns legible; wrapper scrolls */
+}

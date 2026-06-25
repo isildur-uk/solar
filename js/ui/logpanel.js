@@ -205,7 +205,7 @@
 
   function editing() { return editingId && editingId !== "new" ? R.get(store, activeTab, editingId) : null; }
 
-  var LB = "font:10px Consolas,monospace;color:#84837b;text-transform:uppercase;letter-spacing:.08em";
+  var LB = "font:10px var(--mono);color:var(--faint);text-transform:uppercase;letter-spacing:.08em";
   var IN = "background:var(--panel-2,#17171a);border:1px solid var(--line,#2a2a27);color:var(--text,#f4f3e8);font:12px var(--mono,Consolas,monospace);padding:6px 8px;width:100%;box-sizing:border-box";
 
   function officerRow() {
@@ -246,13 +246,13 @@
     recs.forEach(function (r) {
       html += '<tr data-id="' + U.escAttr(r.id) + '" class="lp-row" style="cursor:pointer">';
       cols.forEach(function (c) {
-        if (c[0] === "__status") html += '<td style="padding:4px 7px;border-bottom:1px solid #1f1f1d">' + statusSelect(r) + "</td>";
+        if (c[0] === "__status") html += '<td style="padding:4px 7px;border-bottom:1px solid var(--line)">' + statusSelect(r) + "</td>";
         else html += td(c[1](r));
       });
-      html += '<td style="padding:4px 7px;border-bottom:1px solid #1f1f1d"><button class="btn lp-copy" data-id="' + U.escAttr(r.id) + '" title="Copy text">⧉</button></td></tr>';
+      html += '<td style="padding:4px 7px;border-bottom:1px solid var(--line)"><button class="btn lp-copy" data-id="' + U.escAttr(r.id) + '" title="Copy text">Copy</button></td></tr>';
     });
     html += "</table>";
-    box.innerHTML = html;
+    box.innerHTML = '<div class="lp-tablewrap">' + html + '</div>';
     Array.prototype.forEach.call(box.querySelectorAll(".lp-row"), function (tr) {
       tr.addEventListener("click", function (e) {
         if (e.target.closest("select") || e.target.closest("button")) return;
@@ -265,7 +265,7 @@
     wireStatusSelects(box);
     return box;
   }
-  function td(v) { return '<td style="padding:4px 7px;border-bottom:1px solid #1f1f1d">' + esc(v) + "</td>"; }
+  function td(v) { return '<td style="padding:4px 7px;border-bottom:1px solid var(--line)">' + esc(v) + "</td>"; }
 
   function statusSelect(r) {
     var t = R.RECORD_TYPES[r.type] || { statuses: [] };
@@ -339,30 +339,30 @@
     var rightHtml = isProfile
       ? '<div>' +
           '<div style="' + LB + ';margin-bottom:8px">Generate profile (NCA Short / Long)</div>' +
-          '<p style="font:11px var(--mono,Consolas,monospace);color:#9a998f;line-height:1.5;margin:0 0 12px">Builds the profile for the selected subject from everything linked to them on the chart. Verify before dissemination.</p>' +
+          '<p style="font:11px var(--mono,Consolas,monospace);color:var(--dim);line-height:1.5;margin:0 0 12px">Builds the profile for the selected subject from everything linked to them on the chart. Verify before dissemination.</p>' +
           '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
             '<button class="btn" id="prof-short">Short .docx</button>' +
             '<button class="btn" id="prof-long">Long .docx</button>' +
             '<button class="btn" id="prof-html">Print .html</button>' +
           "</div>" +
-          '<div id="prof-msg" style="font:10px Consolas,monospace;color:#6d6c64;margin-top:10px"></div>' +
+          '<div id="prof-msg" style="font:10px Consolas,monospace;color:var(--faint);margin-top:10px"></div>' +
         "</div>"
       : (hasPreview
       ? '<div>' +
           '<div style="' + LB + ';margin-bottom:8px">Auto-generated (verify before use)</div>' +
           '<div style="' + LB + '">' + (type === "disclosure" ? "Title & description" : "Disclosure text") + '</div>' +
-          '<div id="lp-prev-sentence" style="background:#0e0e10;border:1px solid #2a2a27;padding:10px;font:12px var(--mono,Consolas,monospace);line-height:1.5;white-space:pre-wrap;min-height:90px;margin:3px 0 12px"></div>' +
+          '<div id="lp-prev-sentence" style="background:var(--bg);border:1px solid var(--line);padding:10px;font:12px var(--mono,Consolas,monospace);line-height:1.5;white-space:pre-wrap;min-height:90px;margin:3px 0 12px"></div>' +
           '<div style="' + LB + '">File name</div>' +
-          '<div id="lp-prev-file" style="background:#0e0e10;border:1px solid #2a2a27;padding:8px;font:12px var(--mono,Consolas,monospace);margin:3px 0 12px;word-break:break-all"></div>' +
-          '<div style="font:10px Consolas,monospace;color:#6d6c64">' + esc(D.CAVEAT) + "</div>" +
+          '<div id="lp-prev-file" style="background:var(--bg);border:1px solid var(--line);padding:8px;font:12px var(--mono,Consolas,monospace);margin:3px 0 12px;word-break:break-all"></div>' +
+          '<div style="font:10px Consolas,monospace;color:var(--faint)">' + esc(D.CAVEAT) + "</div>" +
         "</div>"
       : "");
 
     var lockBanner = (rec && lockInfo && lockInfo.heldBy)
-      ? '<div style="margin-bottom:10px;padding:8px 10px;border:1px solid #d8a16e;border-radius:4px;background:#2a2113;color:#e8c98a;font:11px var(--mono,Consolas,monospace)">Checked out by ' + esc(lockInfo.heldBy) + ' since ' + esc(String(lockInfo.since || "").slice(0, 16).replace("T", " ")) + ' — editing anyway will risk a conflict on save.</div>'
+      ? '<div style="margin-bottom:10px;padding:8px 10px;border:1px solid #d8a16e;border-radius:var(--radius);background:#2a2113;color:#e8c98a;font:11px var(--mono,Consolas,monospace)">Checked out by ' + esc(lockInfo.heldBy) + ' since ' + esc(String(lockInfo.since || "").slice(0, 16).replace("T", " ")) + ' — editing anyway will risk a conflict on save.</div>'
       : "";
     box.innerHTML = lockBanner +
-      '<div style="display:grid;grid-template-columns:' + ((hasPreview || isProfile) ? "1fr 1fr" : "1fr") + ';gap:18px">' +
+      '<div class="lp-grid' + ((hasPreview || isProfile) ? "" : " one") + '">' +
         '<div><div style="' + LB + ';margin-bottom:8px">' + (rec ? "Edit " + esc(rec.ref) : "New " + esc(tabLabel(type))) + "</div>" +
           assignBlock + leftHtml + "</div>" + rightHtml +
       "</div>" +
@@ -560,7 +560,7 @@
     var legend = '<div style="' + LB + ';margin-top:10px">Legend: ring = core check for this type · filled = done · ' +
       '<span style="color:#79c98f">green</span> all core done · <span style="color:#d8a16e">amber</span> partial · <span style="color:#d86e6e">red</span> none · click an empty core cell to log it</div>';
 
-    var th = '<th style="text-align:left;padding:5px 7px;border-bottom:1px solid var(--line,#2a2a27);color:#84837b;font-weight:600;position:sticky;left:0;background:var(--panel,#0e0e10)">Selector</th>' +
+    var th = '<th style="text-align:left;padding:5px 7px;border-bottom:1px solid var(--line,#2a2a27);color:#84837b;font-weight:600;position:sticky;left:0;background:var(--panel,var(--bg))">Selector</th>' +
       '<th style="padding:5px 7px;border-bottom:1px solid var(--line,#2a2a27);color:#84837b;font-weight:600">Core</th>' +
       data.cols.map(function (sy) { return '<th style="padding:5px 4px;border-bottom:1px solid var(--line,#2a2a27);color:#84837b;font-weight:600;font-size:10px;white-space:nowrap">' + esc(sy) + "</th>"; }).join("");
     var body = data.rows.map(function (e) {
@@ -571,15 +571,15 @@
         var isCore = !!coreSet[sy], isLit = !!lit[sy];
         var bg = isLit ? "#79c98f" : "transparent";
         var ring = isCore ? "box-shadow:inset 0 0 0 2px #d8a16e;" : "";
-        var dot = '<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:' + bg + ';' + ring + '"></span>';
-        var clickable = (isCore && !isLit) ? ' class="cov-cell" data-ent="' + U.escAttr(e.label) + '" data-sys="' + U.escAttr(sy) + '" style="cursor:pointer;text-align:center;padding:4px;border-bottom:1px solid #1f1f1d" title="Log ' + U.escAttr(sy) + ' on ' + U.escAttr(e.label) + '"' : ' style="text-align:center;padding:4px;border-bottom:1px solid #1f1f1d"';
+        var dot = '<span style="display:inline-block;width:14px;height:14px;border-radius:var(--radius);background:' + bg + ';' + ring + '"></span>';
+        var clickable = (isCore && !isLit) ? ' class="cov-cell" data-ent="' + U.escAttr(e.label) + '" data-sys="' + U.escAttr(sy) + '" style="cursor:pointer;text-align:center;padding:4px;border-bottom:1px solid var(--line)" title="Log ' + U.escAttr(sy) + ' on ' + U.escAttr(e.label) + '"' : ' style="text-align:center;padding:4px;border-bottom:1px solid var(--line)"';
         return "<td" + clickable + ">" + dot + "</td>";
       }).join("");
       var rag = ragColour(st.done, st.total);
       var typeLbl = intelType(e);
-      return '<tr><td style="padding:4px 7px;border-bottom:1px solid #1f1f1d;position:sticky;left:0;background:var(--panel,#0e0e10);white-space:nowrap">' +
-          esc(e.label) + ' <span style="color:#6d6c64;font-size:10px">' + esc(typeLbl) + "</span></td>" +
-          '<td style="padding:4px 7px;border-bottom:1px solid #1f1f1d;text-align:center"><span style="display:inline-block;min-width:34px;padding:1px 6px;border-radius:3px;background:' + rag + ';color:#0e0e10;font-weight:600">' + st.done + "/" + st.total + "</span></td>" +
+      return '<tr><td style="padding:4px 7px;border-bottom:1px solid var(--line);position:sticky;left:0;background:var(--panel,var(--bg));white-space:nowrap">' +
+          esc(e.label) + ' <span style="color:var(--faint);font-size:10px">' + esc(typeLbl) + "</span></td>" +
+          '<td style="padding:4px 7px;border-bottom:1px solid var(--line);text-align:center"><span style="display:inline-block;min-width:34px;padding:1px 6px;border-radius:var(--radius);background:' + rag + ';color:var(--bg);font-weight:600">' + st.done + "/" + st.total + "</span></td>" +
           cells + "</tr>";
     }).join("");
 
@@ -625,12 +625,12 @@
   function syncBar() {
     var Sync = window.CRCaseSync;
     var bar = document.createElement("div");
-    bar.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:7px 10px;border:1px solid var(--line,#2a2a27);border-radius:4px;flex-wrap:wrap;background:#0e0e10";
+    bar.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:7px 10px;border:1px solid var(--line,#2a2a27);border-radius:var(--radius);flex-wrap:wrap;background:var(--bg)";
     var connected = !!(Sync && Sync.isConnected());
     var fsOk = window.CRFs && window.CRFs.supported();
     bar.innerHTML =
       '<span style="' + LB + '">Shared folder</span>' +
-      '<span style="font:11px var(--mono,Consolas,monospace);color:' + (connected ? "#79c98f" : "#9a998f") + '">' +
+      '<span style="font:11px var(--mono,Consolas,monospace);color:' + (connected ? "#79c98f" : "var(--dim)") + '">' +
         (connected ? esc(Sync.folder()) : "not connected") + "</span>" +
       '<div style="flex:1"></div>' +
       (connected

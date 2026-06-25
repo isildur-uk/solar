@@ -208,7 +208,7 @@
       var _bd = nodeBadges(e);
       var _lt = U.truncate(_dl, 26);
       if (e.type === "person" && e.attrs && e.attrs.dob) {
-        var _dob = St ? St.ddmmyyyy(e.attrs.dob) : e.attrs.dob;
+        var _dob = (St ? St.ddmmyyyy(e.attrs.dob) : "") || e.attrs.dob;
         if (_dob) _lt += "\nDOB " + _dob;
       }
       if (_bd.lines.length) _lt += "\n" + _bd.lines.join("\n");

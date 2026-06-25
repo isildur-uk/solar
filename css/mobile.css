@@ -269,3 +269,49 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 @media (max-width: 760px) {
   body.mobile-mode #status-msg { bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 12px); }
 }
+
+/* ===================== chart: touch add (FAB) ===================== */
+/* Touch-only floating "+" — desktop uses right-click bg -> "Add entity here".
+   Hidden on desktop; shown only on the phone chart view, clear of bottom-nav. */
+#chart-fab { display: none; }
+
+@media (max-width: 760px) {
+  body.mobile-mode[data-mview="chart"] #chart-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: 16px;
+    bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 16px);
+    z-index: 65;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid var(--accent, #ebfc72);
+    background: var(--panel, #0c0c0b);
+    color: var(--accent, #ebfc72);
+    font: 600 28px/1 Inter, system-ui, sans-serif;
+    box-shadow: 0 8px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(235,252,114,.18) inset;
+    cursor: pointer;
+  }
+  body.mobile-mode[data-mview="chart"] #chart-fab:active { transform: scale(0.94); }
+  body.mobile-mode[data-mview="chart"] #chart-fab:focus-visible {
+    outline: 2px solid var(--accent, #ebfc72); outline-offset: 2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #chart-fab { transition: none; }
+}
+
+/* The chart canvas owns its own touch gestures (pan / pinch / long-press); stop
+   the browser hijacking them for page scroll/zoom on the chart view. */
+@media (max-width: 760px) {
+  body.mobile-mode[data-mview="chart"] #chart,
+  body.mobile-mode[data-mview="chart"] #chart canvas { touch-action: none; }
+}
+
+/* context menu: enlarge tap targets on touch so menu items meet WCAG 2.5.5 */
+@media (max-width: 760px) {
+  .ctx-menu { min-width: 220px; }
+  .ctx-item { padding: 12px 14px; font-size: 14px; }
+}
