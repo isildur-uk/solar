@@ -65,6 +65,42 @@
     location:          "#5fc4c0"    // SOLAR location
   };
   function siColour(type) { return SI_TYPE_COLOUR[type] || "#9aa5b1"; }
+  // Registry SI type -> SOLAR CRIcons glyph key (same typed glyphs as the workbench chart).
+  var SI_TYPE_GLYPH = {
+    person:"person", organisation:"organisation", vehicle:"vehicle", account:"account",
+    communication:"phone", cyber:"ip", firearm:"flag", official_document:"document", location:"location"
+  };
+  function siGlyph(type) { return SI_TYPE_GLYPH[type] || "flag"; }
+
+  /* ---- highlight extracted entities inside report item text (usability) ---- */
+  var siHighlightOn = (function () { try { return localStorage.getItem("reg_hl_entities") !== "0"; } catch (e) { return true; } })();
+  function escRe(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  function highlightText(raw, ents, on) {
+    var escd = esc(raw == null ? "" : raw);
+    if (!on || !ents || !ents.length) return escd;
+    var labs = ents.filter(function (e) { return e.label && String(e.label).trim().length >= 2; })
+      .map(function (e) { return { e: e, lab: esc(String(e.label)) }; })
+      .filter(function (x) { return x.lab; })
+      .sort(function (a, b) { return b.lab.length - a.lab.length; });   // longest first wins
+    if (!labs.length) return escd;
+    var byLab = {}; labs.forEach(function (x) { var k = x.lab.toLowerCase(); if (!(k in byLab)) byLab[k] = x.e; });
+    var re = new RegExp("(" + labs.map(function (x) { return escRe(x.lab); }).join("|") + ")", "gi");
+    return escd.replace(re, function (m) {                              // single pass: no nested re-match
+      var e = byLab[m.toLowerCase()]; if (!e) return m;
+      var tl = (SI.ENTITY_TYPES[e.type] && SI.ENTITY_TYPES[e.type].label) || e.type;
+      var info = tl + (e.role ? " \u00b7 " + (SI.ROLES[e.role] || e.role) : "") + " \u00b7 PND:" + (e.pndShare || "");
+      return '<mark class="si-hl" data-eid="' + esc(e.id) + '" tabindex="0" style="color:' + siColour(e.type) + '" title="' + esc(info) + '">' + m + '</mark>';
+    });
+  }
+  function siFlash(el) { if (!el) return; try { el.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { el.scrollIntoView(); } el.classList.add("si-flash"); setTimeout(function () { el.classList.remove("si-flash"); }, 1300); }
+  function siFindByEid(sel, id) { var n = document.querySelectorAll(sel); for (var i = 0; i < n.length; i++) if (n[i].getAttribute("data-eid") === id) return n[i]; return null; }
+  document.addEventListener("keydown", function (e) {   // "/" focuses the search box (quick find)
+    if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+    var a = document.activeElement, tag = (a && a.tagName) || "";
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || (a && a.isContentEditable)) return;
+    var box = document.getElementById("search");
+    if (box) { e.preventDefault(); box.focus(); box.select && box.select(); }
+  });
   // rgba glow from a #rrggbb hex (mirrors graph.js glowOf).
   function siGlow(hex, a) {
     var h = String(hex || "#9aa5b1").replace("#", "");
@@ -499,12 +535,13 @@
       var pvd = M.coerceProvenance(ir.provenance);
       var pvGrade = (G.isSourceEval(pvd.sourceEval) && G.isAssessment(pvd.intelEval)) ? V.itemGrade(ir, pvd) : "[ - ]";
       var items = (ir.items || []).filter(function (i) { return !i.isProvenance; });
+      var siEnts = (ir.structuredIntelligence && ir.structuredIntelligence.entities) || [];
       var itemsHTML = items.map(function (it, i) {
         var grade = V.itemGrade(ir, it);
         return '<div class="item-block"><div class="ib-head"><strong>Item ' + (i + 1) + '</strong>' +
           '<span class="ib-src">' + esc(it.sourceType) + '</span>' +
           '<span class="grade"' + relAttr(grade) + '>' + esc(grade) + '</span></div>' +
-          '<pre>' + esc(it.text) + '</pre></div>';
+          '<pre class="item-text">' + highlightText(it.text, siEnts, siHighlightOn) + '</pre></div>';
       }).join("");
       // Sensitive source as a distinct, protected block (not a plain dl row).
       var ssParts = [];
@@ -544,6 +581,7 @@
           '<span class="fact">' + items.length + ' item' + (items.length === 1 ? '' : 's') + '</span>' +
         '</div>' +
         '</div>' +
+        '<aside id="overlap-panel" class="overlap-rail" aria-label="Reports sharing entities with this one"></aside>' +
         '<div class="meta-grid">' +
           metaCell('Date of collection', esc(ir.dateOfCollection)) +
           metaCell('Submitter is author', (ir.submittedBySelf ? "Yes" : "No")) +
@@ -557,10 +595,11 @@
           '<div class="ss-label"><span class="ss-mark" aria-hidden="true">▲</span>SENSITIVE SOURCE</div>' +
           ssBody +
         '</section>' +
-        '<h2>Items (' + items.length + ')</h2>' +
+        '<div class="items-head"><h2>Items (' + items.length + ')</h2>' +
+        '<label class="hl-toggle" title="Bold + colour the entities extracted from this report, by type"><input type="checkbox" id="hl-entities"' + (siHighlightOn ? ' checked' : '') + '> Highlight extracted entities</label></div>' +
         (itemsHTML ? '<div class="items-grid">' + itemsHTML + '</div>' : '<p class="empty">No items.</p>') +
         '<h2>Provenance</h2>' +
-        '<div class="item-block"><div class="ib-head"><strong>Provenance</strong><span class="grade"' + relAttr(pvGrade) + '>' + esc(pvGrade) + '</span></div><pre>' + esc(pvd.text || "—") + '</pre></div>' +
+        '<div class="item-block"><div class="ib-head"><strong>Provenance</strong><span class="grade"' + relAttr(pvGrade) + '>' + esc(pvGrade) + '</span></div><pre class="item-text">' + highlightText(pvd.text || "—", siEnts, true) + '</pre></div>' +
         '<h2>Workflow</h2>' +
         '<div class="wf-status">Status: <span class="pill status" data-status="' + esc(ir.status) + '">' + esc(ir.status) + '</span>' +
           (ir.rejectionReason ? ' · <em>rejected:</em> ' + esc(ir.rejectionReason) : '') +
@@ -586,9 +625,27 @@
       lastDetailUrn = ir.urn;
       markActiveReport();
       focusView();
+      var _hlcb = document.getElementById("hl-entities");
+      els.main.classList.toggle("hl-off", !siHighlightOn);
+      if (_hlcb) _hlcb.addEventListener("change", function () {
+        siHighlightOn = _hlcb.checked;
+        try { localStorage.setItem("reg_hl_entities", siHighlightOn ? "1" : "0"); } catch (e) {}
+        els.main.classList.toggle("hl-off", !siHighlightOn);
+      });
+      if (!els.main._siWired) {
+        els.main._siWired = true;
+        els.main.addEventListener("click", function (ev) {
+          var t = ev.target;
+          var hl = t.closest && t.closest(".si-hl");
+          if (hl) { siFlash(siFindByEid(".si-ent-row", hl.getAttribute("data-eid"))); return; }
+          var row = t.closest && t.closest(".si-ent-row");
+          if (row && !(t.closest && t.closest("button"))) siFlash(siFindByEid(".si-hl", row.getAttribute("data-eid")));
+        });
+      }
       renderWfBar(ir);
       renderSI(ir);
       renderMiniChart(ir);
+      renderOverlaps(ir);
       document.getElementById("hx-contract").addEventListener("click", function () {
         download(ir.urn + ".system.ir.v1.json", JSON.stringify(H.toHandoff(ir), null, 2));
         setStatus("Exported contract for " + ir.urn + ".", "ok");
@@ -642,6 +699,55 @@
     });
   }
 
+  /* ---- cross-report overlap: "also appears in" (deconfliction) ---- */
+  function computeOverlaps(ir) {
+    var mine = (ir.structuredIntelligence && ir.structuredIntelligence.entities) || [];
+    if (!mine.length) return Promise.resolve([]);
+    return allRows().then(function (rows) {
+      var idx = {};                       // "type|sig" -> [{urn,title,op}]
+      rows.forEach(function (r) {
+        if (r.urn === ir.urn) return;
+        ((r.structuredIntelligence && r.structuredIntelligence.entities) || []).forEach(function (e) {
+          MX.signatures(e).forEach(function (sg) { var k = e.type + "|" + sg.sig; (idx[k] = idx[k] || []).push({ urn: r.urn, title: r.title, op: r.operation }); });
+        });
+      });
+      var byReport = {};                  // urn -> {urn,title,op, shared:{label:{rules:{}}}}
+      mine.forEach(function (me) {
+        MX.signatures(me).forEach(function (sg) {
+          (idx[me.type + "|" + sg.sig] || []).forEach(function (hit) {
+            var b = byReport[hit.urn] || (byReport[hit.urn] = { urn: hit.urn, title: hit.title, op: hit.op, shared: {} });
+            var sh = b.shared[me.label] || (b.shared[me.label] = { rules: {} });
+            sh.rules[sg.rule] = true;
+          });
+        });
+      });
+      return Object.keys(byReport).map(function (u) {
+        var b = byReport[u];
+        var shared = Object.keys(b.shared).map(function (l) { return { label: l, rules: Object.keys(b.shared[l].rules) }; });
+        return { urn: b.urn, title: b.title, op: b.op, shared: shared };
+      }).sort(function (a, b) { return b.shared.length - a.shared.length; });
+    });
+  }
+  function renderOverlaps(ir) {
+    var panel = document.getElementById("overlap-panel"); if (!panel) return;
+    panel.innerHTML = '<h3>Also appears in</h3><p class="ov-none">Checking the database\u2026</p>';
+    computeOverlaps(ir).then(function (list) {
+      if (!list.length) { panel.innerHTML = '<h3>Also appears in</h3><p class="ov-none">No other report shares these entities.</p>'; return; }
+      var html = '<h3>Also appears in (' + list.length + ')</h3>';
+      list.forEach(function (o) {
+        var labels = o.shared.map(function (x) { return x.label; }).join(", ");
+        var rules = {}; o.shared.forEach(function (x) { x.rules.forEach(function (r) { rules[r] = true; }); });
+        html += '<button type="button" class="ov-report" data-urn="' + esc(o.urn) + '" title="Matched on: ' + esc(Object.keys(rules).join(", ")) + '">' +
+          '<span class="ov-op">' + esc(o.op || "\u2014") + '</span> <span class="ov-urn">' + esc(o.urn) + '</span>' +
+          '<span class="ov-shared">shares: ' + esc(labels) + '</span></button>';
+      });
+      panel.innerHTML = html;
+      Array.prototype.forEach.call(panel.querySelectorAll(".ov-report"), function (b) {
+        b.addEventListener("click", function () { showDetail(b.getAttribute("data-urn")); });
+      });
+    }, function () { panel.innerHTML = ''; });
+  }
+
   function renderSI(ir) {
     var panel = document.getElementById("si-panel"); if (!panel) return;
     if (!ir.structuredIntelligence) ir.structuredIntelligence = { entities: [], links: [] };
@@ -655,7 +761,7 @@
     var entOpts = ['<option value="">— entity —</option>'].concat(S.entities.map(function (e) { return opt(e.id, entLabel(e)); })).join("");
 
     var entList = S.entities.length ? '<ul class="si-list">' + S.entities.map(function (e) {
-        return '<li><span>' + esc(entLabel(e)) + (e.role ? ' · ' + esc(SI.ROLES[e.role] || e.role) : '') + ' · PND:' + esc(e.pndShare) + (e.isAlias ? ' · <em>alias</em>' : '') + '</span>' +
+        return '<li data-eid="' + esc(e.id) + '" class="si-ent-row" title="Click to locate in the report text"><span>' + esc(entLabel(e)) + (e.role ? ' · ' + esc(SI.ROLES[e.role] || e.role) : '') + ' · PND:' + esc(e.pndShare) + (e.isAlias ? ' · <em>alias</em>' : '') + '</span>' +
           (ro ? '' : '<button type="button" class="btn danger" data-del-ent="' + esc(e.id) + '" aria-label="Delete entity">×</button>') + '</li>';
       }).join('') + '</ul>' : '<p class="empty">No entities yet.</p>';
     var linkList = S.links.length ? '<ul class="si-list">' + S.links.map(function (l) {
@@ -764,16 +870,26 @@
       var lbl = (e.label || "") + (e.isAlias ? " (alias)" : "");
       var typeLabel = (SI.ENTITY_TYPES[e.type] && SI.ENTITY_TYPES[e.type].label) || e.type;
       var roleLabel = e.role ? (SI.ROLES[e.role] || e.role) : "";
-      return {
+      var node = {
         id: e.id,
         label: lbl,
         title: typeLabel + (roleLabel ? " · " + roleLabel : ""),
-        shape: "dot",
-        size: e.type === "person" ? 16 : 13,
-        color: { background: "#131c28", border: c, highlight: { background: "#1d2a3a", border: c } },
-        shadow: { enabled: !reduce, color: siGlow(c, 0.42), size: 14, x: 0, y: 0 },
         font: { color: "#c9d4e0", size: 12, face: "Inter, Segoe UI, sans-serif", strokeWidth: 0 }
       };
+      // Same typed SVG glyph icons as the workbench chart (CRIcons); fall back to
+      // a coloured dot only if icons.js is unavailable.
+      var ico = window.CRIcons && window.CRIcons.get(siGlyph(e.type), c);
+      if (ico) {
+        node.shape = "image";
+        node.image = { unselected: ico.unselected, selected: ico.selected };
+        node.size = e.type === "person" ? 20 : 16;
+      } else {
+        node.shape = "dot";
+        node.size = e.type === "person" ? 16 : 13;
+        node.color = { background: "#131c28", border: c, highlight: { background: "#1d2a3a", border: c } };
+        node.shadow = { enabled: !reduce, color: siGlow(c, 0.42), size: 14, x: 0, y: 0 };
+      }
+      return node;
     });
     // only links whose endpoints are present on this report
     var visEdges = links.filter(function (l) { return byId[l.from] && byId[l.to]; }).map(function (l) {
@@ -806,6 +922,13 @@
         edges: { selectionWidth: 1 }
       };
       miniNetwork = new window.vis.Network(box, data, opts);
+      miniNetwork.on("selectNode", function (params) {   // click a node -> locate it in the list + text
+        if (params && params.nodes && params.nodes.length) {
+          var id = params.nodes[0];
+          siFlash(siFindByEid(".si-ent-row", id));
+          siFlash(siFindByEid(".si-hl", id));
+        }
+      });
       // once settled, freeze physics so the chart sits still (no perpetual motion)
       miniNetwork.once("stabilized", function () {
         try { miniNetwork.setOptions({ physics: { enabled: false } }); miniNetwork.fit({ animation: false }); } catch (e) { /* noop */ }
@@ -1149,5 +1272,21 @@
     if (rows.length && storedSeed() === SEED_VERSION) { return showHome().then(function () { setStatus(""); }); }
     return autoSeed();  // empty store OR the demo generator changed -> rebuild from current demo-seed.js
   });
+
+  /* ---- Shared SOLAR case: the intel-logs live on the SAME localStorage case
+     as the charting workbench, so Database and Chart work one case, not two
+     copies. Re-load before opening so we pick up anything the Chart changed. */
+  (function () {
+    if (!(window.CRModel && window.CRLogPanel && window.CRRecords)) return;
+    var logStore = new window.CRModel.CaseStore();
+    try { logStore.loadLocal(); } catch (e) { /* fresh case */ }
+    window.CRRecords.attach(logStore);
+    if (window.CRCollab) window.CRCollab.init(logStore);
+    if (window.CRCaseSync) window.CRCaseSync.setWho(function () { return (logStore.meta && logStore.meta.officer) || ""; });
+    window.CRLogPanel.init(logStore);
+    var lb = document.getElementById("reg-logs");
+    if (lb) lb.addEventListener("click", function () { try { logStore.loadLocal(); } catch (e) {} window.CRLogPanel.open(); });
+  })();
+
 })();
 /*REGEOF*/

@@ -1,6 +1,19 @@
 {
+  "name": "solar-link-analysis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline-first intelligence link-analysis workbench",
+  "scripts": {
+    "test": "node scripts/verify.js",
+    "test:core": "node tests/run_tests.js && node tests/cm_tests.js && node tests/lang_tests.js && node tests/smartner_tests.js",
+    "test:demo": "node tests/demo_harness.js",
+    "test:dom": "node scripts/verify.js --dom-only",
+    "test:ui": "node tests/ui_intel_tests.js && node tests/dragdrop_tests.js",
+    "check:js": "node scripts/check-js.js"
+  },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
+    "jsdom": "^29.1.1",
     "linkedom": "^0.18.12",
     "postject": "^1.0.0-alpha.6",
     "wink-eng-lite-web-model": "^1.8.1",

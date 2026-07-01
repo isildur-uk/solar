@@ -2,9 +2,11 @@
 *(formerly Chart Room — a connections map looks like a solar system)*
 
 i2-Analyst's-Notebook-style charting workbench. Single-page app: the cinematic cover `hero.html` is the one front door — served at `/` on Vercel, by the LAN server (`serve-lan.js`) and by the `.exe` — and its ENTER leads into the workbench `index.html`
-(or host the folder — Vercel/static hosting works as-is). No build step, no backend; all case data
-stays in the browser (localStorage + JSON save/load). The only network call is the basemap tile
-server, with an offline fallback.
+(or host the folder — Vercel/static hosting works as-is). There is no frontend build step;
+normal case data stays in the browser (localStorage + JSON save/load). The hosted
+**Add from URL** feature uses the Vercel function in `api/fetch.js`; basemap tiles and
+analyst-initiated external checks are the other online surfaces. Core extraction and case
+storage continue to work offline.
 
 ## The USP — smart matching
 - **Paste Text** → entities (people, phones, emails, DOBs, dates, addresses, places, vehicle regs,
@@ -35,6 +37,21 @@ against a real i2 import before relying on it*).
 - `js/lib/`, `css/lib/` — vendored vis-network 10.x, Leaflet 1.9, PapaParse 5.x. No CDN refs.
 - `tests/run_tests.js` + `tests/lang_tests.js` — 127 spec-based tests (engine + language layer).
 - Cache-buster convention on script/link tags: `?v=YYYYMMDD<letter>` — bump on every JS/CSS edit.
+
+## Development verification
+Run from this folder:
+
+    npm install
+    npm test
+
+`npm test` is the single verification entry point. It checks authored JavaScript syntax,
+the extraction/matching/CM suites, demo corpus, collaboration and disclosure tests, and
+the jsdom UI/drag-and-drop tests. Smaller commands are available as `test:core`,
+`test:demo`, `test:dom`, `test:ui`, and `check:js`.
+
+Historical jsdom boot probes for the retired in-app hero live in `tests/legacy/`. They are
+kept as design-history fixtures but are deliberately outside the current verification gate;
+the standalone `hero.html` is now the only supported cover.
 
 ## Hero cover (the single front door)
 `hero.html` is the ONE landing experience across every launch path — a cinematic starfield cover

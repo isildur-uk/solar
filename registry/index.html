@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Registry</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../css/logpanel.css">
 </head>
 <body>
 <div id="marking-banner" class="marking-banner" data-mk="OFFICIAL">OFFICIAL</div>
@@ -13,6 +14,8 @@
   <a class="brand" href="../hero.html" title="SOLAR home">REGISTRY</a>
   <label class="visually-hidden" for="search">Search reports</label>
   <input id="search" class="search masthead-search" type="text" placeholder="Search title, URN, source, text&hellip;" autocomplete="off">
+  <button id="reg-logs" class="btn" type="button" title="Intelligence logs for the shared case">Logs</button>
+  <a id="reg-chart" class="btn" href="../index.html" title="Open the link chart for the shared case">Chart →</a>
   <button id="btn-new" class="btn masthead-new" type="button">+ New report</button>
 </header>
 
@@ -44,6 +47,19 @@
      app.js feature-detects window.vis and skips rendering if absent (Node/jsdom). -->
 <script src="../js/lib/vis-network.min.js"></script>
 <!-- App -->
+<script src="../js/ui/icons.js"></script>
+<script src="../js/core/match.js"></script>
+<script src="../js/core/format.js"></script>
+<script src="../js/core/model.js"></script>
+<script src="../js/core/records.js"></script>
+<script src="../js/core/collab.js"></script>
+<script src="../js/core/fsaccess.js"></script>
+<script src="../js/core/casefolder.js"></script>
+<script src="../js/core/casesync.js"></script>
+<script src="../js/core/intelvocab.js"></script>
+<script src="../js/core/disclosure.js"></script>
+<script src="../js/ui/util.js"></script>
+<script src="../js/ui/logpanel.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

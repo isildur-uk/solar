@@ -1,7 +1,7 @@
 const { JSDOM } = require("jsdom");
 const fs = require("fs");
 const path = require("path");
-const root = path.join(__dirname, "..");
+const root = path.join(__dirname, "..", "..");
 
 const html = `<!DOCTYPE html><html><head><title>Solar</title></head><body>
 <div id="class-banner">OFFICIAL</div>

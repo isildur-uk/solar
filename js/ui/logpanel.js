@@ -68,23 +68,28 @@
   function fieldsFor(type) {
     switch (type) {
       case "enquiry": return [
+        { id: "linkedAction", label: "Linked action (AC ref)", kind: "text" },
         { id: "date", label: "Date", kind: "date", def: todayISO },
         { id: "officer", label: "Officer (staff no.)", kind: "text", def: who },
-        { id: "system", label: "System / enquiry", kind: "select", opts: V.SYSTEMS },
-        { id: "subject", label: "Subject", kind: ENT },
-        { id: "entity", label: "Entity / identifier searched", kind: ENT },
+        { id: "subject", label: "Subject / selector", kind: ENT },
         { id: "source", label: "Source of entity", kind: "select", opts: V.SOURCES },
+        { id: "entity", label: "Entity (optional - blank uses the selector)", kind: ENT },
+        { id: "entityType", label: "Entity type (optional)", kind: "select", opts: V.ENTITY_TYPES },
+        { id: "system", label: "Enquiry / system", kind: "select", opts: V.SYSTEMS },
         { id: "brief", label: "Brief description (for file name, 5-10 words)", kind: "text" },
-        { id: "result", label: "Result summary (optional)", kind: "textarea" }
+        { id: "result", label: "Result summary", kind: "textarea" }
       ];
       case "disclosure": return [
+        { id: "correspondingAction", label: "Corresponding action (AC ref)", kind: "text" },
+        { id: "atlasRed", label: "ATLAS CM Red No.", kind: "text" },
         { id: "date", label: "Date", kind: "date", def: todayISO },
         { id: "officer", label: "Officer (staff no.)", kind: "text", def: who },
-        { id: "docType", label: "Document type", kind: "select", opts: V.DOC_TYPES },
-        { id: "system", label: "System (if applicable)", kind: "select", opts: V.SYSTEMS },
         { id: "subject", label: "Subject", kind: ENT },
         { id: "entity", label: "Entity", kind: ENT },
+        { id: "system", label: "Enquiry / system", kind: "select", opts: V.SYSTEMS },
+        { id: "docType", label: "Document type", kind: "select", opts: V.DOC_TYPES },
         { id: "brief", label: "Brief description (for file name)", kind: "text" },
+        { id: "noInSeries", label: "No. in series", kind: "text" },
         { id: "notes", label: "Notes (e.g. sensitivity)", kind: "textarea" }
       ];
       case "commsapp": return [
@@ -103,6 +108,7 @@
         { id: "date", label: "Date raised", kind: "date", def: todayISO },
         { id: "officer", label: "Officer (staff no.)", kind: "text", def: who },
         { id: "description", label: "Action description", kind: "textarea" },
+        { id: "addedToCm", label: "Added to CM?", kind: "select", opts: ["Y", "N"] },
         { id: "linkedRef", label: "Linked enquiry / disclosure ref", kind: "text" },
         { id: "comments", label: "Comments", kind: "textarea" }
       ];
@@ -127,8 +133,8 @@
 
   function listColsFor(type) {
     switch (type) {
-      case "enquiry": return [["Ref", refGet], ["Date", dg("date")], ["System", dg("system")], ["Subject", dg("subject")], ["Entity", dg("entity")], ["__status", null], ["Owner", og("owner")], ["Assignee", og("assignee")]];
-      case "disclosure": return [["Ref", refGet], ["Date", dg("date")], ["Doc type", dg("docType")], ["Subject", dg("subject")], ["Entity", dg("entity")], ["__status", null], ["Owner", og("owner")], ["Assignee", og("assignee")]];
+      case "enquiry": return [["Ref", refGet], ["Linked", dg("linkedAction")], ["Date", dg("date")], ["System", dg("system")], ["Subject", dg("subject")], ["Entity", dg("entity")], ["__status", null], ["Owner", og("owner")], ["Assignee", og("assignee")]];
+      case "disclosure": return [["Ref", refGet], ["ATLAS Red", dg("atlasRed")], ["Date", dg("date")], ["Doc type", dg("docType")], ["Subject", dg("subject")], ["Entity", dg("entity")], ["__status", null], ["Owner", og("owner")], ["Assignee", og("assignee")]];
       case "commsapp": return [["Ref", refGet], ["Date", dg("date")], ["Subject", dg("subject")], ["Selector", dg("entity")], ["__status", null], ["Owner", og("owner")], ["Assignee", og("assignee")]];
       case "action": return [["Ref", refGet], ["Date", dg("date")], ["Description", function (r) { return trunc((r.data || {}).description); }], ["__status", null], ["Owner", og("owner")], ["Assignee", og("assignee")]];
       case "decision": return [["Ref", refGet], ["Date", dg("date")], ["Type", dg("entryType")], ["Entry", function (r) { return trunc((r.data || {}).entry); }], ["__status", null], ["Owner", og("owner")]];

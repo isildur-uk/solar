@@ -65,9 +65,9 @@
 
   function svgFor(type, colour, selected) {
     var glyph = GLYPHS[type] || GLYPHS.flag;
-    var ring = selected ? "#e8b34b" : colour;
+    var ring = selected ? "#ebfc72" : colour;
     var glow = selected
-      ? '<rect x="2" y="2" width="60" height="60" rx="18" fill="none" stroke="#e8b34b" stroke-opacity="0.35" stroke-width="5"/>'
+      ? '<rect x="2" y="2" width="60" height="60" rx="18" fill="none" stroke="#ebfc72" stroke-opacity="0.35" stroke-width="5"/>'
       : "";
     return '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">' +
       glow +

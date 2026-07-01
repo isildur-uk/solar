@@ -1,7 +1,9 @@
 # Deploy SOLAR to Vercel
 
-SOLAR is a static single-page app (no backend, no build step). These two files make this
-folder deploy cleanly: `vercel.json` (serve as static + security headers) and `.vercelignore`
+SOLAR is a static single-page app with no frontend build step. The hosted **Add from URL**
+feature is implemented by the serverless function at `api/fetch.js`; the rest of the product
+is served as static files. These two files make this folder deploy cleanly:
+`vercel.json` (routing + security headers) and `.vercelignore`
 (keeps node_modules, the SEA blob, .exe builds, tests and dev-notes out of the upload).
 
 ## Fastest route — Vercel CLI (one-time login)
@@ -27,4 +29,6 @@ From inside this `Solar` folder, in a terminal:
   (`demo_contacts.csv`, `assets/profile_*.docx`). Analyst case data stays in the browser and is
   never uploaded, but the bundle itself is public. To lock the URL later, enable Deployment
   Protection (Password/SSO) in Vercel project settings — requires a Pro plan.
-- The only outbound network call is the Leaflet basemap tile server (with offline fallback).
+- Online surfaces are the Leaflet basemap (with offline fallback), the analyst-triggered
+  `api/fetch.js` URL importer, and explicit external-check links. Core extraction does not
+  send case data to a service.

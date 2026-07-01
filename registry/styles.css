@@ -438,3 +438,28 @@ details.facet>summary .c{background:var(--accent-soft);color:var(--accent);borde
   .detail-head { padding: .8rem 0 .6rem; }
   .detail-facts { gap: .35rem; }
 }
+
+/* ---- extracted-entity highlighting in report item text (usability) ---- */
+.items-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.hl-toggle { font: 11px var(--mono); color: var(--faint); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
+.hl-toggle input { accent-color: var(--accent); }
+.item-text .si-hl { font-weight: 700; background: transparent; cursor: pointer; border-radius: 2px; padding: 0 1px; }
+.item-text .si-hl:hover, .item-text .si-hl:focus { background: rgba(235, 252, 114, 0.12); outline: none; }
+.hl-off .si-hl { color: inherit !important; font-weight: 400; background: none; cursor: text; }
+.si-ent-row { cursor: pointer; }
+.si-ent-row:hover { background: rgba(235, 252, 114, 0.06); }
+.si-flash { animation: si-flash 1.2s ease-out; }
+@keyframes si-flash { 0% { background: rgba(235, 252, 114, 0.38); } 100% { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .si-flash { animation: none; outline: 2px solid var(--accent); } }
+
+/* ---- "Also appears in" cross-report overlap rail ---- */
+.overlap-rail { float: right; width: 280px; margin: 0 0 16px 22px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); padding: 10px 12px; box-sizing: border-box; }
+.overlap-rail h3 { margin: 0 0 6px; font: 600 11px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+.overlap-rail .ov-none { font: 11px var(--mono); color: var(--faint); margin: 4px 0 0; }
+.overlap-rail .ov-report { display: block; width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid var(--line); padding: 8px 2px; cursor: pointer; }
+.overlap-rail .ov-report:first-of-type { border-top: 0; }
+.overlap-rail .ov-report:hover { background: rgba(235, 252, 114, 0.06); }
+.overlap-rail .ov-op { font: 600 12px var(--sans); color: var(--accent); }
+.overlap-rail .ov-urn { font: 10px var(--mono); color: var(--faint); }
+.overlap-rail .ov-shared { display: block; font: 11px var(--sans); color: var(--dim); margin-top: 2px; line-height: 1.35; }
+@media (max-width: 900px) { .overlap-rail { float: none; width: auto; margin: 0 0 16px 0; } }

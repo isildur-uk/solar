@@ -6,7 +6,7 @@
  */
 const { JSDOM } = require("jsdom");
 const fs = require("fs");
-const base = require("path").join(__dirname, "..");
+const base = require("path").join(__dirname, "..", "..");
 const html = fs.readFileSync(base + "/index.html", "utf8");
 const bodyHtml = html.slice(html.indexOf("<body>"), html.indexOf("</body>") + 7);
 const dom = new JSDOM("<!DOCTYPE html><html><head></head>" + bodyHtml + "</html>",
