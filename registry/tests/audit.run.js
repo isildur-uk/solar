@@ -1,4 +1,4 @@
-/* audit.run.js — exact/exhaustive forensic audit of the demo dataset (all 480).
+/* audit.run.js — exact/exhaustive forensic audit of the demo dataset (all 240).
  * COLP IR rules + ATLAS CM identifier formats (validated via cm-standards, the
  * single source of truth) + determinism + extraction recall/precision.
  * Deliberate, demoMeta-labelled discrepancies are whitelisted (a logged conflict

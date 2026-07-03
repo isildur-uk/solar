@@ -74,7 +74,7 @@ eq(Q.run(rows, { pageSize: 2, page: 99 }).page, 2, "page clamps to last page");
 // realistic dataset sanity
 var D = require("../core/demo-seed.js");
 var ds = D.buildDemoDataset();
-eq(Q.run(ds, {}).total, 480, "demo: 480 total");
+eq(Q.run(ds, {}).total, 240, "demo: 240 total");
 eq(Q.run(ds, { filters: { operation: ["OP NEPTUNE"] } }).total, 20, "demo: OP NEPTUNE -> 20");
 ok(Q.run(ds, { filters: { operation: ["OP NEPTUNE"] }, pageSize: 50 }).rows.length === 20, "demo: NEPTUNE page holds its 20");
 ok(Q.run(ds, { text: "neptune" }).total >= 20, "demo: free-text 'neptune' finds its reports");

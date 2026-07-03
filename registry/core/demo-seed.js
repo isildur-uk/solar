@@ -1,5 +1,5 @@
 /* demo-seed.js — demonstration dataset (NCA-style intelligence reports).
- * 24 Operations (2 per threat area) x 20 reports each (480 reports). Each report
+ * 12 Operations (1 per threat area) x 20 reports each (240 reports). Each report
  * is built as a DEVELOPING ENQUIRY — records build on one another the way a real
  * intelligence picture develops:
  *   assessment (CHIS / Intelligence report / LEA RFI)
@@ -53,6 +53,10 @@
   function aOrAn(w){ return /^[AEIOU]/i.test(String(w))?"An":"A"; }
   var PLACE_PC=[["Manchester","M14 7QP"],["Leeds","LS9 8AA"],["Bradford","BD3 9LT"],["Birmingham","B12 2RX"],["Canterbury","CT1 1PJ"],["Liverpool","L9 7HG"],["Newcastle","NE6 5TZ"],["Sheffield","S2 4WB"],["Coventry","CV1 2GH"],["Nottingham","NG7 3RR"],["Salford","M6 5DP"],["Leeds","LS11 9SE"]];
   function prevAddrFor(rnd){ var pp=pick(rnd,PLACE_PC); return intBetween(rnd,1,180)+" "+pick(rnd,STREETS)+", "+pp[0]+" "+pp[1]; }
+  var POCS=["Crawley","Gloucester","Calder","Nuncio-Crawley","Nuncio-Glos","Bedford","Hendon","Solent","Mercia","Fenland","Wyvern","Calder"];
+  function pocFor(uid){ return POCS[uid%POCS.length]+(1+uid%9); }                 // desk handle, e.g. Crawley4
+  function pocDate(opIndex,r){ var d=parseDMY(dateFor(opIndex,r)); return fmtDMY(shiftDays(d,1+((opIndex*100+r)%2))); } // created 1-2 days after intel
+  function bandFor(key,uid){ var serious=(key==="CSE"||key==="MODSL"||key==="OIC"||key==="Drugs"||key==="Firearms"); return serious?1:(1+(uid%2)); }
 
   var VLET="ABCDEFGHJKLMNOPRSTUVWXYZ";
   // CM data standard: VRM caps, NO space (IM01 SD01 v6 "In Free Text (CM)" — e.g. VRM LD12ABC).
@@ -246,6 +250,10 @@
       operation:op.name,
       title:titleFor(uid,nomLabel,topic),
       dateOfCollection:dateFor(opIndex,r),
+      dateOfIntelligence:dateFor(opIndex,r),
+      dateCreated:pocDate(opIndex,r),
+      pointOfContact:pocFor(uid),
+      threatBand:bandFor(key,uid),
       submittedBySelf:(r%4!==0), threatArea:op.threatArea, confidence:conf, protectiveMarking:mk, handling:handling,
       provenance:{ text: nomLabel+" is assessed to be involved in "+THEME[key]+".", sourceEval:pg.se, intelEval:pg.ie },
       sensitiveSource:sens
@@ -395,10 +403,10 @@
     return ir;
   }
 
-  function buildDemoDataset(){ var out=[]; for(var i=0;i<24;i++){ for(var r=0;r<REPORTS_PER_OP;r++){ out.push(genReport(i,r)); } } return out; }
+  function buildDemoDataset(){ var out=[]; var nOps=OPS.list().length; for(var i=0;i<nOps;i++){ for(var r=0;r<REPORTS_PER_OP;r++){ out.push(genReport(i,r)); } } return out; }
 
   var SEED_VERSION="2026-06-25-messy";  // realistic-messy: seeded variable source returns + labelled conflicts (over the 06-23-cm CM rewrite)
-  var api={ buildDemoDataset:buildDemoDataset, SEED_VERSION:SEED_VERSION, OPERATION_COUNT:24, REPORTS_PER_OP:REPORTS_PER_OP, BRIDGE_KEYS:Object.keys(BRIDGES) };
+  var api={ buildDemoDataset:buildDemoDataset, SEED_VERSION:SEED_VERSION, OPERATION_COUNT:OPS.list().length, REPORTS_PER_OP:REPORTS_PER_OP, BRIDGE_KEYS:Object.keys(BRIDGES) };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
   if (typeof window !== "undefined") { window.RegistryDemo = api; }
 })();

@@ -26,9 +26,26 @@
     "Other"
   ];
 
+  var THREAT_COLOURS = {
+    "CSE - Child Sexual Exploitation": "#d9534f",
+    "MODSL - Modern Slavery & Human Trafficking": "#d88c6e",
+    "OIC - Organised Immigration Crime": "#6ea8d8",
+    "Drugs - Drug Trafficking": "#79c98f",
+    "Firearms - Illegal Firearms": "#c9c36a",
+    "EConC - Economic Crime / Money Laundering": "#a8c97f",
+    "BC & Sanctions Evasion - Bribery, Corruption & Sanctions Evasion": "#d8a16e",
+    "Fraud": "#b48ad6",
+    "Cyber - Cyber Crime": "#5fc4c0",
+    "OAT - Organised Acquisitive Crime": "#7fb0c9",
+    "Cross-Cutting - Criminal use of technology": "#9aa5b1",
+    "Cross-Cutting - Border vulnerabilities": "#8d99ae",
+    "Other": "#6b7280"
+  };
   var api = {
     list: function () { return THREAT_AREAS.slice(); },
-    isValid: function (v) { return THREAT_AREAS.indexOf(String(v)) !== -1; }
+    isValid: function (v) { return THREAT_AREAS.indexOf(String(v)) !== -1; },
+    colour: function (v) { return THREAT_COLOURS[String(v)] || "#8d99ae"; },
+    short: function (v) { v = String(v); var i = v.indexOf(" - "); return i > 0 ? v.slice(0, i) : v; }
   };
 
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }

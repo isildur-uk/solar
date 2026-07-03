@@ -48,6 +48,7 @@
   var view = "home";          // "home" | "results" | "detail"
   var cameFromResults = false; // detail back-target: true => return to results, else home
   var lastDetailUrn = null;    // currently-open report (for sidebar "you are here")
+  var compareUrns = [];        // reports shown in side-by-side compare (max 3)
 
   // --- Mini-chart (inline structured-intelligence network) ----------------
   // Colour each entity by POLE type, matching SOLAR's CRModel palette. SOLAR's
@@ -91,6 +92,29 @@
       var info = tl + (e.role ? " \u00b7 " + (SI.ROLES[e.role] || e.role) : "") + " \u00b7 PND:" + (e.pndShare || "");
       return '<mark class="si-hl" data-eid="' + esc(e.id) + '" tabindex="0" style="color:' + siColour(e.type) + '" title="' + esc(info) + '">' + m + '</mark>';
     });
+  }
+  function highlightExtract(raw, on) {
+    var txt = raw == null ? "" : String(raw);
+    if (!on) return esc(txt);
+    if (!(window.CRExtract && window.CRExtract.extract)) return highlightText(txt, [], on); // engine absent -> plain
+    var res;
+    try { res = window.CRExtract.extract(txt, { dateFormat: "DMY" }); } catch (e) { return esc(txt); }
+    var marks = [];
+    (res.entities || []).forEach(function (ent) {
+      (ent.spans || []).forEach(function (sp) { marks.push({ s: sp[0], e: sp[1], type: ent.type || "ent" }); });
+    });
+    (res.relationships || []).forEach(function (r) { if (r.cueSpan) marks.push({ s: r.cueSpan[0], e: r.cueSpan[1], type: "cue" }); });
+    (res.cues || []).forEach(function (cu) { if (cu.span) marks.push({ s: cu.span[0], e: cu.span[1], type: "cue" }); });
+    marks.sort(function (a, b) { return a.s - b.s || b.e - a.e; });
+    var out = "", pos = 0;
+    marks.forEach(function (mk) {
+      if (mk.s < pos || mk.s < 0 || mk.e > txt.length) return; // skip overlap / out-of-range
+      out += esc(txt.slice(pos, mk.s));
+      out += '<mark class="hl hl-' + esc(mk.type) + '" title="' + esc(mk.type) + '">' + esc(txt.slice(mk.s, mk.e)) + '</mark>';
+      pos = mk.e;
+    });
+    out += esc(txt.slice(pos));
+    return out;
   }
   function siFlash(el) { if (!el) return; try { el.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) { el.scrollIntoView(); } el.classList.add("si-flash"); setTimeout(function () { el.classList.remove("si-flash"); }, 1300); }
   function siFindByEid(sel, id) { var n = document.querySelectorAll(sel); for (var i = 0; i < n.length; i++) if (n[i].getAttribute("data-eid") === id) return n[i]; return null; }
@@ -303,6 +327,7 @@
     var isC = h.code === "C";
     var provGrade = gradeText(pv, isC ? "C" : "P");
 
+    var bandOpts = ["1","2","3","4"].map(function(b){ return opt(b, "Band "+b, String(e.threatBand||"")); }).join("");
     els.main.innerHTML =
       '<form class="form" id="ir-form" novalidate>' +
       '<h1 tabindex="-1">' + (existing ? "Edit report " + esc(existing.urn) : "New intelligence report") + '</h1>' +
@@ -324,9 +349,18 @@
             '</div></div>' +
         '</div>' +
         '<div class="row">' +
+          '<div class="field"><label for="f-poc">Point of Contact</label>' +
+            '<input id="f-poc" type="text" value="' + esc(e.pointOfContact||"") + '"></div>' +
+          '<div class="field"><label for="f-date-intel">Date of Intelligence</label>' +
+            '<input id="f-date-intel" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" value="' + esc(e.dateOfIntelligence||"") + '"></div>' +
+          '<div class="field"><label for="f-date-created">Date Created</label>' +
+            '<input id="f-date-created" type="text" inputmode="numeric" placeholder="DD/MM/YYYY" value="' + esc(e.dateCreated||"") + '"></div>' +
+        '</div>' +
+        '<div class="row">' +
           '<div class="field"><label for="f-threat">Threat area</label><select id="f-threat">' + threatOpts + '</select></div>' +
           '<div class="field"><label for="f-confidence">Confidence level</label><select id="f-confidence">' + confOpts + '</select></div>' +
           '<div class="field"><label for="f-marking">Protective marking</label><select id="f-marking">' + markingOpts + '</select></div>' +
+          '<div class="field"><label for="f-band">Threat band</label><select id="f-band">' + bandOpts + '</select></div>' +
         '</div>' +
       '</fieldset>' +
 
@@ -430,6 +464,10 @@
       operation: document.getElementById("f-operation").value,
       title: document.getElementById("f-title").value,
       dateOfCollection: document.getElementById("f-date").value,
+      dateOfIntelligence: (document.getElementById("f-date-intel")||{}).value || "",
+      dateCreated: (document.getElementById("f-date-created")||{}).value || "",
+      pointOfContact: (document.getElementById("f-poc")||{}).value || "",
+      threatBand: (document.getElementById("f-band")||{}).value || "",
       submittedBySelf: document.querySelector('input[name="f-self"]:checked').value === "yes",
       threatArea: document.getElementById("f-threat").value,
       confidence: document.getElementById("f-confidence").value,
@@ -533,16 +571,7 @@
       setBanner(ir.protectiveMarking);
       var h = ir.handling || {}, ss = ir.sensitiveSource || {};
       var pvd = M.coerceProvenance(ir.provenance);
-      var pvGrade = (G.isSourceEval(pvd.sourceEval) && G.isAssessment(pvd.intelEval)) ? V.itemGrade(ir, pvd) : "[ - ]";
       var items = (ir.items || []).filter(function (i) { return !i.isProvenance; });
-      var siEnts = (ir.structuredIntelligence && ir.structuredIntelligence.entities) || [];
-      var itemsHTML = items.map(function (it, i) {
-        var grade = V.itemGrade(ir, it);
-        return '<div class="item-block"><div class="ib-head"><strong>Item ' + (i + 1) + '</strong>' +
-          '<span class="ib-src">' + esc(it.sourceType) + '</span>' +
-          '<span class="grade"' + relAttr(grade) + '>' + esc(grade) + '</span></div>' +
-          '<pre class="item-text">' + highlightText(it.text, siEnts, siHighlightOn) + '</pre></div>';
-      }).join("");
       // Sensitive source as a distinct, protected block (not a plain dl row).
       var ssParts = [];
       if (ss.source) ssParts.push(['Source', ss.source]);
@@ -553,9 +582,6 @@
             return '<div class="ss-cell"><span class="ss-k">' + esc(p[0]) + '</span><span class="ss-v">' + esc(p[1]) + '</span></div>';
           }).join("") + '</div>'
         : '<p class="ss-none">None recorded.</p>';
-      function metaCell(label, value) {
-        return '<div class="meta-cell"><span class="meta-k">' + esc(label) + '</span><span class="meta-v">' + value + '</span></div>';
-      }
       var auditHTML = (ir.audit || []).slice().reverse().map(function (a) {
         return "<li>" + esc(a.ts) + " · " + esc(a.actor) + " · " + esc(a.action) + (a.detail ? " — " + esc(a.detail) : "") + "</li>";
       }).join("");
@@ -563,6 +589,26 @@
         ? esc(h.actionCode || "—") + " / " + esc(h.sanitisationCode || "—")
         : "n/a (code P)";
 
+      function fmtISOtoDMY(iso){ if(!iso) return ''; var d=new Date(iso); if(isNaN(d.getTime())) return ''; function p(n){return (n<10?'0':'')+n;} return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(); }
+      var irDateIntel = esc(ir.dateOfIntelligence || ir.dateOfCollection || '—');
+      var irDateMade  = esc(ir.dateCreated || fmtISOtoDMY(ir.createdAt) || '—');
+      var irThreatLine = esc(ir.threatArea || '—') + (ir.threatBand ? ' <span class="ir-band">Band ' + esc(ir.threatBand) + '</span>' : '');
+      var irHandLine = (h.code === 'C')
+        ? esc(h.code) + ' — ' + esc(h.instructions || 'Lawful sharing permitted with conditions') + ' <span class="ir-sub">(' + cond + ')</span>'
+        : esc(h.code || '—') + ' — Lawful sharing permitted';
+      function irHdr(k,v){ return '<div class="ir-hcell"><span class="ir-hk">'+esc(k)+'</span><span class="ir-hv">'+v+'</span></div>'; }
+      function irSiRow(k,v){ return '<div class="ir-si-row"><span class="ir-si-k">'+esc(k)+'</span><span class="ir-si-v">'+v+'</span></div>'; }
+      var irLegend = '<div class="ir-legend"><div class="ir-legend-h">Evaluation · 3×5×2</div>'
+        + '<div class="ir-legend-row"><span class="ir-legend-k">Source</span>' + G.sourceEvalCodes().map(function(k){ return '<span class="ir-lc"><b>'+esc(k)+'</b> '+esc(G.SOURCE_EVAL[k])+'</span>'; }).join('') + '</div>'
+        + '<div class="ir-legend-row"><span class="ir-legend-k">Intelligence</span>' + G.assessmentCodes().map(function(k){ return '<span class="ir-lc"><b>'+esc(k)+'</b> '+esc(G.ASSESSMENT[k])+'</span>'; }).join('') + '</div>'
+        + '<div class="ir-legend-row"><span class="ir-legend-k">Handling</span>' + G.handlingCodes().map(function(k){ return '<span class="ir-lc"><b>'+esc(k)+'</b> '+esc(G.HANDLING[k])+'</span>'; }).join('') + '</div>'
+        + '</div>';
+      var irItemsTable = items.length
+        ? '<table class="ir-items"><thead><tr><th class="c-no">Item</th><th>Report</th><th class="c-src">Source</th><th class="c-si">S</th><th class="c-si">I</th></tr></thead><tbody>'
+          + items.map(function(it,i){ return '<tr><td class="c-no">'+(i+1)+'</td><td class="c-report"><pre class="item-text">'+highlightExtract(it.text, siHighlightOn)+'</pre></td><td class="c-src">'+esc(it.sourceType)+'</td><td class="c-si">'+esc(it.sourceEval)+'</td><td class="c-si">'+esc(it.intelEval)+'</td></tr>'; }).join('')
+          + '</tbody></table>'
+        : '<p class="empty">No items.</p>';
+      var irProvTable = '<table class="ir-items ir-prov"><tbody><tr><td class="c-no">P</td><td class="c-report"><pre class="item-text">'+highlightExtract(pvd.text || '—', true)+'</pre></td><td class="c-src">Assessment</td><td class="c-si">'+esc(pvd.sourceEval||'-')+'</td><td class="c-si">'+esc(pvd.intelEval||'-')+'</td></tr></tbody></table>';
       var backLabel = cameFromResults ? (activeOp ? esc(activeOp) : "All reports") : "Overview";
       els.main.innerHTML =
         '<div class="detail page">' +
@@ -572,34 +618,35 @@
           '<span class="sep">/</span>' +
           '<button type="button" class="linklike" id="dt-home">Overview</button>' +
         '</div>' +
-        '<h1 tabindex="-1">' + esc(ir.title || "(untitled)") + '</h1>' +
-        '<div class="detail-facts">' +
-          '<span class="fact"><span class="grade">' + esc(ir.urn) + '</span></span>' +
-          (ir.operation ? '<span class="fact"><b>' + esc(ir.operation) + '</b></span>' : '') +
-          '<span class="fact"><span class="pill mk-' + esc(ir.protectiveMarking) + '">' + esc(ir.protectiveMarking) + '</span></span>' +
-          '<span class="fact">Status <b class="wf-tag"' + (' data-status="' + esc(ir.status) + '"') + '>' + esc(ir.status) + '</b></span>' +
-          '<span class="fact">' + items.length + ' item' + (items.length === 1 ? '' : 's') + '</span>' +
         '</div>' +
+        '<div class="ir-doc">' +
+          '<div class="ir-masthead"><span class="ir-org">NATIONAL CRIME AGENCY</span><span class="ir-doctype">INTELLIGENCE REPORT</span></div>' +
+          '<h1 class="ir-title" tabindex="-1">' + esc(ir.title || "(untitled)") + '</h1>' +
+          '<div class="ir-hdr">' +
+            irHdr('URN', esc(ir.urn)) +
+            irHdr('Operation', esc(ir.operation || '—')) +
+            irHdr('Date of Intelligence', irDateIntel) +
+            irHdr('Date Created', irDateMade) +
+            irHdr('Point of Contact', esc(ir.pointOfContact || '—')) +
+            irHdr('Status', '<b class="wf-tag" data-status="' + esc(ir.status) + '">' + esc(ir.status) + '</b>') +
+          '</div>' +
+          '<div class="ir-si"><div class="ir-si-h">Supporting information</div>' +
+            irSiRow('Threats', irThreatLine) +
+            irSiRow('Handling code', irHandLine) +
+            irSiRow('Confidence', esc(ir.confidence || '—')) +
+          '</div>' +
+          irLegend +
+          '<div class="items-head"><h2>Items (' + items.length + ')</h2>' +
+          '<label class="hl-toggle" title="Bold + colour the entities extracted from this report, by type"><input type="checkbox" id="hl-entities"' + (siHighlightOn ? ' checked' : '') + '> Highlight extracted entities</label></div>' +
+          irItemsTable +
+          '<h2 class="ir-prov-h">Provenance / assessment <span class="ir-notchart">not charted</span></h2>' +
+          irProvTable +
         '</div>' +
         '<aside id="overlap-panel" class="overlap-rail" aria-label="Reports sharing entities with this one"></aside>' +
-        '<div class="meta-grid">' +
-          metaCell('Date of collection', esc(ir.dateOfCollection)) +
-          metaCell('Submitter is author', (ir.submittedBySelf ? "Yes" : "No")) +
-          metaCell('Threat area', esc(ir.threatArea)) +
-          metaCell('Confidence', esc(ir.confidence)) +
-          metaCell('Handling code', esc(h.code)) +
-          metaCell('Action / sanitisation', cond) +
-        '</div>' +
-        '<div class="meta-cell meta-wide"><span class="meta-k">Handling instructions</span><span class="meta-v">' + esc(h.instructions || "—") + '</span></div>' +
         '<section class="sensitive-source" role="note" aria-label="Sensitive source — protected, handle with care">' +
           '<div class="ss-label"><span class="ss-mark" aria-hidden="true">▲</span>SENSITIVE SOURCE</div>' +
           ssBody +
         '</section>' +
-        '<div class="items-head"><h2>Items (' + items.length + ')</h2>' +
-        '<label class="hl-toggle" title="Bold + colour the entities extracted from this report, by type"><input type="checkbox" id="hl-entities"' + (siHighlightOn ? ' checked' : '') + '> Highlight extracted entities</label></div>' +
-        (itemsHTML ? '<div class="items-grid">' + itemsHTML + '</div>' : '<p class="empty">No items.</p>') +
-        '<h2>Provenance</h2>' +
-        '<div class="item-block"><div class="ib-head"><strong>Provenance</strong><span class="grade"' + relAttr(pvGrade) + '>' + esc(pvGrade) + '</span></div><pre class="item-text">' + highlightText(pvd.text || "—", siEnts, true) + '</pre></div>' +
         '<h2>Workflow</h2>' +
         '<div class="wf-status">Status: <span class="pill status" data-status="' + esc(ir.status) + '">' + esc(ir.status) + '</span>' +
           (ir.rejectionReason ? ' · <em>rejected:</em> ' + esc(ir.rejectionReason) : '') +
@@ -728,6 +775,98 @@
       }).sort(function (a, b) { return b.shared.length - a.shared.length; });
     });
   }
+  // ---- Compare: read-only report body reused across side-by-side panes ----
+  function buildReportReadHTML(ir) {
+    var h = ir.handling || {}, ss = ir.sensitiveSource || {};
+    var pvd = M.coerceProvenance(ir.provenance);
+    var pvGrade = (G.isSourceEval(pvd.sourceEval) && G.isAssessment(pvd.intelEval)) ? V.itemGrade(ir, pvd) : "[ - ]";
+    var items = (ir.items || []).filter(function (i) { return !i.isProvenance; });
+    function metaCell(label, value) { return '<div class="meta-cell"><span class="meta-k">' + esc(label) + '</span><span class="meta-v">' + value + '</span></div>'; }
+    var itemsHTML = items.map(function (it, i) {
+      var grade = V.itemGrade(ir, it);
+      return '<div class="item-block"><div class="ib-head"><strong>Item ' + (i + 1) + '</strong>' +
+        '<span class="ib-src">' + esc(it.sourceType) + '</span>' +
+        '<span class="grade"' + relAttr(grade) + '>' + esc(grade) + '</span></div>' +
+        '<pre class="item-text">' + highlightExtract(it.text, true) + '</pre></div>';
+    }).join("");
+    var ssParts = [];
+    if (ss.source) ssParts.push(['Source', ss.source]);
+    if (ss.subtype) ssParts.push(['Subtype', ss.subtype]);
+    if (ss.reference) ssParts.push(['Reference', ss.reference]);
+    var ssBody = ssParts.length
+      ? '<div class="ss-grid">' + ssParts.map(function (p) { return '<div class="ss-cell"><span class="ss-k">' + esc(p[0]) + '</span><span class="ss-v">' + esc(p[1]) + '</span></div>'; }).join("") + '</div>'
+      : '<p class="ss-none">None recorded.</p>';
+    return '<div class="detail-facts">' +
+        '<span class="fact"><span class="grade">' + esc(ir.urn) + '</span></span>' +
+        (ir.operation ? '<span class="fact"><b>' + esc(ir.operation) + '</b></span>' : '') +
+        '<span class="fact"><span class="pill mk-' + esc(ir.protectiveMarking) + '">' + esc(ir.protectiveMarking) + '</span></span>' +
+        '<span class="fact">Status <b class="wf-tag" data-status="' + esc(ir.status) + '">' + esc(ir.status) + '</b></span>' +
+      '</div>' +
+      '<div class="meta-grid">' +
+        metaCell('Date of collection', esc(ir.dateOfCollection)) +
+        metaCell('Threat area', esc(ir.threatArea)) +
+        metaCell('Confidence', esc(ir.confidence)) +
+        metaCell('Handling code', esc(h.code)) +
+      '</div>' +
+      '<section class="sensitive-source" role="note" aria-label="Sensitive source"><div class="ss-label"><span class="ss-mark" aria-hidden="true">\u25b2</span>SENSITIVE SOURCE</div>' + ssBody + '</section>' +
+      '<div class="items-head"><h2>Items (' + items.length + ')</h2></div>' +
+      (itemsHTML ? '<div class="items-grid">' + itemsHTML + '</div>' : '<p class="empty">No items.</p>') +
+      '<h2>Provenance</h2>' +
+      '<div class="item-block"><div class="ib-head"><strong>Provenance</strong><span class="grade"' + relAttr(pvGrade) + '>' + esc(pvGrade) + '</span></div><pre class="item-text">' + highlightExtract(pvd.text || "\u2014", true) + '</pre></div>';
+  }
+
+  function showCompare(urns) {
+    urns = (urns || []).filter(Boolean).filter(function (u, i, a) { return a.indexOf(u) === i; }).slice(0, 3);
+    compareUrns = urns;
+    if (!urns.length) { showHome(); return; }
+    view = "compare";
+    Promise.all(urns.map(function (u) { return repo.get(u); })).then(function (irs) {
+      irs = irs.filter(Boolean);
+      compareUrns = irs.map(function (r) { return r.urn; });
+      var n = irs.length;
+      setBanner(highestMarking(irs.map(function (r) { return r.protectiveMarking; })));
+      var panes = irs.map(function (ir) {
+        return '<section class="compare-pane" data-urn="' + esc(ir.urn) + '" style="--ta:' + esc(T.colour(ir.threatArea)) + '">' +
+          '<header class="cp-head"><div class="cp-title">' +
+            '<span class="cp-op">' + esc(ir.operation || "") + '</span> <span class="cp-urn">' + esc(ir.urn) + '</span>' +
+            '<button type="button" class="cp-open linklike" data-urn="' + esc(ir.urn) + '" title="Open full report">open \u2197</button>' +
+            (n > 1 ? '<button type="button" class="cp-close" data-urn="' + esc(ir.urn) + '" title="Remove from comparison" aria-label="Remove report">\u00d7</button>' : '') +
+          '</div><h2 class="cp-h">' + esc(ir.title || "(untitled)") + '</h2></header>' +
+          '<div class="cp-body">' + buildReportReadHTML(ir) + '</div>' +
+        '</section>';
+      }).join("");
+      var addCtl = n < 3 ? '<div class="compare-add"><label>Add a report to compare <select id="cmp-add"><option value="">\u2014 choose \u2014</option></select></label></div>' : '';
+      els.main.innerHTML = '<div class="detail page compare">' +
+        '<div class="detail-head"><div class="crumbs">' +
+          '<button type="button" class="linklike" id="cmp-back">\u2190 Back</button>' +
+          '<span class="sep">/</span><span>Compare</span>' +
+        '</div><h1 tabindex="-1">Comparing ' + n + ' report' + (n === 1 ? '' : 's') + '</h1></div>' +
+        '<div class="compare-wrap cols-' + n + '">' + panes + '</div>' + addCtl +
+        '</div>';
+      focusView();
+      if (n < 3) {
+        allRows().then(function (all) {
+          var sel = document.getElementById("cmp-add"); if (!sel) return;
+          all.filter(function (r) { return compareUrns.indexOf(r.urn) === -1; })
+             .sort(function (a, b) { return (a.operation || "").localeCompare(b.operation || "") || String(a.urn).localeCompare(String(b.urn)); })
+             .forEach(function (r) { var o = document.createElement("option"); o.value = r.urn; o.textContent = (r.operation ? r.operation + " \u00b7 " : "") + r.urn + " \u2014 " + (r.title || ""); sel.appendChild(o); });
+          sel.addEventListener("change", function () { if (sel.value) showCompare(compareUrns.concat([sel.value])); });
+        });
+      }
+      Array.prototype.forEach.call(els.main.querySelectorAll(".cp-close"), function (b) {
+        b.addEventListener("click", function () {
+          var rest = compareUrns.filter(function (u) { return u !== b.getAttribute("data-urn"); });
+          if (rest.length <= 1) showDetail(rest[0] || b.getAttribute("data-urn")); else showCompare(rest);
+        });
+      });
+      Array.prototype.forEach.call(els.main.querySelectorAll(".cp-open"), function (b) {
+        b.addEventListener("click", function () { showDetail(b.getAttribute("data-urn")); });
+      });
+      var bk = document.getElementById("cmp-back");
+      if (bk) bk.addEventListener("click", function () { if (compareUrns[0]) showDetail(compareUrns[0]); else showHome(); });
+    });
+  }
+
   function renderOverlaps(ir) {
     var panel = document.getElementById("overlap-panel"); if (!panel) return;
     panel.innerHTML = '<h3>Also appears in</h3><p class="ov-none">Checking the database\u2026</p>';
@@ -737,13 +876,18 @@
       list.forEach(function (o) {
         var labels = o.shared.map(function (x) { return x.label; }).join(", ");
         var rules = {}; o.shared.forEach(function (x) { x.rules.forEach(function (r) { rules[r] = true; }); });
-        html += '<button type="button" class="ov-report" data-urn="' + esc(o.urn) + '" title="Matched on: ' + esc(Object.keys(rules).join(", ")) + '">' +
+        html += '<div class="ov-report" title="Matched on: ' + esc(Object.keys(rules).join(", ")) + '">' +
+          '<button type="button" class="ov-open" data-urn="' + esc(o.urn) + '">' +
           '<span class="ov-op">' + esc(o.op || "\u2014") + '</span> <span class="ov-urn">' + esc(o.urn) + '</span>' +
-          '<span class="ov-shared">shares: ' + esc(labels) + '</span></button>';
+          '<span class="ov-shared">shares: ' + esc(labels) + '</span></button>' +
+          '<button type="button" class="ov-compare" data-urn="' + esc(o.urn) + '" title="Compare side by side">⇔ Compare</button></div>';
       });
       panel.innerHTML = html;
-      Array.prototype.forEach.call(panel.querySelectorAll(".ov-report"), function (b) {
+      Array.prototype.forEach.call(panel.querySelectorAll(".ov-open"), function (b) {
         b.addEventListener("click", function () { showDetail(b.getAttribute("data-urn")); });
+      });
+      Array.prototype.forEach.call(panel.querySelectorAll(".ov-compare"), function (b) {
+        b.addEventListener("click", function () { showCompare([ir.urn, b.getAttribute("data-urn")]); });
       });
     }, function () { panel.innerHTML = ''; });
   }
@@ -1069,13 +1213,26 @@
     var counts = {}; all.forEach(function (ir) { if (ir.operation) counts[ir.operation] = (counts[ir.operation] || 0) + 1; });
     var names = O.names().slice().sort();
     var shown = q ? names.filter(function (nm) { return nm.toLowerCase().indexOf(q) !== -1 || String(O.threatOf(nm)).toLowerCase().indexOf(q) !== -1; }) : names;
-    var cards = shown.map(function (nm) {
+    function opCard(nm) {
       var c = counts[nm] || 0;
       return '<button type="button" class="op-card" data-op="' + esc(nm) + '">' +
         '<span class="oc-name">' + esc(nm) + '</span>' +
         '<span class="oc-threat">' + esc(O.threatOf(nm)) + '</span>' +
         '<span class="oc-count">' + c + ' report' + (c === 1 ? "" : "s") + '</span></button>';
-    }).join("");
+    }
+    var _groups = T.list().map(function (ta) {
+      var opsIn = O.list().filter(function (o) { return o.threatArea === ta; }).map(function (o) { return o.name; }).sort();
+      if (q) opsIn = opsIn.filter(function (nm) { return nm.toLowerCase().indexOf(q) !== -1 || String(ta).toLowerCase().indexOf(q) !== -1; });
+      return { ta: ta, ops: opsIn };
+    }).filter(function (g) { return g.ops.length; });
+    var groupsHTML = _groups.map(function (g) {
+      var repTotal = g.ops.reduce(function (s, nm) { return s + (counts[nm] || 0); }, 0);
+      return '<details class="ta-group"' + (q ? ' open' : '') + ' data-ta="' + esc(g.ta) + '" style="--ta:' + esc(T.colour(g.ta)) + '">' +
+        '<summary class="ta-head"><span class="ta-swatch" aria-hidden="true"></span>' +
+          '<span class="ta-name">' + esc(g.ta) + '</span>' +
+          '<span class="ta-meta">' + g.ops.length + ' op' + (g.ops.length === 1 ? '' : 's') + ' · ' + repTotal + ' report' + (repTotal === 1 ? '' : 's') + '</span></summary>' +
+        '<div class="op-grid">' + g.ops.map(opCard).join('') + '</div></details>';
+    }).join('');
     els.main.innerHTML = '<div class="detail home">' +
       '<h1 tabindex="-1">Operations' + (q ? ' \u00b7 matching \u201c' + esc(q) + '\u201d' : '') + '</h1>' +
       '<div class="toolbar">' +
@@ -1084,7 +1241,7 @@
         '<button type="button" class="btn secondary" id="home-export">Export authorised &rarr; SOLAR case</button> ' +
         '<button type="button" class="btn secondary" id="home-reload">Reload demo</button> ' +
         '<button type="button" class="btn danger" id="home-clear">Clear all reports</button></div>' +
-      '<div class="op-grid">' + (cards || '<p class="empty">No operations match.</p>') + '</div>' +
+      '<div class="ta-groups">' + (groupsHTML || '<p class="empty">No operations match.</p>') + '</div>' +
       '</div>';
     els.main.querySelectorAll(".op-card").forEach(function (c) { c.addEventListener("click", function () { selectOp(c.getAttribute("data-op")); }); });
     var hn = document.getElementById("home-new"); if (hn) hn.addEventListener("click", function () { showForm(null); });
@@ -1206,7 +1363,7 @@
     if (!window.RegistryDemo) { showWelcome(); return refreshList(); }
     var ds; try { ds = window.RegistryDemo.buildDemoDataset(); } catch (e) { showWelcome(); return refreshList(); }
     setStatus("Loading demo dataset…");
-    els.main.innerHTML = '<div class="loading-state"><span class="dot"></span>Loading the demo dataset (480 reports)…</div>';
+    els.main.innerHTML = '<div class="loading-state"><span class="dot"></span>Loading the demo dataset (' + (window.RegistryDemo.OPERATION_COUNT * window.RegistryDemo.REPORTS_PER_OP) + ' reports)…</div>';
     return repo.clear()
       .then(function () { return ds.reduce(function (p, ir) { return p.then(function () { return repo.save(N.normaliseIR(ir)); }); }, Promise.resolve()); })
       .then(function () { dataCache = null; markSeed(); return showHome(); })
@@ -1223,7 +1380,7 @@
   }
   function loadDemo() {
     if (!window.RegistryDemo) { setStatus("Demo module not loaded.", "err"); return; }
-    if (!window.confirm("Load the demo dataset (24 operations × 20 reports = 480)? This REPLACES everything currently in the store.")) return;
+    if (!window.confirm("Load the demo dataset (" + window.RegistryDemo.OPERATION_COUNT + " operations × " + window.RegistryDemo.REPORTS_PER_OP + " reports = " + (window.RegistryDemo.OPERATION_COUNT * window.RegistryDemo.REPORTS_PER_OP) + ")? This REPLACES everything currently in the store.")) return;
     var ds;
     try { ds = window.RegistryDemo.buildDemoDataset(); }
     catch (e) { setStatus("Demo build failed: " + (e && e.message), "err"); return; }
