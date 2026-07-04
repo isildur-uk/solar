@@ -87,7 +87,7 @@ input[type="text"], input[type="search"], textarea,
    ============================================================ */
 
 /* lock the accent to lime (defend against any runtime override) */
-:root { --accent: #ebfc72 !important; --accent-dim: #bacd31 !important; }
+/* accent now themed in app.css :root + [data-theme=light] */
 
 /* buttons mimic the hero ENTER exactly: glass body + bevelled rim + lime breath */
 .btn {
@@ -115,7 +115,7 @@ input[type="text"], input[type="search"], textarea,
 }
 .btn:hover {
   color: var(--accent); border-color: var(--accent-dim);
-  background: rgba(235, 252, 114, 0.08);
+  background: rgba(142, 162, 255, 0.08);
   transform: translateY(-1px);
   box-shadow:
     0 4px 12px rgba(0,0,0,0.22),
@@ -126,7 +126,7 @@ input[type="text"], input[type="search"], textarea,
     0 0 20px -6px var(--accent);
 }
 .btn:active { transform: translateY(0) scale(0.99); }
-.btn.primary { color: var(--accent); border-color: rgba(235,252,114,0.42); background: rgba(235,252,114,0.07); }
+.btn.primary { color: var(--accent); border-color: rgba(142,162,255,0.42); background: rgba(142,162,255,0.07); }
 .btn.danger:hover { color: var(--bad); border-color: var(--bad); box-shadow: 0 4px 12px rgba(0,0,0,0.22), 0 0 20px -6px var(--bad); }
 .btn:disabled { opacity: 0.4; }
 
@@ -141,7 +141,7 @@ details.menu > summary::-webkit-details-marker { display: none; }
 details.menu[open] > summary {
   border-color: var(--accent-dim);
   color: var(--accent);
-  background: rgba(235, 252, 114, 0.07);
+  background: rgba(142, 162, 255, 0.07);
 }
 .menu-pop {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 60;
@@ -162,7 +162,7 @@ details.menu[open] > summary {
   padding: 7px 10px;
 }
 .menu-pop .btn::before, #ct-pop .btn::before { display: none; }
-.menu-pop .btn:hover, #ct-pop .btn:hover { background: rgba(235, 252, 114, 0.08); border-color: transparent; box-shadow: none; transform: none; color: var(--accent); }
+.menu-pop .btn:hover, #ct-pop .btn:hover { background: rgba(142, 162, 255, 0.08); border-color: transparent; box-shadow: none; transform: none; color: var(--accent); }
 .menu-pop .btn.danger:hover, #ct-pop .btn.danger:hover { background: rgba(217, 128, 128, 0.10); color: var(--bad); }
 
 /* chart-tools: single glass dropdown to match the toolbar menus */
@@ -172,13 +172,13 @@ details.menu[open] > summary {
   border: 1px solid var(--line); border-radius: var(--radius);
   box-shadow: var(--shadow-2); padding: 6px; gap: 3px;
 }
-#ct-toggle[aria-expanded="true"] { color: var(--accent); border-color: var(--accent-dim); background: rgba(235,252,114,0.08); }
+#ct-toggle[aria-expanded="true"] { color: var(--accent); border-color: var(--accent-dim); background: rgba(142,162,255,0.08); }
 
 /* bigger inspector — shrink the map pane */
 #map-pane { flex: 0 0 34%; }
 
 /* retired controls — hide defensively if any markup lingers */
-#bloom-root, #class-banner, #btn-more, #more-drawer { display: none !important; }
+#bloom-root, #btn-more, #more-drawer { display: none !important; }
 
 /* ============================================================
    MOBILE FIX — let the dropdown menus escape the scrollable toolbar.
@@ -239,3 +239,119 @@ details.menu[open] > summary {
 /* Tools menu: single column to match the other menus, with a view|analysis divider */
 #ct-pop.open { display: flex; flex-direction: column; gap: 3px; }
 .ct-sep, .menu-sep { height: 1px; margin: 4px 6px; background: var(--line); border: 0; flex: 0 0 auto; }
+
+/* ============================================================
+   Toolbar buttons — refined liquid glass (supersedes the earlier
+   heavy-bevel version above). Clean specular sheen + soft bevel +
+   lime states; readable on the dark console. Appended = wins on
+   source order; .menu-pop items stay flat via higher specificity.
+   ============================================================ */
+.btn, details.menu > summary {
+  position: relative; isolation: isolate; overflow: hidden;
+  border-radius: 9px;
+  border: 1px solid rgba(244,243,232,0.16);
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.55);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.018) 46%, rgba(0,0,0,0.12) 100%),
+    rgba(28,29,25,0.66);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+  backdrop-filter: blur(10px) saturate(1.15);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),      /* crisp top specular seat */
+    inset 0 -1px 0 rgba(0,0,0,0.28),           /* under-shade */
+    0 2px 6px rgba(0,0,0,0.38);                /* ambient lift */
+  transition: color .18s ease, border-color .18s ease, background-color .18s ease, box-shadow .2s ease, transform .16s ease;
+}
+/* wet-glass sheen across the top — sits above the fill, below the label */
+.btn::before, details.menu > summary::before {
+  content: ""; position: absolute; left: 1px; right: 1px; top: 1px; height: 46%;
+  z-index: -1; pointer-events: none;
+  border-radius: 8px 8px 42%/8px 8px 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0) 100%);
+}
+.btn:hover, details.menu > summary:hover {
+  color: var(--accent); border-color: var(--accent-dim);
+  transform: translateY(-1px);
+  background:
+    linear-gradient(180deg, rgba(142,162,255,0.16) 0%, rgba(142,162,255,0.03) 48%, rgba(0,0,0,0.10) 100%),
+    rgba(33,35,22,0.68);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.26),
+    0 5px 14px rgba(0,0,0,0.42),
+    0 0 18px -8px var(--accent);
+}
+.btn:active, details.menu > summary:active {
+  transform: translateY(0) scale(0.985);
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.3);
+}
+.btn:focus-visible, details.menu > summary:focus-visible {
+  outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--accent), inset 0 1px 0 rgba(255,255,255,0.16);
+}
+/* ADD / primary — brighter lime glass so it leads the row without shouting */
+.btn.primary, details.menu.primary > summary {
+  color: var(--accent); border-color: rgba(142,162,255,0.55);
+  background:
+    linear-gradient(180deg, rgba(142,162,255,0.22) 0%, rgba(142,162,255,0.05) 50%, rgba(0,0,0,0.08) 100%),
+    rgba(34,36,22,0.62);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+.btn.primary::before, details.menu.primary > summary::before {
+  background: linear-gradient(180deg, rgba(142,162,255,0.34), rgba(255,255,255,0) 100%);
+}
+.btn.primary:hover, details.menu.primary > summary:hover {
+  color: var(--accent); border-color: var(--accent);
+  background:
+    linear-gradient(180deg, rgba(142,162,255,0.30) 0%, rgba(142,162,255,0.08) 52%, rgba(0,0,0,0.08) 100%),
+    rgba(38,40,24,0.66);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    0 5px 14px rgba(0,0,0,0.42),
+    0 0 22px -6px var(--accent);
+}
+/* the open dropdown trigger reads as an active lime-glass tab */
+details.menu[open] > summary {
+  color: var(--accent); border-color: var(--accent-dim);
+  background:
+    linear-gradient(180deg, rgba(142,162,255,0.20) 0%, rgba(142,162,255,0.05) 50%, rgba(0,0,0,0.10) 100%),
+    rgba(33,35,22,0.7);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.26), 0 0 16px -8px var(--accent);
+}
+.btn.danger:hover {
+  color: var(--bad); border-color: var(--bad);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 5px 14px rgba(0,0,0,0.4), 0 0 20px -7px var(--bad);
+}
+.btn:disabled { opacity: 0.42; }
+
+/* ============================================================
+   V2 liquid-glass buttons — theme-driven fill + grain + per-button
+   cursor spotlight (--mx/--my set by js/ui/theme.js). Supersedes the
+   earlier block via source order. Dropdown items stay flat.
+   ============================================================ */
+.btn, details.menu > summary{
+  position:relative; isolation:isolate; overflow:hidden; border-radius:9px;
+  border:1px solid var(--glass-border); color:var(--btn-text);
+  text-shadow:0 1px 2px rgba(0,0,0,0.38);
+  background:var(--glass-fill);
+  -webkit-backdrop-filter:blur(12px) saturate(1.2); backdrop-filter:blur(12px) saturate(1.2);
+  box-shadow:var(--glass-shadow); --mx:50%; --my:0%;
+  transition:color .18s ease, border-color .18s ease, transform .16s ease, box-shadow .2s ease;
+}
+html[data-theme="light"] .btn, html[data-theme="light"] details.menu>summary{ text-shadow:0 1px 0 rgba(255,255,255,0.5) }
+.btn::before, details.menu>summary::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; border-radius:inherit;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:120px; opacity:var(--grain-opacity); mix-blend-mode:var(--grain-blend) }
+.btn::after, details.menu>summary::after{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; border-radius:inherit; opacity:0; transition:opacity .2s ease; background:var(--spec) }
+.btn:hover::after, details.menu>summary:hover::after{ opacity:1 }
+.btn:hover, details.menu>summary:hover{ color:var(--accent); border-color:var(--accent-dim); transform:translateY(-1px); box-shadow:var(--glass-shadow), 0 0 20px -8px var(--accent) }
+.btn:active, details.menu>summary:active{ transform:translateY(0) scale(0.985) }
+.btn:focus-visible, details.menu>summary:focus-visible{ outline:none; box-shadow:0 0 0 2px var(--bg), 0 0 0 3px var(--accent) }
+.btn.primary, details.menu.primary>summary{ color:var(--primary-text); border-color:color-mix(in srgb,var(--accent) 60%,transparent); background:var(--primary-fill) }
+.btn.primary::after, details.menu.primary>summary::after{ background:var(--primary-spec) }
+.btn.primary:hover, details.menu.primary>summary:hover{ color:var(--primary-text); border-color:var(--accent) }
+details.menu[open]>summary{ color:var(--accent); border-color:var(--accent-dim); background:var(--primary-fill) }
+.btn.danger:hover{ color:var(--bad); border-color:var(--bad); box-shadow:var(--glass-shadow), 0 0 20px -8px var(--bad) }
+.btn:disabled{ opacity:0.42 }
+.menu-pop .btn::after, #ct-pop .btn::after{ display:none }
+.menu-pop .btn::before, #ct-pop .btn::before{ display:none }

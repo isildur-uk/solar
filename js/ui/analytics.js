@@ -1,6 +1,6 @@
 /* SOLAR — analytics.js (UI)
  * Case Analytics view. Hand-rolled SVG (no chart library) applying NYT/Upshot
- * discipline in SOLAR's dark palette: one hero accent (amber) with the rest in
+ * discipline in SOLAR's dark palette: one hero accent (lime) with the rest in
  * grey, tabular figures, bars sorted descending from zero, direct value labels
  * (no legends), a declarative headline + subtitle + source per panel, the time
  * series annotated in-place at its peak, and crucial info visible without hover
@@ -15,7 +15,7 @@
   function status(m) { if (window.CRApp && window.CRApp.status) window.CRApp.status(m); }
 
   // dark-theme tokens (mirror tokens.css)
-  var HERO = "#e8b34b", INK = "#c9d4e0", MUTED = "#76879b", GRID = "#22303f", FAINT = "#56657a";
+  var HERO = "#8ea2ff", INK = "#c9d4e0", MUTED = "#76879b", GRID = "#22303f", FAINT = "#56657a";
   var NUMF = "'Geist Mono','Consolas',monospace";
   var LBLF = "'Inter','Segoe UI',sans-serif";
 

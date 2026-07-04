@@ -137,12 +137,12 @@
       mapHandler = function (e) {
         if (!measureMode) return;
         var ov = window.CRMapPane.getOverlay();
-        L.circleMarker(e.latlng, { radius: 4, color: "#e8b34b", weight: 2, fillColor: "#0f1620", fillOpacity: 1 }).addTo(ov);
+        L.circleMarker(e.latlng, { radius: 4, color: "#8ea2ff", weight: 2, fillColor: "#0f1620", fillOpacity: 1 }).addTo(ov);
         if (!measureA) { measureA = e.latlng; return; }
         var b = e.latlng;
         var km = N().haversineKm(measureA.lat, measureA.lng, b.lat, b.lng);
         var brg = N().bearingDeg(measureA.lat, measureA.lng, b.lat, b.lng);
-        L.polyline([measureA, b], { color: "#e8b34b", weight: 2, dashArray: "5,5" }).addTo(ov);
+        L.polyline([measureA, b], { color: "#8ea2ff", weight: 2, dashArray: "5,5" }).addTo(ov);
         var mid = L.latLng((measureA.lat + b.lat) / 2, (measureA.lng + b.lng) / 2);
         L.popup({ closeButton: false, autoClose: false })
           .setLatLng(mid)
@@ -172,7 +172,7 @@
     if (!(km > 0)) { status("Enter a positive radius"); return; }
     window.CRMapPane.clearOverlay();
     var ov = window.CRMapPane.getOverlay();
-    L.circle(centre, { radius: km * 1000, color: "#e8b34b", weight: 1.5, fillColor: "#e8b34b", fillOpacity: 0.06 }).addTo(ov);
+    L.circle(centre, { radius: km * 1000, color: "#8ea2ff", weight: 1.5, fillColor: "#8ea2ff", fillOpacity: 0.06 }).addTo(ov);
     var hits = N().entitiesWithin(s, centre[0], centre[1], km);
     if (window.CRGraph && window.CRGraph.highlight) window.CRGraph.highlight(hits.length ? hits.map(function (h) { return h.id; }) : null);
     map.setView(centre, map.getZoom());

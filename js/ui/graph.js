@@ -43,7 +43,7 @@
   var hlSet = null;               // null = no highlight; {} = dim everything;
                                   // {id:1,...} = keep these bright, dim the rest
 
-  var LINK_PALETTE = ["#6ea8d8", "#7fc97f", "#d87f9b", "#c9c36a", "#8f9ac4", "#d8a06a", "#5fc4c0", "#d86a6a", "#8d99ae", "#ebfc72"];
+  var LINK_PALETTE = ["#6ea8d8", "#7fc97f", "#d87f9b", "#c9c36a", "#8f9ac4", "#d8a06a", "#5fc4c0", "#d86a6a", "#8d99ae", "#8ea2ff"];
   function paletteFor(key) {
     var h = 0;
     var s = String(key || "");
@@ -145,7 +145,7 @@
       color: {
         background: "#131c28",
         border: T.colour,
-        highlight: { background: "#1d2a3a", border: "#ebfc72" }
+        highlight: { background: "#1d2a3a", border: "#8ea2ff" }
       },
       borderWidth: 2,
       borderWidthSelected: 3,
@@ -256,7 +256,7 @@
       return {
         dashes: [1, 4], width: 0.5, hidden: linkHidden(l) || geoHidden,
         shadow: false, smooth: { type: "continuous" },
-        color: { color: "rgba(95,196,192,0.18)", highlight: "#ebfc72", hover: "#9bb1c9" },
+        color: { color: "rgba(95,196,192,0.18)", highlight: "#8ea2ff", hover: "#9bb1c9" },
         font: { color: "rgba(0,0,0,0)", size: 0 }
       };
     }
@@ -267,7 +267,7 @@
         width: 1,
         hidden: linkHidden(l),
         shadow: false,
-        color: { color: "rgba(61,77,97,0.16)", highlight: "#ebfc72", hover: "#9bb1c9" },
+        color: { color: "rgba(61,77,97,0.16)", highlight: "#8ea2ff", hover: "#9bb1c9" },
         font: { color: "rgba(125,138,153,0.15)", size: 9, face: "Consolas", strokeWidth: 0, align: "middle" },
         smooth: { type: "continuous" }
       };
@@ -279,7 +279,7 @@
       selectionWidth: 1.6,
       hidden: linkHidden(l),
       shadow: { enabled: l.confidence === "high" && colorMode === "confidence", color: "rgba(232,179,75,0.18)", size: 8, x: 0, y: 0 },
-      color: { color: edgeColour(l), highlight: "#ebfc72", hover: "#9bb1c9" },
+      color: { color: edgeColour(l), highlight: "#8ea2ff", hover: "#9bb1c9" },
       font: { color: "#7d8a99", size: 9, face: "Consolas", strokeWidth: 4, strokeColor: "#0b1017", align: "middle" },
       smooth: { type: "continuous" }
     };
@@ -338,7 +338,7 @@
       fixed: false,                            // physics excluded via mass below
       physics: false,                          // corners stay where put
       hidden: hidden,
-      color: { background: "#3d4d61", border: "#5a6878", highlight: { background: "#ebfc72", border: "#ebfc72" } },
+      color: { background: "#3d4d61", border: "#5a6878", highlight: { background: "#8ea2ff", border: "#8ea2ff" } },
       borderWidth: 1,
       shadow: false,
       font: { size: 1, color: "rgba(0,0,0,0)" },
@@ -668,7 +668,7 @@
       try {
         edges.update(live.map(function (id) {
           return { id: id, width: w,
-            color: { color: "#ebfc72", highlight: "#ebfc72", hover: "#ebfc72" },
+            color: { color: "#8ea2ff", highlight: "#8ea2ff", hover: "#8ea2ff" },
             shadow: { enabled: true, color: "rgba(232,179,75,0.6)", size: glow, x: 0, y: 0 } };
         }));
       } catch (e) { /* edge gone */ }
@@ -720,7 +720,7 @@
     ctx.fillStyle = "#0b1017";
     ctx.fillRect(0, 0, out.width, out.height);
     ctx.drawImage(canvas, 0, 28);
-    ctx.fillStyle = "#ebfc72";
+    ctx.fillStyle = "#8ea2ff";
     ctx.font = "600 13px Consolas, monospace";
     ctx.textAlign = "center";
     var banner = (store.meta.classification || "OFFICIAL");

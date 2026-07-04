@@ -14,7 +14,9 @@
     cyber:            { label:"Cyber",             pole:"O", pndShareDefault:true,  createsMaster:true },
     firearm:          { label:"Firearm",           pole:"O", pndShareDefault:false, createsMaster:true },
     official_document:{ label:"Official Document",  pole:"O", pndShareDefault:false, createsMaster:true },
-    location:         { label:"Location",          pole:"L", pndShareDefault:true,  createsMaster:true }
+    location:         { label:"Location",          pole:"L", pndShareDefault:true,  createsMaster:true },
+    drug:             { label:"Drugs",             pole:"O", pndShareDefault:false, createsMaster:true },
+    cash:             { label:"Cash",              pole:"O", pndShareDefault:false, createsMaster:true }
   };
 
   var ROLES = {

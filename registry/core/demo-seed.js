@@ -56,7 +56,7 @@
   var POCS=["Crawley","Gloucester","Calder","Nuncio-Crawley","Nuncio-Glos","Bedford","Hendon","Solent","Mercia","Fenland","Wyvern","Calder"];
   function pocFor(uid){ return POCS[uid%POCS.length]+(1+uid%9); }                 // desk handle, e.g. Crawley4
   function pocDate(opIndex,r){ var d=parseDMY(dateFor(opIndex,r)); return fmtDMY(shiftDays(d,1+((opIndex*100+r)%2))); } // created 1-2 days after intel
-  function bandFor(key,uid){ var serious=(key==="CSE"||key==="MODSL"||key==="OIC"||key==="Drugs"||key==="Firearms"); return serious?1:(1+(uid%2)); }
+  function bandFor(key,uid){ var serious=(key==="ENV"||key==="MODSL"||key==="OIC"||key==="Drugs"||key==="Firearms"); return serious?1:(1+(uid%2)); }
 
   var VLET="ABCDEFGHJKLMNOPRSTUVWXYZ";
   // CM data standard: VRM caps, NO space (IM01 SD01 v6 "In Free Text (CM)" — e.g. VRM LD12ABC).
@@ -118,13 +118,13 @@
   };
 
   function threatKey(t){
-    if(/^CSE/.test(t))return"CSE"; if(/^MODSL/.test(t))return"MODSL"; if(/^OIC/.test(t))return"OIC";
+    if(/^ENV/.test(t))return"ENV"; if(/^MODSL/.test(t))return"MODSL"; if(/^OIC/.test(t))return"OIC";
     if(/^Drugs/.test(t))return"Drugs"; if(/^Firearms/.test(t))return"Firearms"; if(/^EConC/.test(t))return"EConC";
     if(/^BC/.test(t))return"BC"; if(/^Fraud/.test(t))return"Fraud"; if(/^Cyber/.test(t))return"Cyber";
     if(/^OAT/.test(t))return"OAT"; if(/technology/.test(t))return"XTECH"; return"XBORDER";
   }
   var TOPICS={
-    CSE:["sharing of indecent imagery in a closed group","online grooming of a minor","administration of an abuse-image forum","livestreamed abuse facilitation","possession of category-A material","coercion of a victim via social media","sextortion of a minor","payment for abuse content","contact offending against a known victim","distribution via an encrypted channel","recruitment of victims online","travel arranged to offend"],
+    ENV:["illegal disposal of controlled waste","operating a site without an environmental permit","fly-tipping of commercial waste","falsification of waste transfer notes","illegal export of hazardous waste","discharge of pollutants into a watercourse","unlicensed scrap-metal dealing","breach of a waste carrier licence","illegal abstraction of water","operating an unlicensed waste site","mislabelling of hazardous materials","evasion of landfill tax"],
     MODSL:["control of victims for labour exploitation","debt bondage at a cash business","transport of victims between addresses","withholding of identity documents","forced criminal exploitation","sexual exploitation of trafficked persons","recruitment of victims overseas","wage withholding and threats","housing of victims in poor conditions","movement of victims through a port","coordination of exploitation by phone","laundering of exploitation proceeds"],
     OIC:["facilitation of small-boat crossings","supply of fraudulent travel documents","operation of a migrant safe house","lorry-borne clandestine entry","sham marriage facilitation","harbouring of overstayers","collection of facilitation fees","forged visa endorsements","movement of migrants inland","corrupt insider at a port","onward transport network","use of a haulage front company"],
     Drugs:["onward supply of Class A drugs","operation of a county line","importation concealed in freight","cash collection runs","coordination via an encrypted handset","adulteration and bulking of product","storage of drugs at an address","wholesale cocaine supply","cannabis cultivation at a premises","money collection for a supply chain","cross-border courier activity","violence protecting a supply line"],
@@ -137,10 +137,10 @@
     XTECH:["use of encrypted handsets to coordinate offending","criminal use of bespoke comms devices","operation of an encrypted-network node","anonymisation to evade detection","use of dead-drop email accounts","custom app for criminal coordination","SIM-farm operation","anti-attribution tooling","use of privacy coins","secure-device reselling","tooling to defeat lawful interception","coordination via gaming platforms"],
     XBORDER:["exploitation of a freight route","insider facilitation at a port","concealment within containerised cargo","abuse of trusted-trader status","corrupt clearance of consignments","use of a haulage front","misdeclaration of goods","small-craft coastal landings","general-aviation exploitation","postal/parcel route abuse","diversion of in-transit goods","tampering with seals or manifests"]
   };
-  var THEME={ CSE:"child sexual exploitation", MODSL:"modern slavery and labour exploitation", OIC:"organised immigration crime", Drugs:"the supply of controlled drugs", Firearms:"the supply and conversion of firearms", EConC:"money laundering", BC:"bribery, corruption and sanctions evasion", Fraud:"fraud offending", Cyber:"cyber-dependent offending", OAT:"organised acquisitive crime", XTECH:"the criminal use of technology", XBORDER:"exploitation of the UK border" };
-  var PREVOFFENCE={ CSE:"sexual offences", MODSL:"human trafficking", OIC:"assisting unlawful immigration", Drugs:"the supply of controlled drugs", Firearms:"firearms offences", EConC:"money laundering", BC:"fraud", Fraud:"fraud", Cyber:"computer misuse", OAT:"theft and handling stolen goods", XTECH:"fraud", XBORDER:"the improper importation of goods" };
+  var THEME={ ENV:"environmental crime", MODSL:"modern slavery and labour exploitation", OIC:"organised immigration crime", Drugs:"the supply of controlled drugs", Firearms:"the supply and conversion of firearms", EConC:"money laundering", BC:"bribery, corruption and sanctions evasion", Fraud:"fraud offending", Cyber:"cyber-dependent offending", OAT:"organised acquisitive crime", XTECH:"the criminal use of technology", XBORDER:"exploitation of the UK border" };
+  var PREVOFFENCE={ ENV:"environmental offences", MODSL:"human trafficking", OIC:"assisting unlawful immigration", Drugs:"the supply of controlled drugs", Firearms:"firearms offences", EConC:"money laundering", BC:"fraud", Fraud:"fraud", Cyber:"computer misuse", OAT:"theft and handling stolen goods", XTECH:"fraud", XBORDER:"the improper importation of goods" };
   // PNC warning markers (ATLAS/PNC "Warning Signals" — IM01 SD01 v6) the record actually carries.
-  var WARNMARK={ CSE:"VISOR", MODSL:"VIOLENT", OIC:"ALLEGES", Drugs:"DRUGS", Firearms:"FIREARMS", EConC:"", BC:"", Fraud:"ALLEGES", Cyber:"", OAT:"VIOLENT", XTECH:"", XBORDER:"" };
+  var WARNMARK={ ENV:"", MODSL:"VIOLENT", OIC:"ALLEGES", Drugs:"DRUGS", Firearms:"FIREARMS", EConC:"", BC:"", Fraud:"ALLEGES", Cyber:"", OAT:"VIOLENT", XTECH:"", XBORDER:"" };
 
   var COLOURS=["Black","Silver","White","Blue","Grey","Red"];
   // valid-format UK postcode in a real area district (1..maxD), incode digit+letters
@@ -151,7 +151,7 @@
     function veh(prefix,make){ var v=vrmFor(uid,prefix); return e("vehicle",v,{vrm:v,make:make,colour:col},"OWNS"); }
     function loc(street,town,pc,link){ return e("location",hno+" "+street+", "+town+" "+pc,{premiseNumber:String(hno),postcode:pc},link||"LIVES_AT"); }
     switch(key){
-      case"CSE": return [ e("cyber","OnlineID "+u,{address:"id."+u}), loc("Beech Road","Leeds",ukPC("LS",28,uid,"AA")) ];
+      case"ENV": return [ e("cyber","NodeID "+u,{address:"id."+u}), loc("Beech Road","Leeds",ukPC("LS",28,uid,"AA")) ];
       case"MODSL": return [ e("organisation","CASHLINE WASH "+u+" LTD",{companyNumber:pad(21000000+uid,8)},"WORKS_FOR"), loc("Mill Lane","Bradford",ukPC("BD",22,uid,"QQ")) ];
       case"OIC": return [ e("official_document","Counterfeit passport P"+pad(700000+uid,7),{},"OWNS"), loc("Dover Road","Dover",ukPC("CT",20,uid,"ZZ")) ];
       case"Drugs": return [ veh("LD","Audi"), e("communication","07911"+pad(uid,6),{number:"07911"+pad(uid,6)}) ];

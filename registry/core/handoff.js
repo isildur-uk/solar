@@ -16,7 +16,7 @@
   var TYPE_MAP = {
     person:"person", organisation:"organisation", vehicle:"vehicle", account:"account",
     location:"address", firearm:"weapon", official_document:"document",
-    communication:"phone", cyber:"ip"
+    communication:"phone", cyber:"ip", drug:"drug", cash:"money"
   };
   // Registry link type -> SOLAR link type (SOLAR falls back to LINKED_TO anyway)
   var LINK_MAP = {

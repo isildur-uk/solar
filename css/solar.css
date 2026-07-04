@@ -7,8 +7,8 @@
 
 :root {
   /* the live accent set by the bloom picker; everything warms from this */
-  --accent-dim: #bacd31;                       /* fallback pre-color-mix */
-  --accent-soft: rgba(235, 252, 114, 0.24);     /* fallback pre-color-mix */
+  --accent-dim: #6f7fe0;                       /* fallback pre-color-mix */
+  --accent-soft: rgba(142, 162, 255, 0.24);     /* fallback pre-color-mix */
   --accent-dim: color-mix(in srgb, var(--accent) 60%, #1a1408);
   --accent-soft: color-mix(in srgb, var(--accent) 24%, transparent);
 }

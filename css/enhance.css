@@ -37,7 +37,7 @@
   margin: 0 0 10px;
 }
 .an-svg { width: 100%; height: auto; display: block; overflow: visible; }
-.an-hit:hover { fill: rgba(235,252,114,0.06); }
+.an-hit:hover { fill: rgba(142,162,255,0.06); }
 .an-source {
   font: italic 400 10.5px 'Geist Mono', Consolas, monospace; color: #8b93a0;
   margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--sol-graphite, #2a2a27);

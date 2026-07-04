@@ -42,7 +42,7 @@
     regFormat: "Reg. format", cc: "Country", iata: "IATA", colour: "Colour", make: "Make", model: "Model" };
   function attrLabel(k) { return ATTR_LABEL[k] || (k.charAt(0).toUpperCase() + k.slice(1)); }
   function attrValue(k, v) { return (k === "dob" && window.CRStandards) ? (window.CRStandards.ddmmyyyy(v) || v) : v; }
-  var CHIP = "display:inline-block;padding:2px 7px;margin:2px 3px 0 0;border:1px solid #3a4a5e;border-radius:10px;background:#1b2735;color:#e8b34b;font-size:11px;cursor:pointer";
+  var CHIP = "display:inline-block;padding:2px 7px;margin:2px 3px 0 0;border:1px solid #3a4a5e;border-radius:10px;background:#1b2735;color:#8ea2ff;font-size:11px;cursor:pointer";
   function cmTermBlock(title, kind, codes, vocab) {
     var chips = codes.map(function (c) {
       var lbl = (vocab.filter(function (v) { return v.code === c; })[0] || {}).label || c;
@@ -97,7 +97,7 @@
     // provenance 3×5×2: source evaluation 1–3, assessment A–E, handling P/C
     var F = window.CRFormat;
     var p = F.migrateProvenance(e.provenance);
-    html += '<div class="sec">Grading — 3×5×2 <span style="color:#e8b34b">' + U.esc(F.gradeCode(p)) + "</span></div>" +
+    html += '<div class="sec">Grading — 3×5×2 <span style="color:#8ea2ff">' + U.esc(F.gradeCode(p)) + "</span></div>" +
       '<table><tr><td>Source eval</td><td>' + provSelect("prov-source", ["1", "2", "3"], p.source, "source evaluation") +
       ' <span style="color:#76879b">' + U.esc(F.SOURCE_EVAL[p.source] || "") + "</span></td></tr>" +
       "<tr><td>Assessment</td><td>" + provSelect("prov-assessment", ["A", "B", "C", "D", "E"], p.assessment, "intelligence assessment") +
@@ -114,7 +114,7 @@
     (e.media || []).forEach(function (mm) {
       html += '<figure style="margin:0;text-align:center">' +
         '<img src="' + mm.dataUrl + '" alt="' + U.escAttr(mm.name) + '" style="width:64px;height:64px;object-fit:cover;border:2px solid ' +
-        (mm.face ? "#e8b34b" : "#1f2a38") + ';border-radius:6px;cursor:pointer" data-med="' + U.escAttr(mm.id) + '" class="insp-med" title="' +
+        (mm.face ? "#8ea2ff" : "#1f2a38") + ';border-radius:6px;cursor:pointer" data-med="' + U.escAttr(mm.id) + '" class="insp-med" title="' +
         U.escAttr(mm.name + (mm.face ? " (node face)" : " — click to set as node face")) + '">' +
         '<figcaption style="font:8px Consolas,monospace;color:#76879b;max-width:64px;overflow:hidden;text-overflow:ellipsis">' +
         U.esc(mm.name) + '</figcaption>' +

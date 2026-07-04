@@ -19,6 +19,9 @@ ok(ds.every(function(ir){return ir.protectiveMarking==="OFFICIAL-SENSITIVE";}), 
 ok(ds.every(function(ir){return /^[1-4]$/.test(String(ir.threatBand));}), "every report carries a threat Band (1-4)");
 ok(ds.every(function(ir){return ir.pointOfContact && ir.pointOfContact.length>0;}), "every report has a Point of Contact");
 ok(ds.every(function(ir){return /^\d{2}\/\d{2}\/\d{4}$/.test(ir.dateOfIntelligence) && /^\d{2}\/\d{2}\/\d{4}$/.test(ir.dateCreated);}), "every report has Date of Intelligence + Date Created (DD/MM/YYYY)");
+var SM=require("../core/source-meta.js"), MOD=require("../core/ir-model.js");
+ok(MOD.SOURCE_TYPES.every(function(t){ var d=SM.describe(t); return d && d.text && SM.colour(t); }), "every source type has a colour + description");
+ok(ds.every(function(ir){ var rg=V.reportGrade(ir); if(!rg) return false; var its=ir.items.filter(function(x){return !x.isProvenance;}); function rk(x){ var sv=parseInt(x.sourceEval,10)||0; var iv="ABCDE".indexOf(String(x.intelEval).toUpperCase())+1; return sv*10+iv; } var worst=its.reduce(function(a,b){ return rk(b)>rk(a)?b:a; }); return rg.sourceEval===worst.sourceEval && rg.intelEval===worst.intelEval; }), "report grade = least-reliable item's grade");
 ok(ds.every(function(ir){return !/^OP /.test(ir.title);}), "titles do not start with the operation prefix");
 ok(ds.filter(function(ir){return / – .* – /.test(ir.title);}).length===0, "no title uses the old 'Name – activity' triple pattern");
 

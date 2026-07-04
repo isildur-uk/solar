@@ -60,6 +60,8 @@
     vehicle:           "#c9c36a",   // SOLAR vehicle
     account:           "#d87f9b",   // SOLAR account
     communication:     "#79c98f",   // SOLAR phone
+    drug:              "#a88f7a",   // SOLAR drug
+    cash:              "#a8c97f",   // SOLAR cash
     cyber:             "#7fb0c9",   // SOLAR ip
     firearm:           "#d86e6e",   // SOLAR weapon
     official_document: "#b1a08d",   // SOLAR document
@@ -69,7 +71,7 @@
   // Registry SI type -> SOLAR CRIcons glyph key (same typed glyphs as the workbench chart).
   var SI_TYPE_GLYPH = {
     person:"person", organisation:"organisation", vehicle:"vehicle", account:"account",
-    communication:"phone", cyber:"ip", firearm:"flag", official_document:"document", location:"location"
+    communication:"phone", cyber:"ip", firearm:"flag", official_document:"document", location:"location", drug:"drug", cash:"money"
   };
   function siGlyph(type) { return SI_TYPE_GLYPH[type] || "flag"; }
 
@@ -564,10 +566,199 @@
   }
 
   /* ---------- detail view ---------- */
+  var activeDetailIR = null;
+  function closeIrDrawer(){ var d=document.getElementById('ir-drawer'); if(d) d.hidden=true; }
+  function openIrDrawer(html){ var d=document.getElementById('ir-drawer'), b=document.getElementById('ir-drawer-body'); if(!d||!b) return; b.innerHTML=html; d.hidden=false; }
+  function explainGrade(grade, handling){
+    var sc=String(grade||''), s=sc.charAt(0), i=sc.charAt(1).toUpperCase(), hc=String(handling||'P').toUpperCase();
+    var se=G.SOURCE_EVAL[s], as=G.ASSESSMENT[i], ha=G.HANDLING[hc];
+    return '<h3 class="dr-h">Grade '+esc(sc)+esc(hc)+'</h3>'
+      + '<p class="dr-lede">Intelligence is graded on the <b>3\u00d75\u00d72</b> system \u2014 a source-evaluation number, an intelligence-evaluation letter and a handling code. A report inherits its overall grade from its <b>least-reliable item</b>.</p>'
+      + '<dl class="dr-dl">'
+      +   '<dt><span class="dr-code">'+esc(s)+'</span> Source evaluation</dt><dd>'+esc(se||'\u2014')+'</dd>'
+      +   '<dt><span class="dr-code">'+esc(i)+'</span> Intelligence evaluation</dt><dd>'+esc(as||'\u2014')+'</dd>'
+      +   (hc?('<dt><span class="dr-code">'+esc(hc)+'</span> Handling</dt><dd>'+esc(ha||'\u2014')+'</dd>'):'')
+      + '</dl>'
+      + '<p class="dr-foot">Source 1 Reliable \u00b7 2 Untested \u00b7 3 Not reliable. Intelligence A\u2013E, known-true through to suspected-false. Handling P permitted \u00b7 C permitted subject to conditions.</p>';
+  }
+  function openSourceDrawer(src){
+    var SM=(typeof window!=='undefined')?window.RegistrySourceMeta:null; var meta=SM?SM.describe(src):{text:''}; var col=SM?SM.colour(src):'#8d99ae';
+    var op=activeDetailIR?activeDetailIR.operation:'';
+    var head='<h3 class="dr-h"><span class="dr-swatch" style="background:'+esc(col)+'"></span>'+esc(src)+'</h3>'+'<p class="dr-lede">'+esc(meta.text)+(meta.indicative?' <span class="dr-indic">(indicative)</span>':'')+'</p>';
+    openIrDrawer(head+'<p class="dr-loading">Finding other '+esc(src)+' checks in '+esc(op||'this operation')+'\u2026</p>');
+    allRows().then(function(rows){
+      var hits=[];
+      rows.forEach(function(r){ if(op && r.operation!==op) return; (r.items||[]).forEach(function(it,idx){ if(it.sourceType===src) hits.push({urn:r.urn,n:idx+1,text:String(it.text||'')}); }); });
+      var listHtml = hits.length ? '<ul class="dr-hits">'+hits.map(function(hh){ var snip=hh.text.slice(0,90); return '<li><button type="button" class="dr-hit" data-urn="'+esc(hh.urn)+'"><span class="dr-hit-ref">'+esc(hh.urn)+' \u00b7 item '+hh.n+'</span><span class="dr-hit-snip">'+esc(snip)+(hh.text.length>90?'\u2026':'')+'</span></button></li>'; }).join('')+'</ul>' : '<p class="dr-none">No other '+esc(src)+' checks in this operation.</p>';
+      openIrDrawer(head+'<div class="dr-sec-h">'+hits.length+' '+esc(src)+' check'+(hits.length===1?'':'s')+' in '+esc(op||'this operation')+'</div>'+listHtml);
+      var b=document.getElementById('ir-drawer-body'); if(b){ [].forEach.call(b.querySelectorAll('.dr-hit'), function(btn){ btn.addEventListener('click', function(){ closeIrDrawer(); showDetail(btn.getAttribute('data-urn')); }); }); }
+    });
+  }
+  /* ---------- nominal dossier (View Person) ---------- */
+  function showPerson(seedId){
+    view='person';
+    allRows().then(function(all){
+      var d = window.RegistryDossier ? window.RegistryDossier.buildDossier(all, seedId) : null;
+      if(!d){ setStatus('No person record found.','err'); return showHome(); }
+      var seedEnt={type:'person',label:d.primaryName,attrs:{dob:d.dob,pnc:d.identifiers.pnc[0]||'',cro:d.identifiers.cro[0]||'',nino:d.identifiers.nino[0]||''}};
+      var onWatch=!!(window.RegistryWatchlist && window.RegistryWatchlist.has(seedEnt));
+      function cell(k,v){ return '<div class="meta-cell"><span class="meta-k">'+esc(k)+'</span><span class="meta-v">'+esc(v)+'</span></div>'; }
+      var idRows=[['PNC',d.identifiers.pnc],['CRO',d.identifiers.cro],['NINO',d.identifiers.nino],['Passport',d.identifiers.passport]]
+        .filter(function(x){return x[1].length;}).map(function(x){ return cell(x[0], x[1].join(', ')); }).join('');
+      function listCard(title,arr){ if(!arr.length) return ''; return '<div class="dos-card"><h3>'+esc(title)+'<span class="dos-n">'+arr.length+'</span></h3><ul class="dos-list">'+arr.map(function(a){ return '<li>'+esc(a.label)+(a.dob?' <span class="dos-dim">DOB '+esc(a.dob)+'</span>':'')+(a.link?' <span class="dos-link">'+esc((SI.LINK_TYPES[a.link]||a.link))+'</span>':'')+'</li>'; }).join('')+'</ul></div>'; }
+      var appRows=d.appearances.map(function(a){ return '<tr class="dos-appear" data-urn="'+esc(a.urn)+'"><td>'+esc(a.date||'\u2014')+'</td><td>'+esc(a.operation||'')+'</td><td class="dos-urn">'+esc(a.urn)+'</td><td>'+esc(a.title||'')+'</td><td class="dos-grade">'+esc(a.grade||'')+'</td><td>'+esc((SI.ROLES[a.role]||a.role||''))+'</td></tr>'; }).join('');
+      els.main.innerHTML='<div class="detail page person">'
+        +'<div class="crumbs"><button type="button" class="linklike" id="dp-back">\u2190 Back</button> <button type="button" class="btn secondary" id="dp-watch">'+(onWatch?'On watchlist':'Add to watchlist')+'</button></div>'
+        +'<div class="dos-head"><span class="dos-eyebrow">NOMINAL RECORD</span><h1 tabindex="-1">'+esc(d.primaryName)+'</h1>'
+        +'<div class="dos-sub">'+(d.dob?'DOB '+esc(d.dob)+' \u00b7 ':'')+esc(d.roles.map(function(r){return SI.ROLES[r]||r;}).join(', '))+' \u00b7 appears in '+d.reportCount+' report'+(d.reportCount===1?'':'s')+(d.matchedBy&&d.matchedBy.length?' \u00b7 <span class="dos-matched">resolved by '+esc(d.matchedBy.join(', '))+'</span>':'')+'</div></div>'
+        +(idRows?'<div class="meta-grid">'+idRows+'</div>':'')
+        +(d.aliases.length?'<div class="dos-aliases"><b>Aliases:</b> '+esc(d.aliases.join(', '))+'</div>':'')
+        +'<div class="dos-grid">'+listCard('Associates',d.associates)+listCard('Locations',d.locations)+listCard('Communications',d.comms)+listCard('Vehicles',d.vehicles)+listCard('Accounts',d.accounts)+listCard('Cyber',d.cyber)+'</div>'
+        +'<h2>Appearances</h2><table class="op-table dos-appears"><thead><tr><th>Date</th><th>Operation</th><th>URN</th><th>Title</th><th>Grade</th><th>Role</th></tr></thead><tbody>'+appRows+'</tbody></table>'
+        +'</div>';
+      var bk=document.getElementById('dp-back'); if(bk) bk.addEventListener('click', function(){ if(lastDetailUrn) showDetail(lastDetailUrn); else showHome(); });
+      var wb=document.getElementById('dp-watch'); if(wb) wb.addEventListener('click', function(){ var W=window.RegistryWatchlist; if(!W) return; if(W.has(seedEnt)){ setStatus('Already on the watchlist.'); return; } W.add(seedEnt,{addedBy:currentUser()}); wb.textContent='On watchlist'; setStatus('Added '+d.primaryName+' to the watchlist \u2014 silent hits will be raised.','ok'); });
+      [].forEach.call(els.main.querySelectorAll('.dos-appear'), function(tr){ tr.addEventListener('click', function(){ showDetail(tr.getAttribute('data-urn')); }); });
+      focusView();
+    });
+  }
+
+  function currentUser(){ try{ return (window.localStorage && localStorage.getItem('reg_user')) || 'G5 Analyst'; }catch(e){ return 'G5 Analyst'; } }
+  /* ---------- lawful-access gate (Reason / Justification / on-behalf-of) ---------- */
+  function requireAccess(opts, proceed){
+    opts=opts||{};
+    var A=window.RegistryAccessLog; var reasons=(A&&A.REASONS)||['Intelligence development','Other'];
+    var w=document.createElement('div'); w.className='reg-modal';
+    w.innerHTML='<div class="reg-modal-scrim"></div><div class="reg-modal-box" role="dialog" aria-modal="true" aria-label="Lawful access check">'
+      +'<h2>Lawful access check</h2><p class="reg-modal-sub">'+esc(opts.action||'Access')+(opts.target?': <b>'+esc(opts.target)+'</b>':'')+'</p>'
+      +'<label class="rm-lab">Reason <span class="req">*</span><select id="acc-reason">'+reasons.map(function(r){return '<option>'+esc(r)+'</option>';}).join('')+'</select></label>'
+      +'<label class="rm-lab">Justification <span class="req">*</span><input id="acc-just" type="text" placeholder="Why is this access necessary and proportionate?"></label>'
+      +'<fieldset class="rm-obo"><legend>Searching on behalf of</legend><label><input type="radio" name="acc-obo" value="Self" checked> Self</label> <label><input type="radio" name="acc-obo" value="Other"> Other</label><input id="acc-obo-name" type="text" placeholder="name of officer" disabled></fieldset>'
+      +'<div class="rm-actions"><button type="button" class="btn secondary" id="acc-cancel">Cancel</button> <button type="button" class="btn" id="acc-go">Confirm access</button></div></div>';
+    document.body.appendChild(w);
+    function close(){ if(w.parentNode) w.parentNode.removeChild(w); }
+    var oboName=w.querySelector('#acc-obo-name');
+    [].forEach.call(w.querySelectorAll('input[name=acc-obo]'), function(r){ r.addEventListener('change', function(){ oboName.disabled = w.querySelector('input[name=acc-obo]:checked').value!=='Other'; if(!oboName.disabled) oboName.focus(); }); });
+    w.querySelector('#acc-cancel').addEventListener('click', close);
+    w.querySelector('.reg-modal-scrim').addEventListener('click', close);
+    w.querySelector('#acc-go').addEventListener('click', function(){
+      var reason=w.querySelector('#acc-reason').value, just=w.querySelector('#acc-just').value.trim();
+      var oboV=w.querySelector('input[name=acc-obo]:checked').value, oboN=oboName.value.trim();
+      if(!just){ w.querySelector('#acc-just').focus(); setStatus('Justification is required.','err'); return; }
+      if(oboV==='Other' && !oboN){ oboName.focus(); return; }
+      if(A) A.record({ actor:currentUser(), action:opts.action||'', target:opts.target||'', reason:reason, justification:just, onBehalfOf: oboV==='Other'?('Other: '+oboN):'Self' });
+      close(); proceed();
+    });
+    w.querySelector('#acc-reason').focus();
+  }
+  function showAccessLog(){
+    var A=window.RegistryAccessLog; var rows=A?A.list():[];
+    var w=document.createElement('div'); w.className='reg-modal';
+    var body = rows.length ? '<ul class="acc-log-list">'+rows.slice(0,100).map(function(r){ return '<li><div class="al-top"><span>'+esc(String(r.ts).replace('T',' ').slice(0,16))+' \u00b7 '+esc(r.actor)+'</span><span>'+esc(r.onBehalfOf)+'</span></div><div><span class="al-reason">'+esc(r.reason)+'</span> \u2014 '+esc(r.action)+(r.target?' \u00b7 '+esc(r.target):'')+'</div><div class="al-just">'+esc(r.justification)+'</div></li>'; }).join('')+'</ul>' : '<p class="empty">No access recorded yet.</p>';
+    w.innerHTML='<div class="reg-modal-scrim"></div><div class="reg-modal-box" role="dialog" aria-modal="true" aria-label="Access log"><h2>Access log</h2><p class="reg-modal-sub">Every nominal / entity lookup, with its lawful reason.</p>'+body+'<div class="rm-actions" style="margin-top:12px"><button type="button" class="btn secondary" id="al-close">Close</button></div></div>';
+    document.body.appendChild(w);
+    function close(){ if(w.parentNode) w.parentNode.removeChild(w); }
+    w.querySelector('#al-close').addEventListener('click', close); w.querySelector('.reg-modal-scrim').addEventListener('click', close);
+  }
+
+  /* ---------- Silent Hit List ---------- */
+  function showSilentHits(){
+    view='silenthits';
+    allRows().then(function(all){
+      var W=window.RegistryWatchlist; var results=W?W.scan(all):[];
+      function rulesOf(a){ return a.map(function(s){return String(s).split('::')[0];}).filter(function(v,i,arr){return arr.indexOf(v)===i;}).join(', '); }
+      var body = results.length ? results.map(function(res){ var w=res.watch;
+        var hits = res.hits.length ? '<ul class="sh-hits">'+res.hits.map(function(h){ return '<li class="sh-hit" data-urn="'+esc(h.urn)+'"><span class="sh-urn">'+esc(h.urn)+'</span><span class="sh-op">'+esc(h.operation)+'</span><span class="sh-t">'+esc(h.title)+'</span><span class="sh-date">'+esc(h.date)+'</span><span class="sh-by">'+esc(rulesOf(h.matchedBy))+'</span></li>'; }).join('')+'</ul>' : '<p class="empty">No hits yet.</p>';
+        return '<div class="sh-card"><div class="sh-head"><div><span class="sh-name">'+esc(w.label)+'</span>'+(w.dob?' <span class="dos-dim">DOB '+esc(w.dob)+'</span>':'')+(w.note?' <span class="sh-note">'+esc(w.note)+'</span>':'')+'</div><div><span class="sh-count">'+res.hitCount+' hit'+(res.hitCount===1?'':'s')+'</span> <button type="button" class="btn danger sh-rm" data-id="'+esc(w.id)+'">Remove</button></div></div>'+hits+'</div>'; }).join('')
+        : '<p class="empty">Watchlist is empty. Open a nominal record (Dossier) and use Add to watchlist to receive silent hits.</p>';
+      els.main.innerHTML='<div class="detail page"><div class="crumbs"><button type="button" class="linklike" id="sh-back">\u2190 Back</button></div><h1 tabindex="-1">Silent Hit List</h1><p class="hint">Nominals of interest, matched against every report by the same engine as Master/Lower.</p>'+body+'</div>';
+      document.getElementById('sh-back').addEventListener('click', showHome);
+      [].forEach.call(els.main.querySelectorAll('.sh-hit'), function(li){ li.addEventListener('click', function(){ showDetail(li.getAttribute('data-urn')); }); });
+      [].forEach.call(els.main.querySelectorAll('.sh-rm'), function(b){ b.addEventListener('click', function(){ if(window.RegistryWatchlist) window.RegistryWatchlist.remove(b.getAttribute('data-id')); showSilentHits(); }); });
+      focusView();
+    });
+  }
+
+  /* ---------- Entity Management (Master/Lower + comparison review) ---------- */
+  var _entIdx=null, _entMode='master';
+  function showEntities(){
+    view='entities';
+    allRows().then(function(all){
+      _entIdx = window.RegistryEntityIndex ? window.RegistryEntityIndex.buildEntityIndex(all) : {masters:[],lower:[]};
+      els.main.innerHTML='<div class="detail page"><div class="crumbs"><button type="button" class="linklike" id="em-back">← Back</button></div>'
+        +'<h1 tabindex="-1">Entity Management</h1><p class="hint">'+_entIdx.masterCount+' master entities resolved from '+_entIdx.entityCount+' report-level (lower) entities.</p>'
+        +'<div class="em-bar"><div class="em-toggle"><button type="button" class="em-tab" data-mode="master">Master</button><button type="button" class="em-tab" data-mode="lower">Lower</button></div>'
+        +'<input id="em-q" class="search" type="text" placeholder="Search entities by name or identifier…" autocomplete="off"></div><div id="em-results"></div></div>';
+      document.getElementById('em-back').addEventListener('click', showHome);
+      var q=document.getElementById('em-q'); q.addEventListener('input', function(){ renderEntityResults(q.value); });
+      [].forEach.call(els.main.querySelectorAll('.em-tab'), function(t){ t.addEventListener('click', function(){ _entMode=t.getAttribute('data-mode'); renderEntityResults(document.getElementById('em-q').value); }); });
+      renderEntityResults(''); focusView();
+    });
+  }
+  function renderEntityResults(q){
+    var box=document.getElementById('em-results'); if(!box||!_entIdx) return;
+    [].forEach.call(els.main.querySelectorAll('.em-tab'), function(t){ t.setAttribute('aria-selected', t.getAttribute('data-mode')===_entMode?'true':'false'); });
+    var ql=String(q||'').toLowerCase().trim();
+    function matchQ(label, attrs){ if(!ql) return true; if(String(label).toLowerCase().indexOf(ql)!==-1) return true; return Object.keys(attrs||{}).some(function(k){ return k.charAt(0)!=='_' && String(attrs[k]).toLowerCase().indexOf(ql)!==-1; }); }
+    function typeChip(t){ var lab=(SI.ENTITY_TYPES[t]&&SI.ENTITY_TYPES[t].label)||t; return '<span class="em-type" style="--src:'+esc(siColour(t))+'">'+esc(lab)+'</span>'; }
+    var html='';
+    if(_entMode==='master'){
+      var ms=_entIdx.masters.filter(function(m){ return matchQ(m.label,(m.memberEntities[0]||{}).attrs) || m.memberEntities.some(function(me){return matchQ(me.label,me.attrs);}); });
+      ms.sort(function(a,b){ return b.memberCount-a.memberCount; });
+      html = ms.length ? ms.slice(0,200).map(function(m){
+        var head='<div class="em-row">'+typeChip(m.type)+'<span class="em-label">'+esc(m.label)+'</span><span class="em-meta">'+m.memberCount+' appearance'+(m.memberCount===1?'':'s')+(m.matchedBy.length?' · '+esc(m.matchedBy.join(', ')):'')+'</span><span class="em-actions">'
+          +(m.type==='person'?'<button type="button" class="btn secondary em-dossier" data-eid="'+esc(m.memberEntities[0].entityId)+'" data-label="'+esc(m.label)+'">Dossier →</button>':'')
+          +(m.memberCount>1?'<button type="button" class="btn secondary em-review" data-mid="'+esc(m.masterId)+'">'+(m.confirmed?'Reviewed':'Review '+m.memberCount)+'</button>':'')+'</span></div>';
+        var review = m.memberCount>1 ? '<div class="em-review-box" id="rev-'+esc(m.masterId)+'" hidden><div class="em-review-h">These '+m.memberCount+' lower entities were resolved into one master by: '+esc(m.matchedBy.join(', '))+'</div><ul class="em-members">'+m.memberEntities.map(function(me){ return '<li data-urn="'+esc(me.urn)+'"><span class="em-m-urn">'+esc(me.urn)+'</span> '+esc(me.label)+' <span class="dos-dim">'+esc(me.operation)+'</span>'+(me.confirmed?' <span class="em-ok">confirmed</span>':'')+'</li>'; }).join('')+'</ul><div class="rm-actions"><button type="button" class="btn em-confirm" data-mid="'+esc(m.masterId)+'">Confirm matches</button></div></div>' : '';
+        return '<div class="em-card">'+head+review+'</div>';
+      }).join('') : '<p class="empty">No master entities match.</p>';
+    } else {
+      var ls=_entIdx.lower.filter(function(x){ return matchQ(x.e.label,x.e.attrs); });
+      html = ls.length ? ls.slice(0,300).map(function(x){ return '<div class="em-card"><div class="em-row em-lower" data-urn="'+esc(x.urn)+'">'+typeChip(x.e.type)+'<span class="em-label">'+esc(x.e.label)+'</span><span class="em-meta">'+esc(x.urn)+' · '+esc(x.operation)+'</span></div></div>'; }).join('') : '<p class="empty">No lower entities match.</p>';
+    }
+    box.innerHTML=html;
+    [].forEach.call(box.querySelectorAll('.em-dossier'), function(b){ b.addEventListener('click', function(){ requireAccess({action:'View nominal record', target:b.getAttribute('data-label')}, function(){ showPerson(b.getAttribute('data-eid')); }); }); });
+    [].forEach.call(box.querySelectorAll('.em-review'), function(b){ b.addEventListener('click', function(){ var el=document.getElementById('rev-'+b.getAttribute('data-mid')); if(el) el.hidden=!el.hidden; }); });
+    [].forEach.call(box.querySelectorAll('.em-lower'), function(r){ r.addEventListener('click', function(){ showDetail(r.getAttribute('data-urn')); }); });
+    [].forEach.call(box.querySelectorAll('.em-members li'), function(li){ li.addEventListener('click', function(){ showDetail(li.getAttribute('data-urn')); }); });
+    [].forEach.call(box.querySelectorAll('.em-confirm'), function(b){ b.addEventListener('click', function(){ confirmEntityMaster(b.getAttribute('data-mid')); }); });
+  }
+  function confirmEntityMaster(masterId){
+    var m=(_entIdx.masters||[]).filter(function(x){return x.masterId===masterId;})[0]; if(!m) return;
+    var byUrn={}; m.memberEntities.forEach(function(me){ (byUrn[me.urn]=byUrn[me.urn]||[]).push(me.entityId); });
+    var chain=Promise.resolve();
+    Object.keys(byUrn).forEach(function(urn){ chain=chain.then(function(){ return repo.get(urn).then(function(ir){ if(!ir) return; var S=ir.structuredIntelligence||{entities:[]}; S.entities.forEach(function(e){ if(byUrn[urn].indexOf(e.id)!==-1) e.authoriserConfirmed=true; }); M.addAudit(ir,currentUser(),'entity-confirm','confirmed master match '+masterId); return repo.save(ir); }); }); });
+    chain.then(function(){ setStatus('Confirmed '+m.memberCount+' matched entities.','ok'); dataCache=null; showEntities(); }).catch(function(e){ setStatus('Confirm failed: '+(e&&e.message),'err'); });
+  }
+
+  function showWhatsNew(){
+    var items=[
+      'Reports now render in the NCA Intelligence Report house structure (masthead, header, 3\u00d75\u00d72 grade, numbered graded items, provenance).',
+      'The database now generates structured intelligence with the SAME extraction engine as the chart \u2014 automatically on new reports, or via \u201cExtract entities from report text\u201d.',
+      'View Person \u2014 a consolidated nominal dossier aggregating every appearance across an operation (identifiers, aliases, associates, locations, comms, vehicles, accounts, timeline).',
+      'Entity Management \u2014 Master/Lower entity search + comparison-match review (confirm merges).',
+      'Silent Hit List \u2014 flag nominals of interest and get silent hits when they reappear.',
+      'Lawful-access gate \u2014 Reason / Justification / on-behalf-of on sensitive lookups, with an Access log.',
+      'Source column colour-coded + clickable (what the system is, and its other checks in the operation); grades explained on click.',
+      'Drugs & Cash entity types for full chart parity; mobile layout overhauled.'
+    ];
+    var w=document.createElement('div'); w.className='reg-modal';
+    w.innerHTML='<div class="reg-modal-scrim"></div><div class="reg-modal-box" role="dialog" aria-modal="true" aria-label="What\u2019s New"><h2>What\u2019s New</h2><p class="reg-modal-sub">Recent improvements to the Registry.</p><ul class="wn-list">'+items.map(function(i){return '<li>'+esc(i)+'</li>';}).join('')+'</ul><div class="rm-actions" style="margin-top:12px"><button type="button" class="btn secondary" id="wn-close">Close</button></div></div>';
+    document.body.appendChild(w); function close(){ if(w.parentNode) w.parentNode.removeChild(w); }
+    w.querySelector('#wn-close').addEventListener('click', close); w.querySelector('.reg-modal-scrim').addEventListener('click', close);
+  }
+  function lockWorkspace(){
+    var w=document.createElement('div'); w.className='reg-lock';
+    w.innerHTML='<div class="reg-lock-box"><div class="reg-lock-mk">OFFICIAL-SENSITIVE</div><h2>Workspace locked</h2><p>'+esc(currentUser())+'</p><button type="button" class="btn" id="lk-unlock">Unlock</button></div>';
+    document.body.appendChild(w);
+    w.querySelector('#lk-unlock').addEventListener('click', function(){ if(w.parentNode) w.parentNode.removeChild(w); });
+  }
+
   function showDetail(urn) {
     view = "detail";
     repo.get(urn).then(function (ir) {
       if (!ir) { showWelcome(); return; }
+      activeDetailIR = ir;
       setBanner(ir.protectiveMarking);
       var h = ir.handling || {}, ss = ir.sensitiveSource || {};
       var pvd = M.coerceProvenance(ir.provenance);
@@ -577,11 +768,12 @@
       if (ss.source) ssParts.push(['Source', ss.source]);
       if (ss.subtype) ssParts.push(['Subtype', ss.subtype]);
       if (ss.reference) ssParts.push(['Reference', ss.reference]);
-      var ssBody = ssParts.length
-        ? '<div class="ss-grid">' + ssParts.map(function (p) {
-            return '<div class="ss-cell"><span class="ss-k">' + esc(p[0]) + '</span><span class="ss-v">' + esc(p[1]) + '</span></div>';
-          }).join("") + '</div>'
-        : '<p class="ss-none">None recorded.</p>';
+      var ssSection = ssParts.length
+        ? '<section class="sensitive-source" role="note" aria-label="Sensitive source — protected, handle with care">'
+          + '<div class="ss-label"><span class="ss-mark" aria-hidden="true">▲</span>SENSITIVE SOURCE</div>'
+          + '<div class="ss-grid">' + ssParts.map(function (p) { return '<div class="ss-cell"><span class="ss-k">' + esc(p[0]) + '</span><span class="ss-v">' + esc(p[1]) + '</span></div>'; }).join("") + '</div>'
+          + '</section>'
+        : '';
       var auditHTML = (ir.audit || []).slice().reverse().map(function (a) {
         return "<li>" + esc(a.ts) + " · " + esc(a.actor) + " · " + esc(a.action) + (a.detail ? " — " + esc(a.detail) : "") + "</li>";
       }).join("");
@@ -598,17 +790,24 @@
         : esc(h.code || '—') + ' — Lawful sharing permitted';
       function irHdr(k,v){ return '<div class="ir-hcell"><span class="ir-hk">'+esc(k)+'</span><span class="ir-hv">'+v+'</span></div>'; }
       function irSiRow(k,v){ return '<div class="ir-si-row"><span class="ir-si-k">'+esc(k)+'</span><span class="ir-si-v">'+v+'</span></div>'; }
-      var irLegend = '<div class="ir-legend"><div class="ir-legend-h">Evaluation · 3×5×2</div>'
-        + '<div class="ir-legend-row"><span class="ir-legend-k">Source</span>' + G.sourceEvalCodes().map(function(k){ return '<span class="ir-lc"><b>'+esc(k)+'</b> '+esc(G.SOURCE_EVAL[k])+'</span>'; }).join('') + '</div>'
-        + '<div class="ir-legend-row"><span class="ir-legend-k">Intelligence</span>' + G.assessmentCodes().map(function(k){ return '<span class="ir-lc"><b>'+esc(k)+'</b> '+esc(G.ASSESSMENT[k])+'</span>'; }).join('') + '</div>'
-        + '<div class="ir-legend-row"><span class="ir-legend-k">Handling</span>' + G.handlingCodes().map(function(k){ return '<span class="ir-lc"><b>'+esc(k)+'</b> '+esc(G.HANDLING[k])+'</span>'; }).join('') + '</div>'
-        + '</div>';
-      var irItemsTable = items.length
+      var _rg = V.reportGrade(ir);
+      var irGrade = _rg
+        ? '<div class="ir-grade"><span class="ir-grade-k">Report grade</span>'
+          + '<button type="button" class="grade-chip" data-grade="'+esc(_rg.sourceEval)+esc(_rg.intelEval)+'" data-handling="'+esc(_rg.handling)+'" aria-label="Explain the report grade">'+esc(_rg.sourceEval)+esc(_rg.intelEval)+esc(_rg.handling)+'<span class="grade-q">?</span></button>'
+          + '</div>'
+        : '';
+      var _SM = (typeof window!=='undefined' && window.RegistrySourceMeta) ? window.RegistrySourceMeta : null;
+      var irItems = items.length
         ? '<table class="ir-items"><thead><tr><th class="c-no">Item</th><th>Report</th><th class="c-src">Source</th><th class="c-si">S</th><th class="c-si">I</th></tr></thead><tbody>'
-          + items.map(function(it,i){ return '<tr><td class="c-no">'+(i+1)+'</td><td class="c-report"><pre class="item-text">'+highlightExtract(it.text, siHighlightOn)+'</pre></td><td class="c-src">'+esc(it.sourceType)+'</td><td class="c-si">'+esc(it.sourceEval)+'</td><td class="c-si">'+esc(it.intelEval)+'</td></tr>'; }).join('')
+          + items.map(function(it,i){ var col=_SM?_SM.colour(it.sourceType):'#8d99ae'; var gr=esc(it.sourceEval)+esc(it.intelEval), hd=esc(h.code||'P');
+              return '<tr><td class="c-no">'+(i+1)+'</td>'
+                + '<td class="c-report"><pre class="item-text">'+highlightExtract(it.text, siHighlightOn)+'</pre></td>'
+                + '<td class="c-src"><button type="button" class="src-chip" data-src="'+esc(it.sourceType)+'" style="--src:'+esc(col)+'" title="What is '+esc(it.sourceType)+'? Show its other checks in this operation">'+esc(it.sourceType)+'</button></td>'
+                + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-rel="'+esc(it.sourceEval)+'" title="Explain this grade">'+esc(it.sourceEval)+'</button></td>'
+                + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-assess="'+esc(it.intelEval)+'" title="Explain this grade">'+esc(it.intelEval)+'</button></td></tr>'; }).join('')
           + '</tbody></table>'
         : '<p class="empty">No items.</p>';
-      var irProvTable = '<table class="ir-items ir-prov"><tbody><tr><td class="c-no">P</td><td class="c-report"><pre class="item-text">'+highlightExtract(pvd.text || '—', true)+'</pre></td><td class="c-src">Assessment</td><td class="c-si">'+esc(pvd.sourceEval||'-')+'</td><td class="c-si">'+esc(pvd.intelEval||'-')+'</td></tr></tbody></table>';
+      var irProvTable = '<table class="ir-items ir-prov"><tbody><tr><td class="c-no">P</td><td class="c-report"><pre class="item-text">'+highlightExtract(pvd.text || '—', true)+'</pre></td><td class="c-src">Assessment</td><td class="c-si" data-rel="'+esc(pvd.sourceEval||'')+'">'+esc(pvd.sourceEval||'-')+'</td><td class="c-si" data-assess="'+esc(pvd.intelEval||'')+'">'+esc(pvd.intelEval||'-')+'</td></tr></tbody></table>';
       var backLabel = cameFromResults ? (activeOp ? esc(activeOp) : "All reports") : "Overview";
       els.main.innerHTML =
         '<div class="detail page">' +
@@ -635,34 +834,36 @@
             irSiRow('Handling code', irHandLine) +
             irSiRow('Confidence', esc(ir.confidence || '—')) +
           '</div>' +
-          irLegend +
-          '<div class="items-head"><h2>Items (' + items.length + ')</h2>' +
+          (ssSection ? '<div class="ir-sssrc">' + ssSection + '</div>' : '') +
+          irGrade +
+          '<details class="ir-sec" open><summary>Items (' + items.length + ')</summary>' +
+          '<div class="items-head">' +
           '<label class="hl-toggle" title="Bold + colour the entities extracted from this report, by type"><input type="checkbox" id="hl-entities"' + (siHighlightOn ? ' checked' : '') + '> Highlight extracted entities</label></div>' +
-          irItemsTable +
-          '<h2 class="ir-prov-h">Provenance / assessment <span class="ir-notchart">not charted</span></h2>' +
-          irProvTable +
-        '</div>' +
-        '<aside id="overlap-panel" class="overlap-rail" aria-label="Reports sharing entities with this one"></aside>' +
-        '<section class="sensitive-source" role="note" aria-label="Sensitive source — protected, handle with care">' +
-          '<div class="ss-label"><span class="ss-mark" aria-hidden="true">▲</span>SENSITIVE SOURCE</div>' +
-          ssBody +
-        '</section>' +
-        '<h2>Workflow</h2>' +
+          irItems + '</details>' +
+          '<details class="ir-sec" open><summary>Provenance</summary>' +
+          irProvTable + '</details>' +
+        '<details class="ir-sec ir-sec-chart" open><summary>Network chart</summary>' +
+        '<div id="si-chart" class="si-chart" role="img" aria-label="Network chart of this report’s entities and links"></div>' +
+        '</details>' +
+        '<details class="ir-sec" open><summary>Structured intelligence</summary><div id="si-panel"></div></details>' +
+        '<details class="ir-sec" open><summary>Workflow</summary>' +
         '<div class="wf-status">Status: <span class="pill status" data-status="' + esc(ir.status) + '">' + esc(ir.status) + '</span>' +
           (ir.rejectionReason ? ' · <em>rejected:</em> ' + esc(ir.rejectionReason) : '') +
           (ir.suppressionReason ? ' · <em>suppressed:</em> ' + esc(ir.suppressionReason) : '') +
           (ir.pndShareAuthorisedAt ? ' · PND authorised ' + esc(String(ir.pndShareAuthorisedAt).slice(0,16).replace("T"," ")) : '') + '</div>' +
         '<div class="toolbar" id="wf-bar"></div>' +
         '<div id="pnd-review"></div>' +
-        '<h2>Structured intelligence</h2><div id="si-panel"></div>' +
-        '<h3 class="si-chart-h">Network chart</h3>' +
-        '<div id="si-chart" class="si-chart" role="img" aria-label="Network chart of this report’s entities and links"></div>' +
-        '<h2>Handoff to SOLAR</h2>' +
+        '</details>' +
+        '<details class="ir-sec"><summary>Handoff to SOLAR</summary>' +
         '<div class="toolbar">' +
           '<button type="button" class="btn secondary" id="hx-contract">Export contract</button>' +
           '<button type="button" class="btn secondary" id="hx-solar">Export SOLAR case</button>' +
           '<button type="button" class="btn" id="hx-open">Open full chart in SOLAR</button>' +
         '</div>' +
+        '</details>' +
+        '</div>' +
+        '<aside id="overlap-panel" class="overlap-rail" aria-label="Reports sharing entities with this one"></aside>' +
+        '<div id="ir-drawer" class="ir-drawer" hidden><div class="ir-drawer-scrim" id="ir-drawer-scrim"></div><div class="ir-drawer-panel" role="dialog" aria-label="Explanation"><button type="button" class="ir-drawer-x" id="ir-drawer-x" aria-label="Close">✕</button><div id="ir-drawer-body"></div></div></div>' +
         '</div>';
 
       var _bk = document.getElementById("dt-back");
@@ -671,6 +872,10 @@
       if (_hm) _hm.addEventListener("click", function () { showHome(); });
       lastDetailUrn = ir.urn;
       markActiveReport();
+      [].forEach.call(els.main.querySelectorAll('.src-chip'), function(c){ c.addEventListener('click', function(){ openSourceDrawer(c.getAttribute('data-src')); }); });
+      [].forEach.call(els.main.querySelectorAll('[data-grade]'), function(g){ g.addEventListener('click', function(){ openIrDrawer(explainGrade(g.getAttribute('data-grade'), g.getAttribute('data-handling'))); }); });
+      var _dx=document.getElementById('ir-drawer-x'); if(_dx) _dx.addEventListener('click', closeIrDrawer);
+      var _ds=document.getElementById('ir-drawer-scrim'); if(_ds) _ds.addEventListener('click', closeIrDrawer);
       focusView();
       var _hlcb = document.getElementById("hl-entities");
       els.main.classList.toggle("hl-off", !siHighlightOn);
@@ -692,6 +897,8 @@
       renderWfBar(ir);
       renderSI(ir);
       renderMiniChart(ir);
+      var _cs = els.main.querySelector('.ir-sec-chart');
+      if (_cs) _cs.addEventListener('toggle', function(){ if (_cs.open) setTimeout(function(){ try{ window.dispatchEvent(new Event('resize')); }catch(e){} }, 30); });
       renderOverlaps(ir);
       document.getElementById("hx-contract").addEventListener("click", function () {
         download(ir.urn + ".system.ir.v1.json", JSON.stringify(H.toHandoff(ir), null, 2));
@@ -892,11 +1099,33 @@
     }, function () { panel.innerHTML = ''; });
   }
 
+  function reportBodyText(ir){ return (ir.items||[]).filter(function(i){return !i.isProvenance;}).map(function(it){return it.text||'';}).join('\n'); }
+  function generateSIFromText(ir){
+    if(!(window.CRExtract && window.CRExtract.extract && window.RegistrySIExtract)) return null;
+    var body=reportBodyText(ir); if(!body.trim()) return null;
+    var res; try{ res=window.CRExtract.extract(body,{dateFormat:'DMY'}); }catch(e){ return null; }
+    try{ return window.RegistrySIExtract.fromExtraction(res,{actor:'engine'}); }catch(e){ return null; }
+  }
+  function mergeGeneratedSI(ir, gen){
+    var S=ir.structuredIntelligence||(ir.structuredIntelligence={entities:[],links:[]});
+    var seen={}; S.entities.forEach(function(e){ seen[e.type+'|'+String(e.label).toLowerCase()]=e.id; });
+    var idmap={};
+    gen.entities.forEach(function(e){ var k=e.type+'|'+String(e.label).toLowerCase(); if(seen[k]){ idmap[e.id]=seen[k]; } else { S.entities.push(e); seen[k]=e.id; idmap[e.id]=e.id; } });
+    var lseen={}; S.links.forEach(function(l){ lseen[l.from+'|'+l.to+'|'+l.type]=1; });
+    gen.links.forEach(function(l){ var from=idmap[l.from]||l.from, to=idmap[l.to]||l.to; if(from===to) return; var k=from+'|'+to+'|'+l.type; if(lseen[k]) return; l.from=from; l.to=to; S.links.push(l); lseen[k]=1; });
+    return S;
+  }
+  var _siAutoTried = {};
   function renderSI(ir) {
     var panel = document.getElementById("si-panel"); if (!panel) return;
     if (!ir.structuredIntelligence) ir.structuredIntelligence = { entities: [], links: [] };
     var ro = (ir.status === "AUTHORISED" || ir.status === "SUPPRESSED");
     var S = ir.structuredIntelligence;
+    if(!_siAutoTried[ir.urn] && ir.status==='DRAFT' && S.entities.length===0){
+      _siAutoTried[ir.urn]=1;
+      var _gen=generateSIFromText(ir);
+      if(_gen && _gen.entities.length){ mergeGeneratedSI(ir,_gen); M.addAudit(ir,'engine','si-auto','auto-extracted '+_gen.entities.length+' entities from report text'); repo.save(ir); }
+    }
     var byId = {}; S.entities.forEach(function (e) { byId[e.id] = e; });
     var entTypeOpts = alphaPinOther(Object.keys(SI.ENTITY_TYPES), function (k) { return SI.ENTITY_TYPES[k].label; }).map(function (k) { return opt(k, SI.ENTITY_TYPES[k].label, "person"); }).join("");
     var roleOpts = ['<option value="">— role —</option>'].concat(alphaPinOther(Object.keys(SI.ROLES), function (k) { return SI.ROLES[k]; }).map(function (k) { return opt(k, SI.ROLES[k]); })).join("");
@@ -906,6 +1135,7 @@
 
     var entList = S.entities.length ? '<ul class="si-list">' + S.entities.map(function (e) {
         return '<li data-eid="' + esc(e.id) + '" class="si-ent-row" title="Click to locate in the report text"><span>' + esc(entLabel(e)) + (e.role ? ' · ' + esc(SI.ROLES[e.role] || e.role) : '') + ' · PND:' + esc(e.pndShare) + (e.isAlias ? ' · <em>alias</em>' : '') + '</span>' +
+          (e.type==="person" ? '<button type="button" class="btn secondary dos-open" data-person="' + esc(e.id) + '">Dossier \u2192</button>' : '') +
           (ro ? '' : '<button type="button" class="btn danger" data-del-ent="' + esc(e.id) + '" aria-label="Delete entity">×</button>') + '</li>';
       }).join('') + '</ul>' : '<p class="empty">No entities yet.</p>';
     var linkList = S.links.length ? '<ul class="si-list">' + S.links.map(function (l) {
@@ -938,7 +1168,7 @@
           '</div>') +
         '</div>' +
       '</div>' +
-      '<div class="si-add"><button type="button" class="btn" id="si-master">Compute Master/Lower preview (all reports)</button></div>' +
+      '<div class="si-add">' + (ro ? '' : '<button type="button" class="btn" id="si-extract" title="Run the same extraction engine as the chart on this report\u2019s text">Extract entities from report text</button> ') + '<button type="button" class="btn" id="si-master">Compute Master/Lower preview (all reports)</button></div>' +
       '<div id="si-master-out"></div>';
 
     if (!ro) {
@@ -981,6 +1211,18 @@
     });
     }
     document.getElementById("si-master").addEventListener("click", function () { computeMaster(ir); });
+    [].forEach.call(panel.querySelectorAll('.dos-open'), function(b){ b.addEventListener('click', function(ev){ ev.stopPropagation(); var pid=b.getAttribute('data-person'); var pe=(ir.structuredIntelligence.entities||[]).filter(function(x){return x.id===pid;})[0]; requireAccess({action:'View nominal record', target: pe?pe.label:''}, function(){ showPerson(pid); }); }); });
+    var _siEx=document.getElementById('si-extract');
+    if(_siEx) _siEx.addEventListener('click', function(){
+      var gen=generateSIFromText(ir);
+      if(!gen){ setStatus('Extraction engine unavailable or report has no text.','err'); return; }
+      var before=(ir.structuredIntelligence.entities||[]).length;
+      mergeGeneratedSI(ir,gen);
+      var added=(ir.structuredIntelligence.entities.length)-before;
+      M.addAudit(ir,'user','si-extract','engine extracted '+gen.entities.length+' entities ('+added+' new)');
+      persistSI(ir); renderMiniChart(ir);
+      setStatus('Extracted '+gen.entities.length+' entities ('+added+' new) from the report text.','ok');
+    });
   }
 
   // Inline read-only network of THIS report's entities + links, rendered with
@@ -1043,7 +1285,7 @@
         to: l.to,
         label: SI.LINK_TYPES[l.type] || l.type,
         arrows: { to: { enabled: true, scaleFactor: 0.6 } },
-        color: { color: "#3d4d61", highlight: "#bacd31", hover: "#9bb1c9" },
+        color: { color: "#3d4d61", highlight: "#6f7fe0", hover: "#9bb1c9" },
         font: { color: "#7d8a99", size: 9, face: "Geist Mono, Consolas, monospace", strokeWidth: 4, strokeColor: "#0b1017", align: "middle" },
         smooth: { enabled: !reduce, type: "dynamic" }
       };
@@ -1240,6 +1482,9 @@
         '<button type="button" class="btn secondary" id="home-all">View all reports &rarr;</button> ' +
         '<button type="button" class="btn secondary" id="home-export">Export authorised &rarr; SOLAR case</button> ' +
         '<button type="button" class="btn secondary" id="home-reload">Reload demo</button> ' +
+        '<button type="button" class="btn secondary" id="home-entities">Entity search</button> ' +
+        '<button type="button" class="btn secondary" id="home-hits">Silent hits</button> ' +
+        '<button type="button" class="btn secondary" id="home-access">Access log</button> ' +
         '<button type="button" class="btn danger" id="home-clear">Clear all reports</button></div>' +
       '<div class="ta-groups">' + (groupsHTML || '<p class="empty">No operations match.</p>') + '</div>' +
       '</div>';
@@ -1249,6 +1494,10 @@
     var he = document.getElementById("home-export"); if (he) he.addEventListener("click", exportAllAuthorised);
     var hr = document.getElementById("home-reload"); if (hr) hr.addEventListener("click", loadDemo);
     var hc = document.getElementById("home-clear"); if (hc) hc.addEventListener("click", clearAllReports);
+    var hacc = document.getElementById("home-access"); if (hacc) hacc.addEventListener("click", showAccessLog);
+    var hhit = document.getElementById("home-hits"); if (hhit) hhit.addEventListener("click", showSilentHits);
+    var hent = document.getElementById("home-entities"); if (hent) hent.addEventListener("click", function(){ requireAccess({action:'Entity search'}, showEntities); });
+    try{ if(window.RegistryWatchlist){ var _sc=window.RegistryWatchlist.scan(all); var _n=_sc.reduce(function(a,x){return a+x.hitCount;},0); if(_n && hhit) hhit.textContent="Silent hits ("+_n+")"; } }catch(e){}
   }
   function showResults() {
     view = "results"; cameFromResults = true; lastDetailUrn = null;
@@ -1418,6 +1667,11 @@
 
   /* ---------- boot ---------- */
   document.getElementById("btn-new").addEventListener("click", function () { showForm(null); });
+  (function(){
+    var u=document.getElementById("reg-user"); if(u){ u.textContent=currentUser(); u.addEventListener("click", function(){ var v=window.prompt("Your identity (grade + name):", currentUser()); if(v!=null){ try{ localStorage.setItem("reg_user", (v.trim()||"G5 Analyst")); }catch(e){} u.textContent=currentUser(); setStatus("Identity set to "+currentUser()+".","ok"); } }); }
+    var wn=document.getElementById("reg-whatsnew"); if(wn) wn.addEventListener("click", showWhatsNew);
+    var lk=document.getElementById("reg-lock"); if(lk) lk.addEventListener("click", lockWorkspace);
+  })();
   var _searchT;
   els.search.addEventListener("input", function () { filterState.text = els.search.value; filterState.page = 1; clearTimeout(_searchT); _searchT = setTimeout(showResults, 150); });
   (function () { var sb = document.getElementById("op-search"); if (sb) sb.addEventListener("input", function () { renderOpTabs(); if (view === "home") { allRows().then(renderHome); } }); })();

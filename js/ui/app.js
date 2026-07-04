@@ -63,6 +63,7 @@
     window.CRMapPane.init("map", store, selectEntity);
     window.CRTimeline.init(store, selectEntity);
     window.CRInspector.init(store);
+    if (window.CRAccess) window.CRAccess.init(store, selectEntity);
     window.CRReview.init(store);
     window.CRImporter.init(store);
     if (window.CRDragDrop) window.CRDragDrop.init(store);
@@ -104,6 +105,7 @@
   /* ---------------- selection plumbing ---------------- */
 
   function onChartSelect(sel) {
+    if (window.CRAccess) window.CRAccess.notifySelection(sel);
     _selectedEntityId = sel && sel.kind === "entity" ? sel.id : _selectedEntityId;
     if (!sel) {
       window.CRInspector.clear();
@@ -120,6 +122,7 @@
 
   function selectEntity(id) {
     window.CRGraph.focus(id);
+    if (window.CRAccess) window.CRAccess.notifySelection({ kind: "entity", id: id });
     window.CRInspector.show({ kind: "entity", id: id });
     window.CRMapPane.selectEntity(id);
     window.CRTimeline.highlightEntity(id);

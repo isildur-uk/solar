@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOLAR — theme preview (dark blue/purple · light cream/olive)</title>
+<style>
+  /* ============ DARK (default) — blue / purple ============ */
+  :root, [data-theme="dark"]{
+    --bg:#0c0c0b; --panel:#131311; --panel-2:#17171a; --line:#2a2a27; --line-2:#38382f;
+    --text:#f4f3e8; --dim:#a3a299; --faint:#84837b;
+    --accent:#8ea2ff; --accent-dim:#6f7fe0; --accent-soft:rgba(142,162,255,0.16);
+    --ok:#79c98f; --warn:#e0995e; --bad:#d86a6a;
+    --stage:radial-gradient(420px 300px at 15% 130%,rgba(142,162,255,0.18),transparent 60%),radial-gradient(360px 260px at 85% -25%,rgba(179,157,255,0.18),transparent 60%),#0e0f0d;
+    --glass-fill:linear-gradient(180deg,rgba(255,255,255,0.11) 0%,rgba(255,255,255,0.02) 44%,rgba(0,0,0,0.14) 100%),rgba(28,29,25,0.5);
+    --glass-border:rgba(244,243,232,0.16);
+    --glass-top:linear-gradient(180deg,rgba(255,255,255,0.22),rgba(255,255,255,0) 100%);
+    --glass-shadow:inset 0 1px 0 rgba(255,255,255,0.16),inset 0 -1px 0 rgba(0,0,0,0.30),0 3px 10px rgba(0,0,0,0.40);
+    --btn-text:var(--text);
+    --spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(205,214,255,0.55),rgba(142,162,255,0.18) 26%,transparent 54%);
+    --primary-fill:linear-gradient(180deg,rgba(142,162,255,0.28) 0%,rgba(179,157,255,0.10) 52%,rgba(0,0,0,0.08) 100%),rgba(30,32,44,0.55);
+    --primary-text:#eef1ff; --primary-spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(210,198,255,0.55),rgba(179,157,255,0.18) 26%,transparent 56%);
+    --grain-blend:overlay; --grain-opacity:0.05;
+  }
+  /* ============ LIGHT — cream / parchment + olive ============ */
+  [data-theme="light"]{
+    --bg:#f2ecdd; --panel:#fbf8ef; --panel-2:#efe8d7; --line:#ddd5c3; --line-2:#cec5af;
+    --text:#211f18; --dim:#635d4e; --faint:#8b8474;
+    --accent:#6b7a2f; --accent-dim:#55621f; --accent-soft:rgba(107,122,47,0.16);
+    --ok:#4d8a5a; --warn:#a9691c; --bad:#bb4f4c;
+    --stage:radial-gradient(420px 300px at 15% 130%,rgba(107,122,47,0.14),transparent 60%),radial-gradient(360px 260px at 85% -25%,rgba(120,110,60,0.10),transparent 60%),#ece5d4;
+    --glass-fill:linear-gradient(180deg,rgba(255,255,255,0.75) 0%,rgba(255,255,255,0.30) 46%,rgba(0,0,0,0.03) 100%),rgba(251,248,239,0.55);
+    --glass-border:rgba(80,74,58,0.24);
+    --glass-top:linear-gradient(180deg,rgba(255,255,255,0.85),rgba(255,255,255,0) 100%);
+    --glass-shadow:inset 0 1px 0 rgba(255,255,255,0.9),inset 0 -1px 0 rgba(0,0,0,0.08),0 2px 8px rgba(60,52,30,0.14);
+    --btn-text:#33301f;
+    --spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(125,143,52,0.42),rgba(107,122,47,0.16) 26%,transparent 54%);
+    --primary-fill:linear-gradient(180deg,rgba(107,122,47,0.9) 0%,rgba(85,98,31,0.85) 100%),rgba(251,248,239,0.6);
+    --primary-text:#fbfaf1; --primary-spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(255,255,255,0.5),rgba(255,255,255,0.14) 26%,transparent 56%);
+    --grain-blend:multiply; --grain-opacity:0.04;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;transition:background .25s,color .25s}
+  .mono{font-family:"Geist Mono","Cascadia Mono",ui-monospace,Consolas,monospace}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:16px 22px}
+  .brand{font-weight:700;letter-spacing:.02em}.brand b{color:var(--accent)}
+  .themebtn{font:600 12px "Geist Mono",monospace;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+    color:var(--text);background:var(--panel-2);border:1px solid var(--line-2);border-radius:8px;padding:9px 14px}
+  .themebtn:hover{border-color:var(--accent);color:var(--accent)}
+
+  .stage{position:relative;margin:8px 22px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--stage)}
+  .bar{display:flex;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);background:rgba(0,0,0,0.10)}
+  [data-theme="light"] .bar{background:rgba(255,255,255,0.22)}
+
+  /* glass buttons — theme-driven */
+  .b{font:600 13px "Inter",system-ui,sans-serif;color:var(--btn-text);padding:9px 16px;cursor:pointer;border-radius:10px;
+     position:relative;isolation:isolate;overflow:hidden;border:1px solid var(--glass-border);--mx:50%;--my:0%;
+     background:var(--glass-fill);-webkit-backdrop-filter:blur(12px) saturate(1.2);backdrop-filter:blur(12px) saturate(1.2);
+     box-shadow:var(--glass-shadow);text-shadow:0 1px 1px rgba(0,0,0,0.18);transition:color .18s,border-color .18s,transform .16s,box-shadow .2s}
+  [data-theme="light"] .b{text-shadow:0 1px 0 rgba(255,255,255,0.5)}
+  .b .lbl{position:relative;z-index:3}
+  .b::before{content:"";position:absolute;left:1px;right:1px;top:1px;height:48%;z-index:1;pointer-events:none;border-radius:9px 9px 42%/9px 9px 16px;background:var(--glass-top)}
+  .b::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:120px;opacity:var(--grain-opacity);mix-blend-mode:var(--grain-blend)}
+  .b .spec{position:absolute;inset:0;z-index:1;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .2s;background:var(--spec)}
+  .b:hover .spec{opacity:1}
+  .b:hover{color:var(--accent);border-color:var(--accent-dim);transform:translateY(-1px);box-shadow:var(--glass-shadow),0 0 22px -7px var(--accent)}
+  [data-theme="light"] .b:hover{color:var(--accent-dim)}
+  .b:active{transform:translateY(0) scale(.985)}
+  .b.primary{color:var(--primary-text);border-color:color-mix(in srgb,var(--accent) 60%,transparent);background:var(--primary-fill)}
+  .b.primary .spec{background:var(--primary-spec)}
+  .b.primary:hover{border-color:var(--accent);color:var(--primary-text)}   /* keep label readable on hover */
+
+  /* a data panel to show the scheme on real console content */
+  .panel{margin:16px 22px;border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+  .ph{font:600 11px "Geist Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);background:var(--panel-2);padding:9px 14px;border-bottom:1px solid var(--line)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font:600 10px "Geist Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);text-align:left;padding:8px 14px;border-bottom:1px solid var(--line)}
+  th.c{text-align:center}
+  td{padding:8px 14px;border-bottom:1px solid var(--line);color:var(--text)}
+  td.c{text-align:center;font-family:"Geist Mono",monospace;font-weight:700}
+  tr[data-sel="1"]{background:var(--accent-soft)}
+  tr:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+  /* source chips are colour-coded PER SOURCE FAMILY (not the accent) — that coding is meaningful */
+  .chip{display:inline-flex;justify-content:center;min-width:118px;font:600 11px "Geist Mono",monospace;color:var(--src,#8593a3);
+    background:color-mix(in srgb,var(--src,#8593a3) 14%,transparent);border:1px solid color-mix(in srgb,var(--src,#8593a3) 42%,transparent);border-radius:3px;padding:4px 8px}
+  .s1{color:var(--ok)} .s2{color:var(--warn)} .s3{color:var(--bad)}
+  .banner{margin:8px 22px 0;text-align:center;font:600 11px "Geist Mono",monospace;letter-spacing:.18em;color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);border:1px solid var(--line);border-radius:6px;padding:7px}
+  .foot{color:var(--faint);font-size:12px;margin:14px 22px 40px}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand">SOL<b>AR</b> — theme preview</div>
+    <button class="themebtn" id="toggle">Switch to light</button>
+  </div>
+  <div class="banner">OFFICIAL–SENSITIVE</div>
+
+  <div class="stage">
+    <div class="bar">
+      <button class="b primary"><span class="spec"></span><span class="lbl">ADD ▾</span></button>
+      <button class="b"><span class="spec"></span><span class="lbl">CASE ▾</span></button>
+      <button class="b"><span class="spec"></span><span class="lbl">LOGS</span></button>
+      <button class="b"><span class="spec"></span><span class="lbl">DATABASE</span></button>
+      <button class="b"><span class="spec"></span><span class="lbl">TOOLS ▾</span></button>
+      <button class="b"><span class="spec"></span><span class="lbl">UNDO</span></button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph">Entities · selection uses the accent</div>
+    <table>
+      <thead><tr><th>Label</th><th>Type</th><th>Source</th><th class="c">S</th><th class="c">I</th></tr></thead>
+      <tbody>
+        <tr data-sel="1"><td>Stefan VOSS</td><td>Person</td><td><span class="chip" style="--src:#6ea8d8">PNC</span></td><td class="c s1">1</td><td class="c s1">A</td></tr>
+        <tr><td>+44 7700 900001</td><td>Telephone</td><td><span class="chip" style="--src:#66b8d6">IPA Comms Data</span></td><td class="c s2">2</td><td class="c s2">C</td></tr>
+        <tr><td>Bristol Airport</td><td>Location</td><td><span class="chip" style="--src:#56b6a6">NBTC</span></td><td class="c s3">3</td><td class="c s3">E</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="foot">Toggle top-right. Dark = blue/purple (default). Light = cream/parchment + olive. Grade colours (green/amber/red) are semantic and stay in both. Tell me: keep these exact hues, or nudge the blue / violet / olive.</p>
+
+<script>
+  var root=document.documentElement, t=document.getElementById('toggle');
+  t.addEventListener('click',function(){
+    var light=root.getAttribute('data-theme')!=='light';
+    root.setAttribute('data-theme',light?'light':'dark');
+    t.textContent=light?'Switch to dark':'Switch to light';
+  });
+  document.querySelectorAll('.b').forEach(function(b){
+    b.addEventListener('pointermove',function(e){var r=b.getBoundingClientRect();
+      b.style.setProperty('--mx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+      b.style.setProperty('--my',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');});
+  });
+</script>
+</body>
+</html>

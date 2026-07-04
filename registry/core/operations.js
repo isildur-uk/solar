@@ -4,7 +4,7 @@
 "use strict";
 (function () {
   var T = (typeof require!=="undefined") ? require("./threat-areas.js") : (typeof window!=="undefined"?window.RegistryThreatAreas:null);
-  var CSE="CSE - Child Sexual Exploitation",
+  var ENV="ENV - Environmental Crime",
       MODSL="MODSL - Modern Slavery & Human Trafficking",
       OIC="OIC - Organised Immigration Crime",
       DRUGS="Drugs - Drug Trafficking",
@@ -18,7 +18,7 @@
       XBORDER="Cross-Cutting - Border vulnerabilities";
 
   var OPERATIONS = [
-    { name:"OP NEPTUNE",   threatArea:CSE },
+    { name:"OP NEPTUNE",   threatArea:ENV },
     { name:"OP COMET",     threatArea:MODSL },
     { name:"OP AURORA",    threatArea:OIC },
     { name:"OP QUASAR",    threatArea:DRUGS },

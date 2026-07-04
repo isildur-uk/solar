@@ -58,7 +58,12 @@
     var h = (ir && ir.handling && ir.handling.code) || "P";
     return G.code(graded.sourceEval, graded.intelEval, h);
   }
-  var api = { validateIR: validateIR, itemGrade: itemGrade };
+  function _gradeRank(it){ var s=parseInt(it.sourceEval,10); if(isNaN(s)) s=0; var i="ABCDE".indexOf(String(it.intelEval||"").toUpperCase()); return s*10+(i<0?0:i+1); }
+  // The report's overall grade is taken from its LEAST reliable item: worst source
+  // evaluation first (3>2>1), tie-broken by worst intelligence evaluation (E>..>A).
+  function worstItem(ir){ var its=((ir&&ir.items)||[]).filter(function(x){return !x.isProvenance;}); if(!its.length) return null; var w=its[0]; for(var k=1;k<its.length;k++){ if(_gradeRank(its[k])>_gradeRank(w)) w=its[k]; } return w; }
+  function reportGrade(ir){ var w=worstItem(ir); if(!w) return null; var h=(ir.handling&&ir.handling.code)||"P"; return { sourceEval:w.sourceEval, intelEval:w.intelEval, handling:h, code:G.code(w.sourceEval,w.intelEval,h) }; }
+  var api = { validateIR: validateIR, itemGrade: itemGrade, worstItem: worstItem, reportGrade: reportGrade };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
   if (typeof window !== "undefined") { window.RegistryValidate = api; }
 })();

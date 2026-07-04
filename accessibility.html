@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accessibility statement — SOLAR</title>
+<style>
+  :root{ --ink:#1a1a17; --dim:#4a4a43; --line:#d8d5c9; --paper:#fbfaf6; --accent:#5f6b12; }
+  *{box-sizing:border-box}
+  body{margin:0;background:#e9e7df;color:#1a1a17;
+    font:16px/1.62 "Inter","Segoe UI",system-ui,-apple-system,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .doc{max-width:760px;margin:0 auto;background:#fbfaf6;min-height:100vh;padding:48px 40px 80px;
+    box-shadow:0 0 40px rgba(0,0,0,.08)}
+  a{color:#3f480c} a:hover{text-decoration:none}
+  .skip{position:absolute;left:-9999px}.skip:focus{left:8px;top:8px;position:fixed;background:#1a1a17;color:#fff;padding:8px 12px}
+  .eyebrow{font:600 12px/1 ui-monospace,Consolas,monospace;letter-spacing:.18em;text-transform:uppercase;color:#5f6b12;margin-bottom:14px}
+  h1{font-size:2.05rem;line-height:1.12;letter-spacing:-.02em;margin:0 0 6px}
+  .sub{color:#4a4a43;margin:0 0 30px}
+  h2{font-size:1.28rem;letter-spacing:-.01em;margin:34px 0 8px;padding-top:20px;border-top:1px solid #d8d5c9}
+  h3{font-size:1.05rem;margin:20px 0 6px}
+  p,li{color:#26261f}
+  ul{padding-left:22px} li{margin:5px 0}
+  .note{background:#f2efe6;border:1px solid #d8d5c9;border-radius:4px;padding:14px 16px;margin:18px 0}
+  .fine{margin-top:40px;padding-top:16px;border-top:1px solid #d8d5c9;font-size:13px;color:#6b6a60}
+  code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;background:#efece2;padding:1px 5px;border-radius:3px}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="doc">
+  <div class="eyebrow">SOLAR</div>
+  <h1>Accessibility statement for SOLAR</h1>
+  <p class="sub">This statement applies to the SOLAR demonstration workbench, registry and front door.</p>
+
+  <main id="main">
+    <p>SOLAR is a local-first intelligence workbench that runs in the browser on the user&#8217;s own machine. This statement is written to reflect the format set out in the Public Sector Bodies (Websites and Mobile Applications) Accessibility Regulations 2018 (&#8220;PSBAR 2018&#8221;), against the <abbr title="Web Content Accessibility Guidelines">WCAG</abbr> 2.2 AA standard.</p>
+
+    <div class="note">
+      <strong>Honest status.</strong> SOLAR is a demonstration build on synthetic data. It has not yet been independently audited. This statement is a truthful self-assessment, not a claim of certified conformance. An independent WCAG 2.2 AA and assistive-technology audit is required before any operational or procurement submission.
+    </div>
+
+    <h2>Compliance status</h2>
+    <p>This application is <strong>partially compliant</strong> with the WCAG 2.2 AA standard, due to the non-compliances and the not-yet-audited status listed below.</p>
+
+    <h2>What you can do</h2>
+    <p>We aim to let you:</p>
+    <ul>
+      <li>operate the core workflow &#8212; add intelligence, review extracted entities, and inspect the resulting network &#8212; using a keyboard alone;</li>
+      <li>read a text equivalent of the visual link chart and map. Below the timeline, the <strong>&#8220;Text equivalent of chart &amp; map&#8221;</strong> panel (toggle with the button, or press <code>Alt&#8202;+&#8202;T</code>) presents every entity, relationship and location as navigable tables, driven from the same data as the chart;</li>
+      <li>select any entity from that panel with <code>Enter</code>; the selection is announced via a live region and is synchronised with the chart, map, timeline and inspector;</li>
+      <li>use the interface with a screen reader for the report registry and the structured panels.</li>
+    </ul>
+
+    <h2>Non-accessible content</h2>
+    <h3>Known limitations</h3>
+    <ul>
+      <li><strong>The link chart and map are rendered to canvas</strong> and are not themselves exposed to assistive technology. The text-equivalent panel is provided as the conforming alternative; the canvases carry an accessible name pointing to it. (WCAG 1.1.1, 4.1.2.)</li>
+      <li><strong>The timeline is canvas-based.</strong> Its events are represented as dated entries within the entity and relationship tables of the text-equivalent panel; a dedicated timeline table is a planned improvement.</li>
+      <li><strong>Map tiles</strong> are supplied by an external basemap service and may not meet all contrast expectations; location data is fully available as text in the equivalent panel and does not depend on the tiles.</li>
+      <li><strong>No independent audit has yet been carried out.</strong> Further issues may exist that only a formal assistive-technology audit will surface.</li>
+    </ul>
+
+    <h2>Preparation of this statement</h2>
+    <p>This statement was prepared on the basis of a self-assessment of the demonstration build: automated checks, code review, a keyboard-operation review of the core workflow, and a review of the semantic structure exposed to screen readers. It has not been verified by an external body.</p>
+
+    <h2>Feedback and contact information</h2>
+    <p>If you find an accessibility problem, or need information from SOLAR in a different format, please contact the project. As a demonstration build, responses are on a best-effort basis.</p>
+    <p>Contact: <a href="mailto:ben.wilson2092@gmail.com?subject=SOLAR%20accessibility">ben.wilson2092@gmail.com</a></p>
+
+    <h2>Enforcement procedure</h2>
+    <p>In the United Kingdom, the Equality and Human Rights Commission (<abbr title="Equality and Human Rights Commission">EHRC</abbr>) enforces the accessibility regulations. If you are not happy with how we respond to your complaint, contact the Equality Advisory and Support Service (<abbr title="Equality Advisory and Support Service">EASS</abbr>).</p>
+  </main>
+
+  <p class="fine">Statement prepared 4 July 2026 for the SOLAR demonstration build. It will be reviewed when the build changes materially and following any independent audit. SOLAR holds no security accreditation and this statement is not a claim of one.</p>
+</div>
+</body>
+</html>

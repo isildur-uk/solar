@@ -35,9 +35,9 @@
       "#mt-row{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap;font-size:12px}" +
       "#mt-status{color:var(--txt-dim,#9aa7b6)}" +
       "#mt-status.err{color:var(--danger,#d9554f)}" +
-      "#mt-banner{border:1px solid var(--accent,#e8b34b);border-radius:4px;padding:6px 8px;margin:8px 0;" +
+      "#mt-banner{border:1px solid var(--accent,#8ea2ff);border-radius:4px;padding:6px 8px;margin:8px 0;" +
         "background:rgba(232,179,75,.08);color:var(--txt,#e6edf3);font-size:12px}" +
-      "#mt-banner b{color:var(--accent,#e8b34b)}" +
+      "#mt-banner b{color:var(--accent,#8ea2ff)}" +
       "#mt-orig{margin-top:6px}" +
       "#mt-orig pre{white-space:pre-wrap;word-break:break-word;max-height:160px;overflow:auto;" +
         "background:var(--bg-inset,#070a0e);border:1px solid var(--line,#1e2632);border-radius:4px;" +

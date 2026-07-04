@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
+<script>(function(){try{var t=localStorage.getItem("solar_theme")||"dark";document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Registry</title>
@@ -17,6 +19,9 @@
   <button id="reg-logs" class="btn" type="button" title="Intelligence logs for the shared case">Logs</button>
   <a id="reg-chart" class="btn" href="../index.html" title="Open the link chart for the shared case">Chart →</a>
   <button id="btn-new" class="btn masthead-new" type="button">+ New report</button>
+  <button id="reg-whatsnew" class="btn masthead-wn" type="button">What’s New</button>
+  <button id="reg-lock" class="masthead-icon" type="button" title="Lock workspace" aria-label="Lock workspace">Lock</button>
+  <button id="reg-user" class="masthead-user" type="button" title="Set your identity">G5 Analyst</button>
 </header>
 
 <main class="main" id="main" aria-live="polite"></main>
@@ -31,11 +36,17 @@
 <script src="core/threat-areas.js"></script>
 <script src="core/operations.js"></script>
 <script src="core/ir-model.js"></script>
+<script src="core/source-meta.js"></script>
 <script src="core/ir-validate.js"></script>
 <script src="core/normalise.js"></script>
 <script src="core/repository.js"></script>
 <script src="core/si-model.js"></script>
+<script src="core/si-extract.js"></script>
 <script src="core/matching.js"></script>
+<script src="core/dossier.js"></script>
+<script src="core/access-log.js"></script>
+<script src="core/watchlist.js"></script>
+<script src="core/entity-index.js"></script>
 <script src="core/workflow.js"></script>
 <script src="core/deletion.js"></script>
 <script src="core/handoff.js"></script>
@@ -68,5 +79,6 @@
 <script src="../js/core/segment.js"></script>
 <script src="../js/core/extract.js"></script>
 <script src="app.js"></script>
+<script src="../js/ui/theme.js"></script>
 </body>
 </html>

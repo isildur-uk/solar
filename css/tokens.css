@@ -30,8 +30,8 @@
   --sol-bone:        #dedcc9;   /* secondary luminance */
   --sol-white:       #ffffff;   /* emitted light — wordmark, primary text */
   --sol-signal:      #2563eb;   /* functional accent — focus only */
-  --sol-amber:       #ebfc72;   /* the horizon glow — our brand accent */
-  --sol-glow:        235, 252, 114;
+  --sol-amber:       #8ea2ff;   /* the horizon glow — our brand accent */
+  --sol-glow:        142, 162, 255;
 
   /* ---- type ---- */
   --sol-font-display: "Inter Var", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;

@@ -11,7 +11,7 @@
 
 (function () {
   var THREAT_AREAS = [
-    "CSE - Child Sexual Exploitation",
+    "ENV - Environmental Crime",
     "MODSL - Modern Slavery & Human Trafficking",
     "OIC - Organised Immigration Crime",
     "Drugs - Drug Trafficking",
@@ -27,14 +27,14 @@
   ];
 
   var THREAT_COLOURS = {
-    "CSE - Child Sexual Exploitation": "#d9534f",
+    "ENV - Environmental Crime": "#5f9e86",
     "MODSL - Modern Slavery & Human Trafficking": "#d88c6e",
     "OIC - Organised Immigration Crime": "#6ea8d8",
     "Drugs - Drug Trafficking": "#79c98f",
     "Firearms - Illegal Firearms": "#c9c36a",
     "EConC - Economic Crime / Money Laundering": "#a8c97f",
     "BC & Sanctions Evasion - Bribery, Corruption & Sanctions Evasion": "#d8a16e",
-    "Fraud": "#b48ad6",
+    "Fraud": "#c98f8f",
     "Cyber - Cyber Crime": "#5fc4c0",
     "OAT - Organised Acquisitive Crime": "#7fb0c9",
     "Cross-Cutting - Criminal use of technology": "#9aa5b1",

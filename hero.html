@@ -25,7 +25,7 @@
 :root {
   --bg:   #000000;
   --text: #f4f3e8;
-  --accent: #ebfc72;
+  --accent: #8ea2ff;
   --sans: "Inter Var", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "Geist Mono Var", "Geist Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
 }
@@ -40,7 +40,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-::selection { background: rgba(235, 252, 114, 0.22); }
+::selection { background: rgba(142, 162, 255, 0.22); }
 
 /* layer 0 — the starfield */
 #stars  { position: fixed; inset: 0; z-index: 0; display: block; }
@@ -159,13 +159,13 @@ body.warping .content {
     inset -1px -1px 1px -0.5px rgba(255, 255, 255, 0.5),
     inset 0 0 6px 6px rgba(255, 255, 255, 0.12),
     inset 0 0 2px 2px rgba(255, 255, 255, 0.06),
-    0 0 22px rgba(235, 252, 114, 0.20);          /* a breath of brand lime */
+    0 0 22px rgba(142, 162, 255, 0.20);          /* a breath of brand lime */
 }
 .enter:focus-visible .enter-rim {
   box-shadow:
     inset 3px 3px 0.5px -3.5px rgba(255, 255, 255, 0.6),
     inset -3px -3px 0.5px -3.5px rgba(255, 255, 255, 0.6),
-    0 0 0 2px rgba(235, 252, 114, 0.85);
+    0 0 0 2px rgba(142, 162, 255, 0.85);
 }
 .enter-label {
   position: relative;
@@ -233,10 +233,10 @@ body.warping .content {
     inset 2px 2px 0.5px -2.5px rgba(255, 255, 255, 0.6),
     inset -2px -2px 0.5px -2.5px rgba(255, 255, 255, 0.6),
     inset 0 0 5px 5px rgba(255, 255, 255, 0.09),
-    0 0 18px rgba(235, 252, 114, 0.20);
+    0 0 18px rgba(142, 162, 255, 0.20);
 }
 .pill:focus-visible .pill-rim {
-  box-shadow: 0 0 0 2px rgba(235, 252, 114, 0.85);
+  box-shadow: 0 0 0 2px rgba(142, 162, 255, 0.85);
 }
 .pill-label { position: relative; z-index: 2; text-shadow: 0 1px 14px rgba(0, 0, 0, 0.5); }
 

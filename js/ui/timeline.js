@@ -21,7 +21,7 @@
   var drag = null;
 
   var KIND_COLOURS = {
-    travel: "#6ea8d8", transaction: "#7fc97f", conviction: "#d86a6a", other: "#e8b34b"
+    travel: "#6ea8d8", transaction: "#7fc97f", conviction: "#d86a6a", other: "#8593a3"
   };
 
   function kindOf(ev) {
@@ -147,7 +147,7 @@
       ctx.arc(x, y, hl ? 6 : 4.2, 0, Math.PI * 2);
       ctx.fill();
       if (hl) {
-        ctx.strokeStyle = "#e8b34b";
+        ctx.strokeStyle = "#8ea2ff";
         ctx.lineWidth = 1.6;
         ctx.beginPath(); ctx.arc(x, y, 8.4, 0, Math.PI * 2); ctx.stroke();
         ctx.lineWidth = 1;
@@ -168,7 +168,7 @@
       lx += 9 + ctx.measureText(k).width + 14;
     });
     if (range) {
-      ctx.fillStyle = "#e8b34b";
+      ctx.fillStyle = "#8ea2ff";
       ctx.fillText("time filter on — double-click to clear", lx + 6, 12);
     }
   }

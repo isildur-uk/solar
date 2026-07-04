@@ -120,7 +120,7 @@
     font: 500 10px var(--mono, Consolas, monospace); cursor: pointer;
   }
   #bottom-nav button .bn-ico { font-size: 18px; line-height: 1; }
-  #bottom-nav button[aria-pressed="true"] { color: var(--accent, #ebfc72); }
+  #bottom-nav button[aria-pressed="true"] { color: var(--accent, #8ea2ff); }
 }
 
 /* ===================== "More" drawer ===================== */
@@ -156,7 +156,7 @@
 }
 #ocr-overlay .ocr-spin {
   width: 34px; height: 34px; margin: 0 auto 12px;
-  border: 3px solid var(--line, #2a2a27); border-top-color: var(--accent, #ebfc72);
+  border: 3px solid var(--line, #2a2a27); border-top-color: var(--accent, #8ea2ff);
   border-radius: 50%; animation: ocr-spin 0.9s linear infinite;
 }
 @keyframes ocr-spin { to { transform: rotate(360deg); } }
@@ -172,9 +172,9 @@
 }
 #map-tools .btn { font-size: 11px; padding: 5px 9px; }
 .btn.active {
-  border-color: var(--accent, #ebfc72) !important;
-  color: var(--accent, #ebfc72) !important;
-  box-shadow: 0 0 0 1px var(--accent, #ebfc72) inset;
+  border-color: var(--accent, #8ea2ff) !important;
+  color: var(--accent, #8ea2ff) !important;
+  box-shadow: 0 0 0 1px var(--accent, #8ea2ff) inset;
 }
 .kp-note { font: 11px var(--mono, Consolas, monospace); color: var(--muted, #84837b); margin: 0 0 12px; }
 .kp-grid { display: flex; gap: 18px; flex-wrap: wrap; }
@@ -189,10 +189,10 @@
   background: none; border: 0; border-radius: 6px; padding: 6px 8px; cursor: pointer;
   color: var(--ink, #f4f3e8); font: 12px var(--mono, Consolas, monospace);
 }
-.kp-row:hover { background: rgba(235,252,114,0.08); }
+.kp-row:hover { background: rgba(142,162,255,0.08); }
 .kp-rank { color: var(--muted, #84837b); width: 18px; }
 .kp-lbl { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kp-score { color: var(--accent, #ebfc72); font-weight: 600; }
+.kp-score { color: var(--accent, #8ea2ff); font-weight: 600; }
 @media (max-width: 760px) { .kp-grid { flex-direction: column; } }
 
 /* ===================== iOS Safari robustness ===================== */
@@ -287,16 +287,16 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    border: 1px solid var(--accent, #ebfc72);
+    border: 1px solid var(--accent, #8ea2ff);
     background: var(--panel, #0c0c0b);
-    color: var(--accent, #ebfc72);
+    color: var(--accent, #8ea2ff);
     font: 600 28px/1 Inter, system-ui, sans-serif;
-    box-shadow: 0 8px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(235,252,114,.18) inset;
+    box-shadow: 0 8px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(142,162,255,.18) inset;
     cursor: pointer;
   }
   body.mobile-mode[data-mview="chart"] #chart-fab:active { transform: scale(0.94); }
   body.mobile-mode[data-mview="chart"] #chart-fab:focus-visible {
-    outline: 2px solid var(--accent, #ebfc72); outline-offset: 2px;
+    outline: 2px solid var(--accent, #8ea2ff); outline-offset: 2px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

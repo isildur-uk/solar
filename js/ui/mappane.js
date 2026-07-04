@@ -144,7 +144,7 @@
       var sel = e.id === selectedId;
       var mk = L.circleMarker(c, {
         radius: sel ? 9 : 6,
-        color: sel ? "#ebfc72" : col,
+        color: sel ? "#8ea2ff" : col,
         weight: 2,
         fillColor: "#0f1620",
         fillOpacity: 0.9,
@@ -223,8 +223,7 @@
     rebuild();
     var mk = markers[id];
     if (mk) {
-      var tz = Math.max(map.getZoom(), 8);
-      map.flyTo(mk.getLatLng(), tz, { duration: 0.8 });
+      map.panTo(mk.getLatLng(), { animate: true }); // pan only — no zoom change
       mk.openPopup();
     }
   }
