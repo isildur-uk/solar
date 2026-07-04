@@ -140,10 +140,9 @@
   /* pick a specific icon glyph from entity subtype (airport vs city, social platform, …) */
   function iconKey(e) {
     var a = e.attrs || {};
-    var G = (window.CRIcons && window.CRIcons.GLYPHS) || {};
     if (a.kind === "social-account") {
       var p = (a.platform || "").toLowerCase();
-      return G[p] ? p : "social";
+      return (window.CRIcons && window.CRIcons.has && window.CRIcons.has(p)) ? p : "social";
     }
     if (e.type === "location" && a.kind === "airport") return "airport";
     return e.type;
