@@ -137,6 +137,18 @@
   function TL() { return document.documentElement.getAttribute("data-theme") === "light"; }
   function pk(dark, light) { return TL() ? light : dark; }
 
+  /* pick a specific icon glyph from entity subtype (airport vs city, social platform, …) */
+  function iconKey(e) {
+    var a = e.attrs || {};
+    var G = (window.CRIcons && window.CRIcons.GLYPHS) || {};
+    if (a.kind === "social-account") {
+      var p = (a.platform || "").toLowerCase();
+      return G[p] ? p : "social";
+    }
+    if (e.type === "location" && a.kind === "airport") return "airport";
+    return e.type;
+  }
+
   function nodeFromEntity(e) {
     var T = window.CRModel.ENTITY_TYPES[e.type] || { colour: "#8593a3" };
     var country = e.type === "location" && e.attrs && e.attrs.kind === "country" && e.attrs.cc;
@@ -174,7 +186,7 @@
     } else {
       n.opacity = 1;
     }
-    if (e.type === "note") {
+    if (e.type === "note" && !(e.attrs && e.attrs.kind === "social-account")) {
       n.color.background = "#2a2716";
       n.color.border = "#d9c87a";
       n.font.color = "#d9c87a";
@@ -199,7 +211,7 @@
         n.shapeProperties = { useBorderWithImage: true };
         n.font.vadjust = 6;
       } else if (window.CRIcons) {
-        var ic = window.CRIcons.get(e.type, T.colour);
+        var ic = window.CRIcons.get(iconKey(e), T.colour);
         n.shape = "image";
         n.image = { unselected: ic.unselected, selected: ic.selected };
         n.size = ICON_SIZE[e.type] || 17;
