@@ -63,16 +63,30 @@
 
   var cache = {};
 
+  function isLight() { return typeof document !== "undefined" && document.documentElement.getAttribute("data-theme") === "light"; }
+  // darken a #rrggbb toward black by factor f (0..1) — lifts ring contrast on the cream light canvas
+  function darken(hex, f) {
+    var h = String(hex || "#8593a3").replace("#", "");
+    if (h.length !== 6) return hex;
+    var r = Math.round(parseInt(h.slice(0, 2), 16) * f);
+    var g = Math.round(parseInt(h.slice(2, 4), 16) * f);
+    var b = Math.round(parseInt(h.slice(4, 6), 16) * f);
+    return "#" + [r, g, b].map(function (v) { return ("0" + v.toString(16)).slice(-2); }).join("");
+  }
+
   function svgFor(type, colour, selected) {
     var glyph = GLYPHS[type] || GLYPHS.flag;
-    var ring = selected ? "#8ea2ff" : colour;
+    var light = isLight();
+    var chip = light ? "#faf6ec" : "#10161f";     // squircle fill: cream in light, near-black in dark
+    var ink = light ? "#2a2820" : "#dbe5ef";      // glyph stroke flips for contrast
+    var ring = selected ? "#8ea2ff" : (light ? darken(colour, 0.66) : colour);
     var glow = selected
       ? '<rect x="2" y="2" width="60" height="60" rx="18" fill="none" stroke="#8ea2ff" stroke-opacity="0.35" stroke-width="5"/>'
       : "";
     return '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">' +
       glow +
-      '<rect x="5" y="5" width="54" height="54" rx="15" fill="#10161f" stroke="' + ring + '" stroke-width="' + (selected ? 3.4 : 2.6) + '"/>' +
-      '<g fill="none" stroke="#dbe5ef" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">' +
+      '<rect x="5" y="5" width="54" height="54" rx="15" fill="' + chip + '" stroke="' + ring + '" stroke-width="' + (selected ? 3.4 : 2.6) + '"/>' +
+      '<g fill="none" stroke="' + ink + '" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">' +
       glyph + "</g></svg>";
   }
 
@@ -83,7 +97,7 @@
   /** get(type, colour) -> { unselected, selected } data URIs (cached). */
   function get(type, colour) {
     colour = colour || "#8593a3";
-    var key = type + "|" + colour;
+    var key = (isLight() ? "L" : "D") + "|" + type + "|" + colour;
     if (!cache[key]) {
       cache[key] = {
         unselected: uri(svgFor(type, colour, false)),

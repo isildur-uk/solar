@@ -55,9 +55,12 @@
 
   function frame(now) {
     var t = now - t0;
+    var light = document.documentElement.getAttribute("data-theme") === "light";
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = "#0a0a09";
+    ctx.fillStyle = light ? "#f2ecdd" : "#0a0a09";
     ctx.fillRect(0, 0, W, H);
+    /* light theme: clean cream canvas, no cosmic nebula (the cosmic brand lives in dark mode) */
+    if (light) { if (!reduce) requestAnimationFrame(frame); return; }
 
     ctx.globalCompositeOperation = "lighter";
     for (var i = 0; i < blobs.length; i++) {
@@ -97,6 +100,7 @@
     ro.observe(wrap);
   }
   window.addEventListener("resize", size);
+  window.addEventListener("cr-theme", function () { frame(performance.now()); });
 
   size();
   if (reduce) frame(performance.now());

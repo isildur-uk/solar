@@ -243,11 +243,14 @@ body {
   padding: 0 10px;
   font: 600 10px var(--mono);
   letter-spacing: 0.14em;
-  color: var(--faint);
+  color: var(--dim);
   cursor: pointer;
   user-select: none;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-#timeline-head:hover { color: var(--dim); }
+#timeline-head:hover { color: var(--text); background: var(--panel-2); }
+#timeline-wrap.collapsed #timeline-head { color: var(--faint); }
+#timeline-wrap.collapsed #timeline-head:hover { color: var(--text); }
 #timeline { flex: 1; position: relative; overflow-x: auto; overflow-y: hidden; }
 #timeline .axis {
   position: absolute; left: 0; right: 0; top: 50%;
@@ -573,6 +576,9 @@ mark.hl-ip { background: color-mix(in srgb, var(--c-ip) 20%, transparent); borde
   background: rgba(10,10,9,.55); color: var(--dim);
   border-color: var(--line); border-top: none; font: 10px var(--mono);
 }
+/* keep leaflet corner controls off the map edges (scale, fit-pins, attribution) */
+.leaflet-bottom.leaflet-left .leaflet-control { margin: 0 0 8px 8px; }
+.leaflet-bottom.leaflet-right .leaflet-control { margin: 0 8px 8px 0; }
 .cr-label-tiles { transition: opacity .35s ease; }
 
 /* map connection / travel arcs */
@@ -772,7 +778,7 @@ html[data-theme="light"]{
 }
 /* global cursor torch — a soft light that follows the pointer over everything */
 #cursor-torch{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483000;opacity:0;transition:opacity .35s ease;
-  background:radial-gradient(240px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 12%, transparent), transparent 62%)}
+  background:radial-gradient(130px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 11%, transparent), transparent 60%)}
 #cursor-torch.on{opacity:1}
 @media (prefers-reduced-motion: reduce){ #cursor-torch{display:none} }
 /* theme toggle button */

@@ -93,12 +93,8 @@
     if (hadLocal && store.entities.length) {
       var hinted = false;
       try { hinted = sessionStorage.getItem("solar_cover_hint") === "1"; } catch (e) { /* noop */ }
-      if (!hinted) {
-        setTimeout(function () {
-          status("Tip — click the SOLAR brand for the full cover experience");
-          try { sessionStorage.setItem("solar_cover_hint", "1"); } catch (e) { /* noop */ }
-        }, 1600);
-      }
+      /* cover-hint toast removed — it overlapped the chart bottom and was more clutter than help */
+      void hinted;
     }
   }
 

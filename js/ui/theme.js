@@ -14,6 +14,8 @@
     root.setAttribute("data-theme", t);
     try { localStorage.setItem("solar_theme", t); } catch (e) { /* noop */ }
     if (btn) { btn.textContent = label(t); btn.setAttribute("aria-pressed", t === "light" ? "true" : "false"); }
+    if (window.CRGraph && window.CRGraph.rebuild) { try { window.CRGraph.rebuild(); } catch (e) { /* noop */ } }
+    try { window.dispatchEvent(new Event("cr-theme")); } catch (e) { /* noop */ }
   }
 
   function wire() {

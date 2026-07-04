@@ -133,6 +133,10 @@
     return { lines: lines, warn: warn };
   }
 
+  /* theme-aware chart palette — cosmic dark (default) ↔ cream light */
+  function TL() { return document.documentElement.getAttribute("data-theme") === "light"; }
+  function pk(dark, light) { return TL() ? light : dark; }
+
   function nodeFromEntity(e) {
     var T = window.CRModel.ENTITY_TYPES[e.type] || { colour: "#8593a3" };
     var country = e.type === "location" && e.attrs && e.attrs.kind === "country" && e.attrs.cc;
@@ -143,14 +147,14 @@
       size: TYPE_SIZE[e.type] || 13,
       hidden: entityHidden(e) || (geoHidden && !!country),
       color: {
-        background: "#131c28",
+        background: pk("#131c28", "#fbf8ef"),
         border: T.colour,
-        highlight: { background: "#1d2a3a", border: "#8ea2ff" }
+        highlight: { background: pk("#1d2a3a", "#efe6cf"), border: "#8ea2ff" }
       },
       borderWidth: 2,
       borderWidthSelected: 3,
       shadow: { enabled: true, color: glowOf(T.colour, 0.42), size: 22, x: 0, y: 0 },
-      font: { color: "#c9d4e0", size: 12, face: "Segoe UI", strokeWidth: 5, strokeColor: "#0c0c0b", vadjust: 2 },
+      font: { color: pk("#c9d4e0", "#26241b"), size: 12, face: "Segoe UI", strokeWidth: 5, strokeColor: pk("#0c0c0b", "#f4efe1"), vadjust: 2 },
       title: titleFor(e)
     };
     // persisted manual position
@@ -247,7 +251,7 @@
     if (l.negated) return "#d86a6a";
     if (colorMode === "type") return paletteFor(l.type);
     if (colorMode === "source") return paletteFor(originOf(l));
-    return "#3d4d61";
+    return pk("#3d4d61", "#b8ad93");
   }
 
   function baseEdge(l) {
@@ -267,8 +271,8 @@
         width: 1,
         hidden: linkHidden(l),
         shadow: false,
-        color: { color: "rgba(61,77,97,0.16)", highlight: "#8ea2ff", hover: "#9bb1c9" },
-        font: { color: "rgba(125,138,153,0.15)", size: 9, face: "Consolas", strokeWidth: 0, align: "middle" },
+        color: { color: pk("rgba(61,77,97,0.16)", "rgba(70,64,48,0.18)"), highlight: "#8ea2ff", hover: "#9bb1c9" },
+        font: { color: pk("rgba(125,138,153,0.15)", "rgba(70,64,48,0.24)"), size: 9, face: "Consolas", strokeWidth: 0, align: "middle" },
         smooth: { type: "continuous" }
       };
     }
@@ -280,7 +284,7 @@
       hidden: linkHidden(l),
       shadow: { enabled: l.confidence === "high" && colorMode === "confidence", color: "rgba(232,179,75,0.18)", size: 8, x: 0, y: 0 },
       color: { color: edgeColour(l), highlight: "#8ea2ff", hover: "#9bb1c9" },
-      font: { color: "#7d8a99", size: 9, face: "Consolas", strokeWidth: 4, strokeColor: "#0b1017", align: "middle" },
+      font: { color: pk("#9fb0c4", "#4d4839"), size: 10, face: "Consolas", strokeWidth: 4, strokeColor: pk("#0b1017", "#f4efe1"), align: "middle" },
       smooth: { type: "continuous" }
     };
   }

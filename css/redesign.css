@@ -74,6 +74,9 @@ input[type="text"], input[type="search"], textarea,
 /* ---- the animated nebula sits behind the chart ---- */
 #chart-wrap { background: #0a0a09; }
 #space-bg   { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.15; }
+/* light theme: cream chart canvas, cosmic nebula hidden (the cosmic brand lives in dark mode) */
+html[data-theme="light"] #chart-wrap { background: #f2ecdd; }
+html[data-theme="light"] #space-bg   { opacity: 0; }
 #chart      { position: absolute; inset: 0; z-index: 1; background: transparent; }
 #chart-tools  { z-index: 30; }
 #legend-panel { z-index: 20; }
