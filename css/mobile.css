@@ -167,7 +167,7 @@
 
 /* ===================== analysis tools (netpanel) ===================== */
 #map-tools {
-  position: absolute; top: 8px; left: 8px; z-index: 600;
+  position: absolute; top: 8px; right: 8px; z-index: 600;
   display: flex; gap: 6px;
 }
 #map-tools .btn { font-size: 11px; padding: 5px 9px; }

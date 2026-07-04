@@ -29,7 +29,7 @@
   /* entity hues */
   --c-person: #6ea8d8;
   --c-phone: #79c98f;
-  --c-email: #b48ad6;
+  --c-email: #cf9285;
   --c-address: #9aa5b1;
   --c-location: #5fc4c0;
   --c-organisation: #d8a16e;
@@ -354,22 +354,23 @@ body {
 mark.hl {
   border-radius: 0;
   padding: 1px 2px;
-  color: #0c0c0b;
+  color: var(--text);
   cursor: pointer;
   scroll-margin: 60px;
 }
 mark.hl.dimmed { opacity: 0.45; }
 mark.hl.active { outline: 2px solid var(--accent); }
-mark.hl-person { background: var(--c-person); }
-mark.hl-phone { background: var(--c-phone); }
-mark.hl-email { background: var(--c-email); }
-mark.hl-address { background: var(--c-address); }
-mark.hl-location { background: var(--c-location); }
-mark.hl-date { background: var(--c-date); }
-mark.hl-organisation { background: var(--c-organisation); }
-mark.hl-vehicle { background: var(--c-vehicle); }
-mark.hl-money { background: var(--c-money); }
-mark.hl-ip { background: var(--c-ip); }
+/* muted type-coding: a low tint fill + a solid underline, not a saturated highlighter block */
+mark.hl-person { background: color-mix(in srgb, var(--c-person) 20%, transparent); border-bottom: 2px solid var(--c-person); }
+mark.hl-phone { background: color-mix(in srgb, var(--c-phone) 20%, transparent); border-bottom: 2px solid var(--c-phone); }
+mark.hl-email { background: color-mix(in srgb, var(--c-email) 20%, transparent); border-bottom: 2px solid var(--c-email); }
+mark.hl-address { background: color-mix(in srgb, var(--c-address) 20%, transparent); border-bottom: 2px solid var(--c-address); }
+mark.hl-location { background: color-mix(in srgb, var(--c-location) 20%, transparent); border-bottom: 2px solid var(--c-location); }
+mark.hl-date { background: color-mix(in srgb, var(--c-date) 20%, transparent); border-bottom: 2px solid var(--c-date); }
+mark.hl-organisation { background: color-mix(in srgb, var(--c-organisation) 20%, transparent); border-bottom: 2px solid var(--c-organisation); }
+mark.hl-vehicle { background: color-mix(in srgb, var(--c-vehicle) 20%, transparent); border-bottom: 2px solid var(--c-vehicle); }
+mark.hl-money { background: color-mix(in srgb, var(--c-money) 20%, transparent); border-bottom: 2px solid var(--c-money); }
+mark.hl-ip { background: color-mix(in srgb, var(--c-ip) 20%, transparent); border-bottom: 2px solid var(--c-ip); }
 
 .rv-toolbar {
   display: flex; gap: 6px; flex-wrap: wrap;
@@ -568,6 +569,39 @@ mark.hl-ip { background: var(--c-ip); }
 }
 .leaflet-popup-content { font: 11px var(--mono); margin: 8px 10px; }
 .leaflet-bar a { background: var(--panel-2); color: var(--text); border-color: var(--line); }
+.leaflet-control-scale-line {
+  background: rgba(10,10,9,.55); color: var(--dim);
+  border-color: var(--line); border-top: none; font: 10px var(--mono);
+}
+.cr-label-tiles { transition: opacity .35s ease; }
+
+/* map connection / travel arcs */
+.cr-arc { pointer-events: none; }
+.cr-arc-move {
+  stroke-dasharray: 6 8;
+  animation: cr-flow 1.1s linear infinite;
+}
+@keyframes cr-flow { to { stroke-dashoffset: -14; } } /* marches from → to */
+@media (prefers-reduced-motion: reduce) {
+  .cr-arc-move { animation: none; stroke-dasharray: none; }
+}
+
+/* selected marker glow + pulse */
+.cr-marker-sel {
+  filter: drop-shadow(0 0 5px var(--accent));
+  animation: cr-pulse 1.6s ease-in-out infinite;
+}
+@keyframes cr-pulse { 0%, 100% { stroke-opacity: 1; } 50% { stroke-opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .cr-marker-sel { animation: none; } }
+
+/* map hover tooltip */
+.leaflet-tooltip.cr-tip {
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--line); border-radius: 0;
+  font: 11px var(--mono); padding: 3px 7px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.4);
+}
+.leaflet-tooltip.cr-tip::before { border-top-color: var(--line); }
 
 /* ---------- vis-network tooltip ---------- */
 div.vis-tooltip {
@@ -698,4 +732,8 @@ mark.hl-cue.active { outline: 2px solid var(--accent); border-bottom-style: soli
 #tl-canvas { width: 100%; height: 88px; display: block; }
 #tl-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   text-align: center; padding: 0 40px; }
-.tl-tip { position: fixed; z-index: 4100; display: no
+.tl-tip { position: fixed; z-index: 4100; display: none; max-width: 340px;
+  background: rgba(13, 19, 28, 0.98); border: 1px solid #2a3a4d; border-radius: 4px;
+  padding: 4px 8px; font: 10px Consolas, monospace; color: #c9d4e0; pointer-events: none; }
+
+#layout-select { appearance: none; -webkit-appearance: none; }

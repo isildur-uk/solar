@@ -43,7 +43,7 @@
   var hlSet = null;               // null = no highlight; {} = dim everything;
                                   // {id:1,...} = keep these bright, dim the rest
 
-  var LINK_PALETTE = ["#6ea8d8", "#7fc97f", "#d87f9b", "#c9c36a", "#9b7fd8", "#d8a06a", "#5fc4c0", "#d86a6a", "#8d99ae", "#ebfc72"];
+  var LINK_PALETTE = ["#6ea8d8", "#7fc97f", "#d87f9b", "#c9c36a", "#8f9ac4", "#d8a06a", "#5fc4c0", "#d86a6a", "#8d99ae", "#ebfc72"];
   function paletteFor(key) {
     var h = 0;
     var s = String(key || "");
@@ -150,7 +150,7 @@
       borderWidth: 2,
       borderWidthSelected: 3,
       shadow: { enabled: true, color: glowOf(T.colour, 0.42), size: 22, x: 0, y: 0 },
-      font: { color: "#c9d4e0", size: 12, face: "Segoe UI", strokeWidth: 0, vadjust: 2 },
+      font: { color: "#c9d4e0", size: 12, face: "Segoe UI", strokeWidth: 5, strokeColor: "#0c0c0b", vadjust: 2 },
       title: titleFor(e)
     };
     // persisted manual position
@@ -551,7 +551,7 @@
       interaction: { hover: true, multiselect: true, tooltipDelay: 220 },
       physics: {
         solver: "barnesHut",
-        barnesHut: { gravitationalConstant: -5200, springLength: 150, springConstant: 0.025, damping: 0.32, avoidOverlap: 0.4 },
+        barnesHut: { gravitationalConstant: -6000, springLength: 190, springConstant: 0.025, damping: 0.32, avoidOverlap: 0.75 },
         stabilization: { iterations: 120, fit: true }
       },
       edges: { selectionWidth: 1 },

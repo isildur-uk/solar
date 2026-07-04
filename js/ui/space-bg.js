@@ -33,13 +33,14 @@
         s: 0.3 + Math.random() * 0.6
       });
     }
-    /* drifting gas masses in the hero's violet/blue palette — prominent */
+    /* drifting gas masses — warm graphite console palette (no purple/blue), dialled low
+       so the near-black ground reads as the analyst console (DESIGN.md: workbench, no purple) */
     blobs = [
-      { c: [150, 96, 210], x: 0.30, y: 0.34, r: 0.58, a: 0.20, dx: 0.000020, dy: 0.000015, ph: 0 },
-      { c: [82, 112, 235], x: 0.66, y: 0.58, r: 0.64, a: 0.17, dx: -0.000016, dy: 0.000022, ph: 2 },
-      { c: [205, 140, 235], x: 0.50, y: 0.74, r: 0.50, a: 0.15, dx: 0.000012, dy: -0.000020, ph: 4 },
-      { c: [120, 150, 245], x: 0.80, y: 0.26, r: 0.44, a: 0.13, dx: -0.000020, dy: 0.000012, ph: 1 },
-      { c: [170, 110, 225], x: 0.16, y: 0.66, r: 0.46, a: 0.12, dx: 0.000017, dy: 0.000014, ph: 3 }
+      { c: [66, 66, 60],   x: 0.30, y: 0.34, r: 0.58, a: 0.16, dx: 0.000020, dy: 0.000015, ph: 0 },
+      { c: [58, 60, 54],   x: 0.66, y: 0.58, r: 0.64, a: 0.14, dx: -0.000016, dy: 0.000022, ph: 2 },
+      { c: [120, 132, 74], x: 0.50, y: 0.74, r: 0.50, a: 0.07, dx: 0.000012, dy: -0.000020, ph: 4 },
+      { c: [70, 70, 62],   x: 0.80, y: 0.26, r: 0.44, a: 0.12, dx: -0.000020, dy: 0.000012, ph: 1 },
+      { c: [60, 62, 55],   x: 0.16, y: 0.66, r: 0.46, a: 0.11, dx: 0.000017, dy: 0.000014, ph: 3 }
     ];
   }
 
