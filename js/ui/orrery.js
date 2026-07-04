@@ -139,6 +139,27 @@
       ctx.restore();
     }
 
+    // intelligence sparks travel the links once the system is live — a rotating
+    // subset so the motion stays quiet (cargohero travelling-marker pattern)
+    if (!REDUCED && linkP >= 1 && tilt > 0.5) {
+      ctx.save();
+      var band = Math.floor(time / 4) % 3;
+      for (var si = 0; si < LINKS.length; si++) {
+        if (si % 3 !== band) continue;
+        var A2 = pos[LINKS[si][0]], B2 = pos[LINKS[si][1]];
+        var tt = (time * 0.22 + si * 0.37) % 1;
+        var sx = A2.x + (B2.x - A2.x) * tt, sy = A2.y + (B2.y - A2.y) * tt;
+        var sg = ctx.createRadialGradient(sx, sy, 0, sx, sy, 7);
+        sg.addColorStop(0, accentAlpha(0.8 * tilt));
+        sg.addColorStop(1, accentAlpha(0));
+        ctx.fillStyle = sg;
+        ctx.beginPath(); ctx.arc(sx, sy, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255," + (0.75 * tilt).toFixed(3) + ")";
+        ctx.beginPath(); ctx.arc(sx, sy, 1.4, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+
     // bodies: glow disc + ring + label  (draw back-of-orbit first)
     var order = pos.map(function (q, i) { return i; }).sort(function (a, b) {
       return (pos[a].behind === pos[b].behind) ? 0 : (pos[a].behind ? -1 : 1);

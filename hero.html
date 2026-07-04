@@ -46,6 +46,20 @@ body {
 #stars  { position: fixed; inset: 0; z-index: 0; display: block; }
 /* layer 1 — the living nebula bloom, additive over the stars */
 #nebula { position: fixed; inset: 0; z-index: 1; display: block; pointer-events: none; }
+/* layer 1.5 — the demo case orbiting as an orrery: the product IS the cosmos.
+   Bleeds off the right edge (asymmetric balance) so its labels never fight the copy.
+   Explicit width/height matter: canvas is a replaced element, inset alone won't stretch it. */
+#orrery {
+  position: fixed;
+  top: 50%; right: -10vmin;
+  width: 70vmin; height: 70vmin;
+  transform: translateY(-50%);
+  z-index: 1; display: block; pointer-events: none;
+  opacity: 0.55;
+  transition: opacity 0.45s ease;
+}
+body.warping #orrery { opacity: 0; }
+@media (max-width: 900px) { #orrery { display: none; } }  /* phones: copy owns the frame */
 /* layer 1 — the shooting-star cursor trail, above the nebula */
 #trail  { position: fixed; inset: 0; z-index: 1; display: block; pointer-events: none; }
 /* layer 5 — the ENTER explosion overlay, above everything */
@@ -173,17 +187,20 @@ body.warping .content {
   text-shadow: 0 1px 16px rgba(0, 0, 0, 0.55);
 }
 
-/* ---- launcher: tagline + secondary function pills ---- */
-.tagline {
-  margin-top: 22px;
-  font-family: var(--mono);
-  font-size: 12px;
+/* ---- launcher: value line + secondary function pill + assurance ---- */
+/* what SOLAR does + the human gate — the one sentence a cold evaluator needs */
+.value {
+  margin-top: 26px;
+  max-width: 46ch;
+  padding: 0 20px;
+  font-size: clamp(14px, 1.25vw, 17px);
   font-weight: 400;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(244, 243, 232, 0.55);
+  line-height: 1.55;
+  text-align: center;
+  color: rgba(244, 243, 232, 0.78);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.55);
   opacity: 0;
-  animation: fade 1.1s ease 0.7s forwards;
+  animation: rise 1s cubic-bezier(0.16,1,0.3,1) 0.4s forwards;
 }
 .launch-nav {
   display: flex;
@@ -191,7 +208,20 @@ body.warping .content {
   margin-top: 22px;
   pointer-events: auto;
   opacity: 0;
-  animation: fade 1.1s ease 0.85s forwards;
+  animation: rise 1s cubic-bezier(0.16,1,0.3,1) 0.85s forwards;
+}
+/* the trust posture, stated quietly */
+.assure {
+  margin-top: 30px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(244, 243, 232, 0.42);
+  opacity: 0;
+  animation: rise 1s cubic-bezier(0.16,1,0.3,1) 1.05s forwards;
 }
 /* glass pills — same liquid-glass language as ENTER, smaller + lime hover */
 .pill {
@@ -241,6 +271,11 @@ body.warping .content {
 .pill-label { position: relative; z-index: 2; text-shadow: 0 1px 14px rgba(0, 0, 0, 0.5); }
 
 @keyframes fade { to { opacity: 1; } }
+/* blur-up rise — the premium entrance for static text (never on hover-transformed elements) */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
 
 /* ---- phone: keep the hero as the front door, enlarge tap targets ---- */
 @media (max-width: 768px) {
@@ -251,7 +286,8 @@ body.warping .content {
     padding: 16px 40px;
     font-size: 15px;
   }
-  .tagline { font-size: 11px; letter-spacing: 0.16em; padding: 0 16px; text-align: center; }
+  .value { font-size: 14px; padding: 0 24px; }
+  .assure { font-size: 10px; letter-spacing: 0.14em; padding: 0 16px; }
   .launch-nav {
     flex-wrap: wrap;
     justify-content: center;
@@ -271,33 +307,31 @@ body.warping .content {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wordmark, .enter, .tagline, .launch-nav { animation: none; opacity: 1; }
+  .wordmark, .enter, .value, .assure, .launch-nav { animation: none; opacity: 1; }
 }
 </style>
 </head>
 <body>
   <canvas id="stars" aria-hidden="true"></canvas>
   <canvas id="nebula" aria-label="Living nebula background" aria-hidden="true"></canvas>
+  <canvas id="orrery" aria-hidden="true"></canvas>
   <canvas id="trail" aria-hidden="true"></canvas>
 
   <div class="content">
-    <div class="wordmark" id="wordmark" aria-label="SOLAR">SOLAR</div>
-    <button class="enter" id="enter" type="button" aria-label="Enter SOLAR charting">
+    <h1 class="wordmark" id="wordmark">SOLAR</h1>
+    <p class="value">Paste raw intelligence. SOLAR extracts entities and relationships; an analyst approves every match before anything reaches the chart.</p>
+    <button class="enter" id="enter" type="button" aria-label="Enter the charting workbench">
       <span class="enter-fx" aria-hidden="true"></span>
       <span class="enter-rim" aria-hidden="true"></span>
       <span class="enter-label">Enter</span>
     </button>
-    <div class="tagline" aria-hidden="true">Intelligence registry &amp; link analysis</div>
     <nav class="launch-nav" aria-label="SOLAR functions">
       <a class="pill" id="go-database" href="registry/">
         <span class="pill-rim" aria-hidden="true"></span>
         <span class="pill-label">Database</span>
       </a>
-      <a class="pill" id="go-charting" href="index.html">
-        <span class="pill-rim" aria-hidden="true"></span>
-        <span class="pill-label">Charting</span>
-      </a>
     </nav>
+    <p class="assure">Local-first and offline. Case data never leaves the machine.</p>
   </div>
 
   <canvas id="burst" aria-hidden="true"></canvas>
@@ -735,6 +769,31 @@ body.warping .content {
   /* trail loop */
   function loop(now) { drawTrail(now); requestAnimationFrame(loop); }
   if (!reduceMotion) requestAnimationFrame(loop);
+})();
+</script>
+
+<!-- the demo case as a living orrery behind the wordmark — the product is the cosmos -->
+<script src="js/ui/orrery.js"></script>
+<script>
+(function () {
+  "use strict";
+  var oc = document.getElementById("orrery");
+  if (!oc || !window.CROrrery) return;
+  window.CROrrery.setAccent("#8ea2ff");
+  if (!window.CROrrery.mount(oc)) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    window.CROrrery.setProgress(1);            /* settled still frame */
+    return;
+  }
+  /* time-driven assembly (this page has no scroll): particles converge,
+     links draw with their verbs, the orbital plane opens — then steady orbit */
+  var DELAY = 700, DUR = 5200, a0 = 0;
+  (function drive(now) {
+    if (!a0) a0 = now;
+    var k = Math.min(Math.max((now - a0 - DELAY) / DUR, 0), 1);
+    window.CROrrery.setProgress(k);
+    if (k < 1) requestAnimationFrame(drive);
+  })(performance.now());
 })();
 </script>
 </body>

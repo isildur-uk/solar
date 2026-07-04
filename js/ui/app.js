@@ -164,6 +164,12 @@
 
     U.el("btn-csv").addEventListener("click", function () { window.CRImporter.open(); });
     U.el("btn-files").addEventListener("click", function () { U.el("files-input").click(); });
+
+    /* empty-state quick actions mirror the Add-menu entries (guarded — degrade safely) */
+    var eP = U.el("empty-paste"), eC = U.el("empty-csv"), eD = U.el("empty-demo");
+    if (eP) eP.addEventListener("click", function () { U.el("btn-paste").click(); });
+    if (eC) eC.addEventListener("click", function () { window.CRImporter.open(); });
+    if (eD) eD.addEventListener("click", function () { U.el("btn-demo-1").click(); });
     U.el("files-input").addEventListener("change", function (e) {
       var picked = e.target.files;
       if (picked && picked.length && window.CRDragDrop) window.CRDragDrop.ingestFiles(picked);

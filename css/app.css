@@ -146,7 +146,13 @@ body {
   z-index: 5;
 }
 #chart-empty .big { font: 600 15px var(--sans); color: var(--dim); }
-#chart-empty .hint { font: 11px var(--mono); }
+#chart-empty .hint { font: 11px/1.7 var(--mono); max-width: 46ch; text-align: center; padding: 0 16px; }
+#chart-empty .constellation { width: 190px; color: var(--accent); opacity: 0.45; }
+#chart-empty .empty-actions {
+  display: flex; gap: 8px; margin-top: 8px;
+  flex-wrap: wrap; justify-content: center;
+  pointer-events: auto;   /* the container is pointer-events:none; re-enable the actions */
+}
 
 #side {
   flex: 0 0 360px;
@@ -251,7 +257,11 @@ body {
 #timeline-head:hover { color: var(--text); background: var(--panel-2); }
 #timeline-wrap.collapsed #timeline-head { color: var(--faint); }
 #timeline-wrap.collapsed #timeline-head:hover { color: var(--text); }
-#timeline { flex: 1; position: relative; overflow-x: auto; overflow-y: hidden; }
+#timeline { flex: 1; position: relative; overflow-x: auto; overflow-y: hidden;
+  /* edge-mask fade — events dissolve at the edges instead of hard-clipping */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+  mask-image: linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent);
+}
 #timeline .axis {
   position: absolute; left: 0; right: 0; top: 50%;
   border-top: 1px solid var(--line);

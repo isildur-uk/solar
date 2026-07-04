@@ -13,6 +13,7 @@
     store = caseStore;
     store.onChange(function (what) {
       if (current) show(current); // keep in sync
+      else clear();               // keep the case overview live too
     });
     // Source extracts are clipped by default; tap/click to expand and read full.
     var insp = U.el("inspector");
@@ -25,10 +26,37 @@
 
   function clear() {
     current = null;
-    U.el("inspector").innerHTML =
-      '<div class="placeholder">Select an entity or link on the chart.<br><br>' +
-      "Paste Text or Import CSV to populate the chart; everything you add " +
-      "passes through analyst review first.</div>";
+    var el = U.el("inspector");
+    if (!store || !store.entities.length) {
+      el.innerHTML =
+        '<div class="placeholder">Select an entity or link on the chart.<br><br>' +
+        "Paste Text or Import CSV to populate the chart; everything you add " +
+        "passes through analyst review first.</div>";
+      return;
+    }
+    /* case overview — the resting state is a live summary, not a void */
+    var types = window.CRModel ? window.CRModel.ENTITY_TYPES : {};
+    var mix = {};
+    store.entities.forEach(function (e) { mix[e.type] = (mix[e.type] || 0) + 1; });
+    var rows = Object.keys(mix).sort(function (a, b) { return mix[b] - mix[a]; })
+      .map(function (t) {
+        var T = types[t] || {};
+        return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;' +
+          'background:' + (T.colour || "#8593a3") + ';margin-right:7px;vertical-align:baseline"></span>' +
+          U.esc(T.label || t) + "</td><td style=\"text-align:right;font-variant-numeric:tabular-nums\">" + mix[t] + "</td></tr>";
+      }).join("");
+    var located = store.entities.filter(function (e) {
+      return e.attrs && (typeof e.attrs.lat === "number");
+    }).length;
+    el.innerHTML =
+      '<div class="type-chip">Case overview</div>' +
+      '<table><tr><td>Entities</td><td style="text-align:right;font-variant-numeric:tabular-nums">' + store.entities.length + "</td></tr>" +
+      '<tr><td>Links</td><td style="text-align:right;font-variant-numeric:tabular-nums">' + store.links.length + "</td></tr>" +
+      '<tr><td>Timeline events</td><td style="text-align:right;font-variant-numeric:tabular-nums">' + store.events.length + "</td></tr>" +
+      '<tr><td>Located on map</td><td style="text-align:right;font-variant-numeric:tabular-nums">' + located + "</td></tr></table>" +
+      '<div class="sec">Entity mix</div>' +
+      "<table>" + rows + "</table>" +
+      '<div class="audit" style="margin-top:10px">Select an entity or link on the chart for its detail, provenance and source.</div>';
   }
 
   function show(sel) {

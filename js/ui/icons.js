@@ -6,76 +6,32 @@
 (function () {
   "use strict";
 
-  // Glyphs drawn in a 64×64 viewBox, stroke-based, geometric, 3.4px weight.
+  // Lucide glyphs (ISC licence, lucide.dev) — 24×24 stroke icons scaled into the 64×64 chip.
+  // Effective stroke ≈ 3.3 (2.2 × 1.5 scale) to match the chip weight.
+  function L(s) { return '<g transform="translate(14 14) scale(1.5)" stroke-width="2.2">' + s + '</g>'; }
   var GLYPHS = {
-    person:
-      '<circle cx="32" cy="24.5" r="7.2"/>' +
-      '<path d="M19 47c2.2-9.2 7.2-13.4 13-13.4S42.8 37.8 45 47"/>',
-    phone:
-      '<rect x="23.5" y="15.5" width="17" height="33" rx="4.5"/>' +
-      '<path d="M29 43.5h6"/><path d="M29.5 20h5"/>',
-    email:
-      '<rect x="16.5" y="21.5" width="31" height="22" rx="4"/>' +
-      '<path d="M18.5 24.5 32 35l13.5-10.5"/>',
-    address:
-      '<path d="M18.5 31.5 32 19.5l13.5 12"/>' +
-      '<path d="M22.5 29.5V46h19V29.5"/>' +
-      '<path d="M28.8 46v-8.5h6.4V46"/>',
-    location:
-      '<path d="M32 47.5S20.8 37.6 20.8 29.6a11.2 11.2 0 0 1 22.4 0c0 8-11.2 17.9-11.2 17.9z"/>' +
-      '<circle cx="32" cy="29.2" r="4.1"/>',
-    organisation:
-      '<rect x="21" y="17.5" width="22" height="28.5"/>' +
-      '<path d="M26 23.5h3.6M34.4 23.5H38M26 29.5h3.6M34.4 29.5H38M26 35.5h3.6M34.4 35.5H38"/>' +
-      '<path d="M29.2 46v-4.8h5.6V46"/>',
-    vehicle:
-      '<path d="M17.5 38.5v-5.2l4.2-8.3h20.6l4.2 8.3v5.2"/>' +
-      '<path d="M17.5 38.5h29"/><path d="M21.8 33.3h20.4"/>' +
-      '<circle cx="25" cy="42.2" r="3.3"/><circle cx="39" cy="42.2" r="3.3"/>',
-    account:
-      '<rect x="16.5" y="21.5" width="31" height="21" rx="3"/>' +
-      '<path d="M16.5 28.5h31"/><path d="M22 36.5h8.5"/>',
-    date:
-      '<rect x="18" y="20" width="28" height="26" rx="3"/>' +
-      '<path d="M18 28h28"/><path d="M26 15.8v7M38 15.8v7"/>' +
-      '<path d="M24.5 35h4.2M35.3 35h4.2M24.5 40.5h4.2"/>',
-    money:
-      '<circle cx="32" cy="32" r="14.5"/>' +
-      '<path d="M37 25.4c-4.6-2.8-9.4-.3-9.4 4.4v4.6c0 3-1 4.6-3.1 5.8H38"/>' +
-      '<path d="M24.5 33h9"/>',
-    ip:
-      '<circle cx="32" cy="21.8" r="4"/>' +
-      '<circle cx="21.8" cy="40.5" r="4"/><circle cx="42.2" cy="40.5" r="4"/>' +
-      '<path d="M29.9 25.2 24 36.9M34.1 25.2 40 36.9M25.8 40.5h12.4"/>',
-    document:
-      '<path d="M22 15.8h13.4l8.6 8.6V48H22z"/>' +
-      '<path d="M35.4 15.8v8.6H44"/>' +
-      '<path d="M27 32h10M27 38h10"/>',
-    event:
-      '<path d="M24.5 47V17.5"/>' +
-      '<path d="M24.5 19h15.7l-4.2 6 4.2 6H24.5"/>',
-    note:
-      '<path d="M19.5 17.5h25V36l-8.5 9h-16.5z"/>' +
-      '<path d="M36 45v-9h8.5"/>',
-    flag:
-      '<circle cx="32" cy="32" r="14.5"/><path d="M25 32h14M32 25v14"/>',
-    airport:
-      '<path d="M32 16c1.5 0 2.3 2 2.3 4.8v7.4l11.7 6.9v3.3l-11.7-3.4v7.1l3.4 2.5v2.5l-5.7-1.6-5.7 1.6v-2.5l3.4-2.5v-7.1L18 39.4v-3.3l11.7-6.9v-7.4c0-2.8.8-4.8 2.3-4.8z"/>',
-    social:
-      '<path d="M20 20h24a3.5 3.5 0 0 1 3.5 3.5v12A3.5 3.5 0 0 1 44 39H31l-7 6v-6h-4a3.5 3.5 0 0 1-3.5-3.5v-12A3.5 3.5 0 0 1 20 20z"/>' +
-      '<path d="M26 27.5h12M26 32.5h8"/>',
-    twitter:
-      '<path d="M46 25.2a11 11 0 0 1-3 .9 5.2 5.2 0 0 0 2.3-2.9 10.4 10.4 0 0 1-3.3 1.3 5.2 5.2 0 0 0-8.9 4.7 14.8 14.8 0 0 1-10.7-5.4 5.2 5.2 0 0 0 1.6 6.9 5.1 5.1 0 0 1-2.3-.6v.1a5.2 5.2 0 0 0 4.2 5.1 5.2 5.2 0 0 1-2.3.1 5.2 5.2 0 0 0 4.8 3.6A10.4 10.4 0 0 1 19 41a14.7 14.7 0 0 0 8 2.3c9.5 0 14.7-7.9 14.7-14.7v-.7a10.5 10.5 0 0 0 2.6-2.7z"/>',
+    person: L('<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'),
+    phone: L('<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>'),
+    email: L('<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/>'),
+    address: L('<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+    location: L('<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>'),
+    organisation: L('<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>'),
+    vehicle: L('<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>'),
+    weapon: L('<circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/>'),
+    drug: L('<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>'),
+    account: L('<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>'),
+    date: L('<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/>'),
+    money: L('<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>'),
+    ip: L('<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>'),
+    document: L('<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>'),
+    event: L('<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/>'),
+    note: L('<path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/>'),
+    airport: L('<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'),
+    social: L('<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>'),
     skype:
       '<circle cx="32" cy="32" r="13.5"/>' +
       '<path d="M37.5 27c-1.8-1.8-4.6-2.3-6.8-1.3-2.4 1.1-2.6 3.9-.3 5.2 1.4.8 3.3 1.1 4.9 1.8 2.4 1 2.3 3.9-.2 5-2.3 1-5.2.5-7.1-1.3"/>',
-    telegram:
-      '<path d="M45.5 20.5 18.5 31l8.2 3.1 2.1 8.9 4.4-5.6 8 5.9z"/>' +
-      '<path d="M26.7 34.1 40 26"/>',
-    instagram:
-      '<rect x="19" y="19" width="26" height="26" rx="7.5"/>' +
-      '<circle cx="32" cy="32" r="6.5"/>' +
-      '<circle cx="39.6" cy="24.4" r="1.5"/>'
+    flag: L('<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>')
   };
 
   // Simple Icons (CC0) brand marks — single 24×24 fill paths, rendered monochrome in the chip.

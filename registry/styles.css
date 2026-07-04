@@ -479,18 +479,19 @@ details.facet>summary .c{background:var(--accent-soft);color:var(--accent);borde
   --c-location:#5fc4c0; --c-organisation:#d8a16e; --c-vehicle:#c9c36a; --c-date:#8d99ae;
   --c-money:#a8c97f; --c-ip:#7fb0c9; --c-account:#c58fb0;
 }
-.item-text mark.hl{ color:#0c0c0b; padding:1px 2px; border-radius:2px; background:#c2c7cf; cursor:default; }
-.item-text mark.hl-person{ background:var(--c-person); }
-.item-text mark.hl-phone{ background:var(--c-phone); }
-.item-text mark.hl-email{ background:var(--c-email); }
-.item-text mark.hl-address{ background:var(--c-address); }
-.item-text mark.hl-location{ background:var(--c-location); }
-.item-text mark.hl-organisation{ background:var(--c-organisation); }
-.item-text mark.hl-vehicle{ background:var(--c-vehicle); }
-.item-text mark.hl-date{ background:var(--c-date); }
-.item-text mark.hl-money{ background:var(--c-money); }
-.item-text mark.hl-ip{ background:var(--c-ip); }
-.item-text mark.hl-account{ background:var(--c-account); }
+/* muted type-coding — parity with the charting review screen: tint + underline, not highlighter blocks */
+.item-text mark.hl{ color:inherit; padding:1px 2px; border-radius:2px; background:color-mix(in srgb,#8593a3 20%,transparent); border-bottom:2px solid #8593a3; cursor:default; }
+.item-text mark.hl-person{ background:color-mix(in srgb,var(--c-person) 20%,transparent); border-bottom-color:var(--c-person); }
+.item-text mark.hl-phone{ background:color-mix(in srgb,var(--c-phone) 20%,transparent); border-bottom-color:var(--c-phone); }
+.item-text mark.hl-email{ background:color-mix(in srgb,var(--c-email) 20%,transparent); border-bottom-color:var(--c-email); }
+.item-text mark.hl-address{ background:color-mix(in srgb,var(--c-address) 20%,transparent); border-bottom-color:var(--c-address); }
+.item-text mark.hl-location{ background:color-mix(in srgb,var(--c-location) 20%,transparent); border-bottom-color:var(--c-location); }
+.item-text mark.hl-organisation{ background:color-mix(in srgb,var(--c-organisation) 20%,transparent); border-bottom-color:var(--c-organisation); }
+.item-text mark.hl-vehicle{ background:color-mix(in srgb,var(--c-vehicle) 20%,transparent); border-bottom-color:var(--c-vehicle); }
+.item-text mark.hl-date{ background:color-mix(in srgb,var(--c-date) 20%,transparent); border-bottom-color:var(--c-date); }
+.item-text mark.hl-money{ background:color-mix(in srgb,var(--c-money) 20%,transparent); border-bottom-color:var(--c-money); }
+.item-text mark.hl-ip{ background:color-mix(in srgb,var(--c-ip) 20%,transparent); border-bottom-color:var(--c-ip); }
+.item-text mark.hl-account{ background:color-mix(in srgb,var(--c-account) 20%,transparent); border-bottom-color:var(--c-account); }
 .item-text mark.hl-cue{ background:transparent; color:inherit; border-bottom:2px dotted #7a828e; }
 .hl-off .item-text mark.hl{ background:transparent !important; color:inherit !important; border-bottom:0 !important; padding:0 !important; }
 

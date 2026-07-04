@@ -96,8 +96,24 @@
     <div id="chart"></div>
     <div id="legend-panel" aria-label="legend and filters"></div>
     <div id="chart-empty">
-      <div class="big">Empty chart</div>
-      <div class="hint">Open the Add menu to paste text, import a CSV, or load the demo.</div>
+      <svg class="constellation" viewBox="0 0 220 120" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M30 92 82 34 138 66 196 22" opacity=".5"/>
+          <path d="M82 34 110 96 138 66" opacity=".35"/>
+        </g>
+        <g fill="currentColor">
+          <circle cx="30" cy="92" r="4"/><circle cx="82" cy="34" r="5.5"/>
+          <circle cx="138" cy="66" r="4.5"/><circle cx="196" cy="22" r="4"/>
+          <circle cx="110" cy="96" r="3.5"/>
+        </g>
+      </svg>
+      <div class="big">Start a chart</div>
+      <div class="hint">Paste intelligence, import a CSV, or load a worked demo. Every extracted match is reviewed before it reaches the chart.</div>
+      <div class="empty-actions">
+        <button class="btn primary" id="empty-paste" type="button">Paste intelligence</button>
+        <button class="btn" id="empty-csv" type="button">Import CSV</button>
+        <button class="btn" id="empty-demo" type="button">Load the demo</button>
+      </div>
     </div>
   </section>
 
