@@ -224,56 +224,30 @@ body.warping .content {
   text-shadow: 0 1px 16px rgba(0, 0, 0, 0.55);
 }
 
-/* ---- launcher: value line + secondary function pill + assurance ---- */
-/* what SOLAR does + the human gate — the one sentence a cold evaluator needs */
-.value {
-  margin-top: 26px;
-  max-width: 46ch;
-  padding: 0 20px;
-  font-size: clamp(14px, 1.25vw, 17px);
-  font-weight: 400;
-  line-height: 1.55;
-  text-align: center;
-  color: rgba(244, 243, 232, 0.78);
-  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.55);
-  opacity: 0;
-  animation: rise 1s cubic-bezier(0.16,1,0.3,1) 0.4s forwards;
-}
+/* ---- launcher: the secondary function pill ---- */
 .launch-nav {
   display: flex;
   gap: 14px;
-  margin-top: 22px;
+  margin-top: 18px;
   pointer-events: auto;
   opacity: 0;
-  animation: rise 1s cubic-bezier(0.16,1,0.3,1) 0.85s forwards;
-}
-/* the trust posture, stated quietly */
-.assure {
-  margin-top: 30px;
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  text-align: center;
-  color: rgba(244, 243, 232, 0.42);
-  opacity: 0;
-  animation: rise 1s cubic-bezier(0.16,1,0.3,1) 1.05s forwards;
+  animation: rise 1s cubic-bezier(0.16,1,0.3,1) 0.75s forwards;
 }
 /* glass pills — same liquid-glass language as ENTER, smaller + lime hover */
 .pill {
   position: relative;
   isolation: isolate;
   font-family: var(--mono);
-  font-size: 12px;
+  /* matches .enter exactly — one type size, one height, one radius (label sets the width) */
+  font-size: 14px;
   font-weight: 400;
-  letter-spacing: 0.2em;
-  text-indent: 0.2em;
+  letter-spacing: 0.24em;
+  text-indent: 0.24em;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--text);
-  border-radius: 12px;
-  padding: 13px 30px;
+  border-radius: 14px;
+  padding: 17px 44px;
   cursor: pointer;
   transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
 }
@@ -323,8 +297,6 @@ body.warping .content {
     padding: 16px 40px;
     font-size: 15px;
   }
-  .value { font-size: 14px; padding: 0 24px; }
-  .assure { font-size: 10px; letter-spacing: 0.14em; padding: 0 16px; }
   .launch-nav {
     flex-wrap: wrap;
     justify-content: center;
@@ -344,7 +316,7 @@ body.warping .content {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wordmark, .enter, .value, .assure, .launch-nav { animation: none; opacity: 1; }
+  .wordmark, .enter, .launch-nav { animation: none; opacity: 1; }
   #cosmos { display: none; }
   .rt { animation: none; stroke-dashoffset: 0; }
   .rt-head { display: none; }
@@ -377,7 +349,6 @@ body.warping .content {
 
   <div class="content">
     <h1 class="wordmark" id="wordmark">SOLAR</h1>
-    <p class="value">Paste raw intelligence. SOLAR extracts entities and relationships; an analyst approves every match before anything reaches the chart.</p>
     <button class="enter" id="enter" type="button" aria-label="Enter the charting workbench">
       <span class="enter-fx" aria-hidden="true"></span>
       <span class="enter-rim" aria-hidden="true"></span>
@@ -389,7 +360,6 @@ body.warping .content {
         <span class="pill-label">Database</span>
       </a>
     </nav>
-    <p class="assure">Local-first and offline. Case data never leaves the machine.</p>
   </div>
 
   <canvas id="burst" aria-hidden="true"></canvas>

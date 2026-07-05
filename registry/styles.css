@@ -794,3 +794,9 @@ html[data-theme="light"]{
 }
 .masthead .brand:hover::after, .masthead .brand:focus-visible::after { transform: scaleX(1); }
 @media (prefers-reduced-motion: reduce) { .main { animation: none; } }
+
+/* themed scrollbars — parity with the charting workbench */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: var(--line-2); }
+::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+::-webkit-scrollbar-track { background: transparent; }

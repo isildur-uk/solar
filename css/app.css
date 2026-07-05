@@ -313,7 +313,13 @@ body {
   align-items: center; justify-content: center;
   z-index: 1000;
 }
-.modal-veil.open { display: flex; }
+.modal-veil.open { display: flex; animation: veilIn 0.18s ease; }
+.modal-veil.open .modal { animation: modalIn 0.22s cubic-bezier(0.16,1,0.3,1); }
+@keyframes veilIn { from { opacity: 0; } }
+@keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(0.985); } }
+@media (prefers-reduced-motion: reduce) {
+  .modal-veil.open, .modal-veil.open .modal { animation: none; }
+}
 .modal {
   background: var(--panel);
   border: 1px solid var(--line);

@@ -16,7 +16,7 @@
     email:        { label: "Email Address", i2: "Email Address", sem: "",                colour: "#cf9285", icon: "@" },
     address:      { label: "Address",       i2: "Address",       sem: "Mailing Address", colour: "#9aa5b1", icon: "A" },
     location:     { label: "Location",      i2: "Location",      sem: "Location",        colour: "#5fc4c0", icon: "L" },
-    organisation: { label: "Organization",  i2: "Organization",  sem: "Organization",    colour: "#d8a16e", icon: "O" },
+    organisation: { label: "Organisation",  i2: "Organization",  sem: "Organization",    colour: "#d8a16e", icon: "O" },  /* UK label; i2/sem stay US for interop */
     vehicle:      { label: "Vehicle",       i2: "Vehicle",       sem: "Motor Vehicle",   colour: "#c9c36a", icon: "V" },
     weapon:       { label: "Weapon",        i2: "Weapon",        sem: "Weapon",          colour: "#d86e6e", icon: "!" },
     drug:         { label: "Drugs",         i2: "Object",        sem: "Object",          colour: "#a88f7a", icon: "*" },
