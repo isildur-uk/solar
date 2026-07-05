@@ -36,6 +36,7 @@
 
   var canvas = null, ctx = null, raf = 0;
   var chipImgs = [];                     // preloaded entity-chip icons (the charting language)
+  var linkDone = [];                     // per-link completion time, for the landing flash
   var W = 0, H = 0, DPR = 1;
   var progress = 0;                      // scroll progress 0..1
   var accent = "#e8b34b";
@@ -100,14 +101,19 @@
     }
     ctx.restore();
 
-    // positions this frame
+    // positions this frame — bodies SPIRAL in (decaying sweep, exact landing at 1)
     var pos = BODIES.map(function (b, i) {
       var target = bodyPos(b, i, time, tilt);
       if (assemble >= 1) return target;
       var s = seeds[i];
+      var lx = s.x + (target.x - s.x) * assemble;
+      var ly = s.y + (target.y - s.y) * assemble;
+      var rot = Math.pow(1 - assemble, 1.6) * 2.1 * (0.8 + (i % 3) * 0.2);
+      var dx = lx - cx, dy = ly - cy;
+      var cosR = Math.cos(rot), sinR = Math.sin(rot);
       return {
-        x: s.x + (target.x - s.x) * assemble,
-        y: s.y + (target.y - s.y) * assemble,
+        x: cx + dx * cosR - dy * sinR,
+        y: cy + dx * sinR + dy * cosR,
         behind: target.behind
       };
     });
@@ -136,6 +142,23 @@
           ctx.textAlign = "center";
           ctx.fillText(lk[2], (A.x + B.x) / 2, (A.y + B.y) / 2 - 4);
         }
+      });
+
+      // landing flash — each link's arrival blooms briefly at its target body
+      if (!REDUCED) LINKS.forEach(function (lk, li) {
+        var lp = ease(linkP * LINKS.length - li);
+        if (lp >= 1 && linkDone[li] === undefined) linkDone[li] = time;
+        if (linkDone[li] === undefined) return;
+        var ft = time - linkDone[li];
+        if (ft > 0.7) return;
+        var B = pos[lk[1]];
+        var fa = 1 - ft / 0.7;
+        var fr = 8 + ft * 52;
+        var fg = ctx.createRadialGradient(B.x, B.y, 0, B.x, B.y, fr);
+        fg.addColorStop(0, accentAlpha(0.75 * fa));
+        fg.addColorStop(1, accentAlpha(0));
+        ctx.fillStyle = fg;
+        ctx.beginPath(); ctx.arc(B.x, B.y, fr, 0, Math.PI * 2); ctx.fill();
       });
       ctx.restore();
     }
