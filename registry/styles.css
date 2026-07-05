@@ -782,3 +782,15 @@ html[data-theme="light"]{
 #theme-toggle{background:var(--panel-2);border:1px solid var(--line-2);color:var(--text);border-radius:var(--radius);
   font:600 12px var(--mono);letter-spacing:.04em;padding:7px 10px;cursor:pointer}
 #theme-toggle:hover{border-color:var(--accent-dim);color:var(--accent)}
+
+/* ===== entrance & masthead craft (pattern library: blur-up reveal, scaleX underline) ===== */
+.main { animation: reg-rise 0.7s cubic-bezier(0.16,1,0.3,1); }
+@keyframes reg-rise { from { opacity: 0; transform: translateY(12px); filter: blur(5px); } to { opacity: 1; transform: none; filter: none; } }
+.masthead .brand { position: relative; }
+.masthead .brand::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 2px;
+  background: var(--accent); transform: scaleX(0); transform-origin: left;
+  transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+}
+.masthead .brand:hover::after, .masthead .brand:focus-visible::after { transform: scaleX(1); }
+@media (prefers-reduced-motion: reduce) { .main { animation: none; } }

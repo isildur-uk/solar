@@ -42,6 +42,18 @@ body {
 
 ::selection { background: rgba(142, 162, 255, 0.22); }
 
+/* layer -1 — the filmed cosmos: vendored, muted, fades in when ready (canvas is the poster) */
+#cosmos {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; z-index: 0; pointer-events: none;
+  filter: brightness(0.55) saturate(1.1);
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+#cosmos.on { opacity: 0.5; animation: kenburns 1.8s cubic-bezier(0.16,1,0.3,1) forwards; }
+@keyframes kenburns { from { transform: scale(1.12); } to { transform: scale(1); } }
+body.warping #cosmos { opacity: 0; }
+
 /* layer 0 — the starfield */
 #stars  { position: fixed; inset: 0; z-index: 0; display: block; }
 /* layer 1 — the living nebula bloom, additive over the stars */
@@ -60,6 +72,31 @@ body {
 }
 body.warping #orrery { opacity: 0; }
 @media (max-width: 900px) { #orrery { display: none; } }  /* phones: copy owns the frame */
+
+/* journey routes — draw in once after the copy ladder, then arrows ride them forever */
+#routes {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  width: 100%; height: 34vh;
+  z-index: 1; pointer-events: none; opacity: 0.55;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  transition: opacity 0.45s ease;
+}
+body.warping #routes { opacity: 0; }
+.rt {
+  fill: none;
+  stroke: rgba(142, 162, 255, 0.20);
+  stroke-width: 1.3;
+  stroke-dasharray: 1700;
+  stroke-dashoffset: 1700;
+  animation: rt-draw 2.6s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+#rt1 { animation-delay: 1.6s; }
+#rt2 { animation-delay: 2.3s; }
+#rt3 { animation-delay: 3.0s; }
+@keyframes rt-draw { to { stroke-dashoffset: 0; } }
+.rt-head { fill: rgba(198, 212, 255, 0.75); }
+@media (max-width: 900px) { #routes { display: none; } }
 /* layer 1 — the shooting-star cursor trail, above the nebula */
 #trail  { position: fixed; inset: 0; z-index: 1; display: block; pointer-events: none; }
 /* layer 5 — the ENTER explosion overlay, above everything */
@@ -308,14 +345,35 @@ body.warping .content {
 
 @media (prefers-reduced-motion: reduce) {
   .wordmark, .enter, .value, .assure, .launch-nav { animation: none; opacity: 1; }
+  #cosmos { display: none; }
+  .rt { animation: none; stroke-dashoffset: 0; }
+  .rt-head { display: none; }
 }
 </style>
 </head>
 <body>
+  <video id="cosmos" muted playsinline loop preload="none" aria-hidden="true"></video>
   <canvas id="stars" aria-hidden="true"></canvas>
   <canvas id="nebula" aria-label="Living nebula background" aria-hidden="true"></canvas>
   <canvas id="orrery" aria-hidden="true"></canvas>
   <canvas id="trail" aria-hidden="true"></canvas>
+
+  <!-- journey routes draw themselves across the lower void; arrows ride them
+       (cargohero pattern) — the case's travel story as atmosphere -->
+  <svg id="routes" viewBox="0 0 1440 320" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <path class="rt" id="rt1" d="M-40 240 C 260 140, 520 300, 760 180 S 1240 120, 1480 200"/>
+    <path class="rt" id="rt2" d="M-40 300 C 360 260, 700 120, 1040 220 S 1360 260, 1480 160"/>
+    <path class="rt" id="rt3" d="M-40 170 C 300 240, 640 80, 980 150 S 1300 60, 1480 120"/>
+    <polygon class="rt-head" points="0,-3.4 7.5,0 0,3.4">
+      <animateMotion dur="11s" begin="3.6s" repeatCount="indefinite" rotate="auto"><mpath href="#rt1"/></animateMotion>
+    </polygon>
+    <polygon class="rt-head" points="0,-3.4 7.5,0 0,3.4">
+      <animateMotion dur="14s" begin="5.2s" repeatCount="indefinite" rotate="auto"><mpath href="#rt2"/></animateMotion>
+    </polygon>
+    <polygon class="rt-head" points="0,-3.4 7.5,0 0,3.4">
+      <animateMotion dur="12.5s" begin="4.4s" repeatCount="indefinite" rotate="auto"><mpath href="#rt3"/></animateMotion>
+    </polygon>
+  </svg>
 
   <div class="content">
     <h1 class="wordmark" id="wordmark">SOLAR</h1>
@@ -777,6 +835,17 @@ body.warping .content {
 <script>
 (function () {
   "use strict";
+  /* filmed cosmos backdrop — desktop only, fades in when playable; canvas cosmos
+     remains the base so a missing/slow file costs nothing (gate-then-reveal) */
+  var cv = document.getElementById("cosmos");
+  var noMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (cv && !noMotion && window.innerWidth >= 768) {
+    cv.src = "assets/video/cosmos.mp4";
+    cv.addEventListener("canplay", function () { cv.classList.add("on"); }, { once: true });
+    var pp = cv.play();
+    if (pp && pp.catch) pp.catch(function () { /* autoplay refused: canvas cosmos stands */ });
+  }
+
   var oc = document.getElementById("orrery");
   if (!oc || !window.CROrrery) return;
   window.CROrrery.setAccent("#8ea2ff");
