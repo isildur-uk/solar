@@ -797,10 +797,13 @@
           + '</div>'
         : '';
       var _SM = (typeof window!=='undefined' && window.RegistrySourceMeta) ? window.RegistrySourceMeta : null;
+      // The sensitive source's own reporting is "S", not item 1 — true items number from the next row.
+      var srcRow0 = !!(ss.source) && items.length && /chis/i.test(items[0].sourceType || '');
       var irItems = items.length
         ? '<table class="ir-items"><thead><tr><th class="c-no">Item</th><th>Report</th><th class="c-src">Source</th><th class="c-si">S</th><th class="c-si">I</th></tr></thead><tbody>'
           + items.map(function(it,i){ var col=_SM?_SM.colour(it.sourceType):'#8d99ae'; var gr=esc(it.sourceEval)+esc(it.intelEval), hd=esc(h.code||'P');
-              return '<tr><td class="c-no">'+(i+1)+'</td>'
+              var ord = srcRow0 ? (i === 0 ? 'S' : i) : (i + 1);
+              return '<tr'+(srcRow0 && i===0 ? ' class="row-src"' : '')+'><td class="c-no">'+ord+'</td>'
                 + '<td class="c-report"><pre class="item-text">'+highlightExtract(it.text, siHighlightOn)+'</pre></td>'
                 + '<td class="c-src"><button type="button" class="src-chip" data-src="'+esc(it.sourceType)+'" style="--src:'+esc(col)+'" title="What is '+esc(it.sourceType)+'? Show its other checks in this operation">'+esc(it.sourceType)+'</button></td>'
                 + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-rel="'+esc(it.sourceEval)+'" title="Explain this grade">'+esc(it.sourceEval)+'</button></td>'
@@ -840,13 +843,13 @@
           '<div class="items-head">' +
           '<label class="hl-toggle" title="Bold + colour the entities extracted from this report, by type"><input type="checkbox" id="hl-entities"' + (siHighlightOn ? ' checked' : '') + '> Highlight extracted entities</label></div>' +
           irItems + '</details>' +
-          '<details class="ir-sec" open><summary>Provenance</summary>' +
+          '<details class="ir-sec"><summary>Provenance</summary>' +
           irProvTable + '</details>' +
-        '<details class="ir-sec ir-sec-chart" open><summary>Network chart</summary>' +
+        '<details class="ir-sec ir-sec-chart"><summary>Network chart</summary>' +
         '<div id="si-chart" class="si-chart" role="img" aria-label="Network chart of this report’s entities and links"></div>' +
         '</details>' +
-        '<details class="ir-sec" open><summary>Structured intelligence</summary><div id="si-panel"></div></details>' +
-        '<details class="ir-sec" open><summary>Workflow</summary>' +
+        '<details class="ir-sec"><summary>Structured intelligence</summary><div id="si-panel"></div></details>' +
+        '<details class="ir-sec"><summary>Workflow</summary>' +
         '<div class="wf-status">Status: <span class="pill status" data-status="' + esc(ir.status) + '">' + esc(ir.status) + '</span>' +
           (ir.rejectionReason ? ' · <em>rejected:</em> ' + esc(ir.rejectionReason) : '') +
           (ir.suppressionReason ? ' · <em>suppressed:</em> ' + esc(ir.suppressionReason) : '') +

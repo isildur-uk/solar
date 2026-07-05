@@ -13,28 +13,29 @@
 
   // the BAINES demo system — colours follow the entity-type palette
   var BODIES = [
-    { label: "GEOFF BAINES", type: "person", ring: 0, size: 16 },
-    { label: "+44 7686 868686", type: "phone", ring: 1, size: 7, phase: 0.05 },
-    { label: "geoff.b@gmail.com", type: "email", ring: 1, size: 7, phase: 0.38 },
-    { label: "+34 123 123 1233", type: "phone", ring: 1, size: 6, phase: 0.72 },
-    { label: "BRISTOL AIRPORT", type: "location", ring: 2, size: 8, phase: 0.12 },
-    { label: "MÁLAGA", type: "location", ring: 2, size: 9, phase: 0.45 },
-    { label: "C. MAESTRANZA 20", type: "address", ring: 2, size: 7, phase: 0.66 },
-    { label: "SEVILLE", type: "location", ring: 2, size: 7, phase: 0.88 },
-    { label: "KAREN WALSH", type: "person", ring: 3, size: 9, phase: 0.2 },
-    { label: "DEAN HOLLAND", type: "person", ring: 3, size: 9, phase: 0.55 },
-    { label: "£5,000", type: "money", ring: 3, size: 6, phase: 0.8 }
+    { label: "SUBJECT",           type: "person",       ring: 0, size: 16 },
+    { label: "PHONE NUMBER",      type: "phone",        ring: 1, size: 7, phase: 0.05 },
+    { label: "EMAIL ADDRESS",     type: "email",        ring: 1, size: 7, phase: 0.38 },
+    { label: "FINANCIAL ACCOUNT", type: "account",      ring: 1, size: 6, phase: 0.72 },
+    { label: "LOCATION",          type: "location",     ring: 2, size: 8, phase: 0.12 },
+    { label: "AIRPORT",           type: "airport",      ring: 2, size: 9, phase: 0.45 },
+    { label: "ADDRESS",           type: "address",      ring: 2, size: 7, phase: 0.66 },
+    { label: "VEHICLE",           type: "vehicle",      ring: 2, size: 7, phase: 0.88 },
+    { label: "PERSON",            type: "person",       ring: 3, size: 9, phase: 0.2 },
+    { label: "ORGANISATION",      type: "organisation", ring: 3, size: 9, phase: 0.55 },
+    { label: "CASH",              type: "money",        ring: 3, size: 6, phase: 0.8 }
   ];
   var LINKS = [
-    [0, 1, "USES"], [0, 2, "USES"], [0, 3, "PLANNED"],
-    [0, 4, "DEPARTS"], [0, 5, "TRAVELS TO"], [0, 6, "STAYS AT"], [0, 7, "DAY TRIP"],
-    [0, 8, "CONTACTED"], [8, 9, "DENIES MEETING"], [9, 10, "TRANSFERRED"]
+    [0, 1, "USES"], [0, 2, "USES"], [0, 3, "HOLDS"],
+    [0, 4, "TRAVELS TO"], [0, 5, "DEPARTS"], [0, 6, "STAYS AT"], [0, 7, "DRIVES"],
+    [0, 8, "ASSOCIATE OF"], [8, 9, "EMPLOYED BY"], [9, 10, "TRANSFERRED"]
   ];
   var RING_R = [0, 0.16, 0.30, 0.44];   // semi-major axis as fraction of min(w,h)
   var RING_SPEED = [0, 0.05, 0.032, 0.02]; // radians/sec
   var SQUASH = 0.42;                     // ellipse vertical squash
 
   var canvas = null, ctx = null, raf = 0;
+  var chipImgs = [];                     // preloaded entity-chip icons (the charting language)
   var W = 0, H = 0, DPR = 1;
   var progress = 0;                      // scroll progress 0..1
   var accent = "#e8b34b";
@@ -178,14 +179,22 @@
       ctx.beginPath();
       ctx.arc(q.x, q.y, sz * 3.2, 0, Math.PI * 2);
       ctx.fill();
-      // core
-      ctx.fillStyle = "#0d1117";
-      ctx.strokeStyle = hexAlpha(col, alpha);
-      ctx.lineWidth = i === 0 ? 2.4 : 1.6;
-      ctx.beginPath();
-      ctx.arc(q.x, q.y, sz, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      // core — the chart's own icon chip when available, else the plain disc
+      var chip = chipImgs[i];
+      if (chip && chip.complete && chip.naturalWidth) {
+        var cs = sz * 2.7;
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(chip, q.x - cs / 2, q.y - cs / 2, cs, cs);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = "#0d1117";
+        ctx.strokeStyle = hexAlpha(col, alpha);
+        ctx.lineWidth = i === 0 ? 2.4 : 1.6;
+        ctx.beginPath();
+        ctx.arc(q.x, q.y, sz, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
       // subject pulse
       if (i === 0 && !REDUCED) {
         var pr = sz + 6 + 4 * (0.5 + 0.5 * Math.sin(time * 1.8));
@@ -199,7 +208,7 @@
         ctx.fillStyle = "rgba(201,212,224," + (0.85 * alpha * (i === 0 ? 1 : 0.8)) + ")";
         ctx.font = (i === 0 ? "600 11px" : "500 9px") + " Consolas, monospace";
         ctx.textAlign = "center";
-        ctx.fillText(b.label, q.x, q.y + sz + 13);
+        ctx.fillText(b.label, q.x, q.y + sz * 1.55 + 12);
       }
     });
 
@@ -219,6 +228,14 @@
     ctx = canvas.getContext("2d");
     if (!ctx) return false;
     resize();
+    // the same icon chips the chart uses — the hero speaks the product's language
+    if (window.CRIcons) {
+      chipImgs = BODIES.map(function (b) {
+        var img = new Image();
+        img.src = window.CRIcons.get(b.type, typeColour(b.type)).unselected;
+        return img;
+      });
+    }
     // deterministic scatter seeds (no flicker between mounts)
     seeds = BODIES.map(function (b, i) {
       var sa = i * 2.39996;              // golden angle

@@ -188,7 +188,7 @@ legend{font-weight:700;padding:0 .4rem;text-transform:uppercase;font-size:.74rem
 /* Sensitive source — distinct PROTECTED block, amber warn token, never colour-
  * alone (persistent text label + glyph + role=note). Separated from item sources. */
 .sensitive-source{border:1px solid var(--warn);border-left:4px solid var(--warn);background:rgba(224,153,94,0.08);
-  border-radius:var(--radius);padding:.7rem .85rem;margin:.6rem 0 1.5rem;box-shadow:var(--shadow-1)}
+  border-radius:var(--radius);padding:1rem 1.15rem;margin:1.6rem 0 1.9rem;box-shadow:var(--shadow-1)}
 .sensitive-source .ss-label{display:flex;align-items:center;gap:.45rem;color:var(--warn);font-family:var(--mono);
   font-weight:700;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:.5rem}
 .sensitive-source .ss-mark{font-size:.8rem;line-height:1}
@@ -542,7 +542,7 @@ details.facet>summary .c{background:var(--accent-soft);color:var(--accent);borde
 @media (max-width:900px){.compare-wrap.cols-2,.compare-wrap.cols-3{grid-template-columns:minmax(0,1fr)}.compare-pane{max-height:none}}
 
 /* ---- IR house-format document (read view) — mirrors the NCA sample IR layout ---- */
-.ir-doc{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:20px 22px;margin:4px 0 18px}
+.ir-doc{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:30px 38px;margin:4px 0 18px}
 .ir-masthead{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--line-2);padding-bottom:10px;margin-bottom:12px}
 .ir-org{font:600 11px/1 var(--mono);letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
 .ir-doctype{font:700 13px/1 var(--mono);letter-spacing:.18em;color:var(--accent);text-transform:uppercase}
@@ -572,7 +572,7 @@ table.ir-items .c-report pre.item-text{margin:0;white-space:pre-wrap;font-family
 table.ir-prov .c-no{color:var(--accent)}
 /* ---- mobile: report read view ---- */
 @media(max-width:640px){
-  .ir-doc{padding:14px 14px}
+  .ir-doc{padding:18px 16px}
   .ir-masthead{flex-wrap:wrap;gap:4px 12px}
   .ir-hdr{grid-template-columns:1fr 1fr}
   /* reflow the 5-col item table into stacked cards; source chip stays visible */
@@ -776,7 +776,7 @@ html[data-theme="light"]{
   --spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(125,143,52,0.42),rgba(107,122,47,0.16) 26%,transparent 54%);
 }
 #cursor-torch{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483000;opacity:0;transition:opacity .35s ease;
-  background:radial-gradient(240px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 12%, transparent), transparent 62%)}
+  background:radial-gradient(70px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 9%, transparent), transparent 58%)}
 #cursor-torch.on{opacity:1}
 @media (prefers-reduced-motion: reduce){ #cursor-torch{display:none} }
 #theme-toggle{background:var(--panel-2);border:1px solid var(--line-2);color:var(--text);border-radius:var(--radius);
@@ -800,3 +800,7 @@ html[data-theme="light"]{
 ::-webkit-scrollbar-thumb { background: var(--line-2); }
 ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* the sensitive source's own reporting row — tied to the SENSITIVE SOURCE block */
+table.ir-items tr.row-src{background:rgba(224,153,94,0.05)}
+table.ir-items tr.row-src .c-no{color:var(--warn);font-weight:700}

@@ -794,7 +794,7 @@ html[data-theme="light"]{
 }
 /* global cursor torch — a soft light that follows the pointer over everything */
 #cursor-torch{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483000;opacity:0;transition:opacity .35s ease;
-  background:radial-gradient(130px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 11%, transparent), transparent 60%)}
+  background:radial-gradient(70px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 9%, transparent), transparent 58%)}
 #cursor-torch.on{opacity:1}
 @media (prefers-reduced-motion: reduce){ #cursor-torch{display:none} }
 /* theme toggle button */

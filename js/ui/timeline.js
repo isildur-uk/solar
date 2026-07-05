@@ -9,6 +9,9 @@
 (function () {
   "use strict";
 
+  /* theme-aware canvas colours (light mode was illegible with the dark set) */
+  function tcol(d, l) { return document.documentElement.getAttribute("data-theme") === "light" ? l : d; }
+
   var U = window.CRUtil;
   var store = null;
   var onSelectCb = null;
@@ -99,7 +102,7 @@
     // dek — count + span, NYT subtitle discipline (tabular figures via mono)
     var _f = new Date(evs[0].dateISO), _l = new Date(evs[evs.length - 1].dateISO);
     var _fmt = function (d) { return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" }); };
-    ctx.font = "10px Consolas, monospace"; ctx.textAlign = "right"; ctx.fillStyle = "#76879b";
+    ctx.font = "10px Consolas, monospace"; ctx.textAlign = "right"; ctx.fillStyle = tcol("#76879b", "#6b6453");
     ctx.fillText(evs.length + (evs.length === 1 ? " event" : " events") +
       "  \u00b7  " + _fmt(_f) + (evs.length > 1 ? " \u2013 " + _fmt(_l) : ""), w - 8, 12);
     ctx.textAlign = "left";
@@ -114,15 +117,15 @@
     }
 
     // axis + ticks
-    ctx.strokeStyle = "#22303f";
+    ctx.strokeStyle = tcol("#22303f", "#c9c1ab");
     ctx.beginPath(); ctx.moveTo(0, axisY + 0.5); ctx.lineTo(w, axisY + 0.5); ctx.stroke();
-    ctx.fillStyle = "#5a6878";
+    ctx.fillStyle = tcol("#5a6878", "#6b6453");
     ctx.font = "9px Consolas, monospace";
     ctx.textAlign = "center";
     niceTicks().forEach(function (tk) {
       var x = xOf(tk.t);
       if (x < -40 || x > w + 40) return;
-      ctx.strokeStyle = "#1a2430";
+      ctx.strokeStyle = tcol("#1a2430", "#e3dcc6");
       ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, axisY); ctx.stroke();
       ctx.fillText(tk.label, x, h - 6);
     });
@@ -142,7 +145,7 @@
       var inR = !range || (t >= range.a && t <= range.b);
       var heroMode = !!highlightEntityId; // one hero (selected entity), rest grey
       ctx.globalAlpha = inR ? (heroMode && !hl ? 0.5 : 1) : 0.22;
-      ctx.fillStyle = (heroMode && !hl) ? "#46566b" : KIND_COLOURS[kind];
+      ctx.fillStyle = (heroMode && !hl) ? tcol("#46566b", "#b3ab93") : KIND_COLOURS[kind];
       ctx.beginPath();
       ctx.arc(x, y, hl ? 6 : 4.2, 0, Math.PI * 2);
       ctx.fill();
@@ -163,7 +166,7 @@
     Object.keys(KIND_COLOURS).forEach(function (k) {
       ctx.fillStyle = KIND_COLOURS[k];
       ctx.beginPath(); ctx.arc(lx + 3, 9, 3, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#5a6878";
+      ctx.fillStyle = tcol("#5a6878", "#6b6453");
       ctx.fillText(k, lx + 9, 12);
       lx += 9 + ctx.measureText(k).width + 14;
     });
@@ -301,5 +304,6 @@
     render();
   }
 
+  window.addEventListener("cr-theme", function () { try { render(); } catch (e) { /* noop */ } });
   window.CRTimeline = { init: init, render: render, highlightEntity: highlightEntity, clearRange: clearRange };
 })();
