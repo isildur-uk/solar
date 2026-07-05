@@ -804,3 +804,9 @@ html[data-theme="light"]{
 /* the sensitive source's own reporting row — tied to the SENSITIVE SOURCE block */
 table.ir-items tr.row-src{background:rgba(224,153,94,0.05)}
 table.ir-items tr.row-src .c-no{color:var(--warn);font-weight:700}
+
+/* the source's own reporting, inside the SENSITIVE SOURCE block */
+.sensitive-source .ss-reporting{margin-top:.75rem;padding-top:.75rem;border-top:1px dashed rgba(224,153,94,.4)}
+.sensitive-source .ss-reporting .ss-k{display:block;margin-bottom:.35rem}
+.sensitive-source .ss-reporting .item-text{margin:0;white-space:pre-wrap;font:500 13px/1.55 var(--sans, inherit);color:var(--ink)}
+.sensitive-source .ss-grades{font-family:var(--mono);font-size:.72rem;color:var(--warn);font-weight:700;display:inline-block;margin-top:.4rem}

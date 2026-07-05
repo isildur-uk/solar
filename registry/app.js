@@ -764,14 +764,23 @@
       var pvd = M.coerceProvenance(ir.provenance);
       var items = (ir.items || []).filter(function (i) { return !i.isProvenance; });
       // Sensitive source as a distinct, protected block (not a plain dl row).
+      // The source's own reporting item belongs INSIDE this section, not in the report body.
+      var srcItem = (ss.source && items.length && /chis/i.test(items[0].sourceType || '')) ? items[0] : null;
+      if (srcItem) items = items.slice(1);
       var ssParts = [];
       if (ss.source) ssParts.push(['Source', ss.source]);
       if (ss.subtype) ssParts.push(['Subtype', ss.subtype]);
       if (ss.reference) ssParts.push(['Reference', ss.reference]);
-      var ssSection = ssParts.length
+      var ssReporting = srcItem
+        ? '<div class="ss-reporting"><span class="ss-k">Source reporting</span>'
+          + '<pre class="item-text">' + highlightExtract(srcItem.text, siHighlightOn) + '</pre>'
+          + '<span class="ss-grades">' + esc(srcItem.sourceEval) + esc(srcItem.intelEval) + '</span></div>'
+        : '';
+      var ssSection = (ssParts.length || ssReporting)
         ? '<section class="sensitive-source" role="note" aria-label="Sensitive source — protected, handle with care">'
           + '<div class="ss-label"><span class="ss-mark" aria-hidden="true">▲</span>SENSITIVE SOURCE</div>'
           + '<div class="ss-grid">' + ssParts.map(function (p) { return '<div class="ss-cell"><span class="ss-k">' + esc(p[0]) + '</span><span class="ss-v">' + esc(p[1]) + '</span></div>'; }).join("") + '</div>'
+          + ssReporting
           + '</section>'
         : '';
       var auditHTML = (ir.audit || []).slice().reverse().map(function (a) {
@@ -797,13 +806,10 @@
           + '</div>'
         : '';
       var _SM = (typeof window!=='undefined' && window.RegistrySourceMeta) ? window.RegistrySourceMeta : null;
-      // The sensitive source's own reporting is "S", not item 1 — true items number from the next row.
-      var srcRow0 = !!(ss.source) && items.length && /chis/i.test(items[0].sourceType || '');
       var irItems = items.length
         ? '<table class="ir-items"><thead><tr><th class="c-no">Item</th><th>Report</th><th class="c-src">Source</th><th class="c-si">S</th><th class="c-si">I</th></tr></thead><tbody>'
           + items.map(function(it,i){ var col=_SM?_SM.colour(it.sourceType):'#8d99ae'; var gr=esc(it.sourceEval)+esc(it.intelEval), hd=esc(h.code||'P');
-              var ord = srcRow0 ? (i === 0 ? 'S' : i) : (i + 1);
-              return '<tr'+(srcRow0 && i===0 ? ' class="row-src"' : '')+'><td class="c-no">'+ord+'</td>'
+              return '<tr><td class="c-no">'+(i+1)+'</td>'
                 + '<td class="c-report"><pre class="item-text">'+highlightExtract(it.text, siHighlightOn)+'</pre></td>'
                 + '<td class="c-src"><button type="button" class="src-chip" data-src="'+esc(it.sourceType)+'" style="--src:'+esc(col)+'" title="What is '+esc(it.sourceType)+'? Show its other checks in this operation">'+esc(it.sourceType)+'</button></td>'
                 + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-rel="'+esc(it.sourceEval)+'" title="Explain this grade">'+esc(it.sourceEval)+'</button></td>'
@@ -843,7 +849,7 @@
           '<div class="items-head">' +
           '<label class="hl-toggle" title="Bold + colour the entities extracted from this report, by type"><input type="checkbox" id="hl-entities"' + (siHighlightOn ? ' checked' : '') + '> Highlight extracted entities</label></div>' +
           irItems + '</details>' +
-          '<details class="ir-sec"><summary>Provenance</summary>' +
+          '<details class="ir-sec" open><summary>Provenance</summary>' +
           irProvTable + '</details>' +
         '<details class="ir-sec ir-sec-chart"><summary>Network chart</summary>' +
         '<div id="si-chart" class="si-chart" role="img" aria-label="Network chart of this report’s entities and links"></div>' +

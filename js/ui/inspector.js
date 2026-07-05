@@ -41,9 +41,16 @@
     var rows = Object.keys(mix).sort(function (a, b) { return mix[b] - mix[a]; })
       .map(function (t) {
         var T = types[t] || {};
-        return '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;' +
-          'background:' + (T.colour || "#8593a3") + ';margin-right:7px;vertical-align:baseline"></span>' +
-          U.esc(T.label || t) + "</td><td style=\"text-align:right;font-variant-numeric:tabular-nums\">" + mix[t] + "</td></tr>";
+        var mark;
+        if (window.CRIcons) {   // the chart's own coloured icon chip, not a bare dot
+          mark = '<img src="' + window.CRIcons.get(t, T.colour || "#8593a3").unselected +
+            '" alt="" style="width:16px;height:16px;vertical-align:-3px;margin-right:7px">';
+        } else {
+          mark = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;' +
+            'background:' + (T.colour || "#8593a3") + ';margin-right:7px;vertical-align:baseline"></span>';
+        }
+        return "<tr><td>" + mark + U.esc(T.label || t) +
+          "</td><td style=\"text-align:right;font-variant-numeric:tabular-nums\">" + mix[t] + "</td></tr>";
       }).join("");
     var located = store.entities.filter(function (e) {
       return e.attrs && (typeof e.attrs.lat === "number");
