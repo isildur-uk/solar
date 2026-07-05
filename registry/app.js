@@ -905,6 +905,7 @@
       }
       renderWfBar(ir);
       renderSI(ir);
+      _selIr = ir; wireSelIntel(els.main);
       renderMiniChart(ir);
       var _cs = els.main.querySelector('.ir-sec-chart');
       if (_cs) _cs.addEventListener('toggle', function(){ if (_cs.open) setTimeout(function(){ try{ window.dispatchEvent(new Event('resize')); }catch(e){} }, 30); });
@@ -1124,6 +1125,69 @@
     gen.links.forEach(function(l){ var from=idmap[l.from]||l.from, to=idmap[l.to]||l.to; if(from===to) return; var k=from+'|'+to+'|'+l.type; if(lseen[k]) return; l.from=from; l.to=to; S.links.push(l); lseen[k]=1; });
     return S;
   }
+  /* ---- select report text → add as structured intelligence + link ---- */
+  var _selIr = null;
+  function hideSelIntel(){ var p=document.getElementById('sel-intel'); if(p) p.hidden=true; }
+  function showSelIntel(text, rect) {
+    var ir = _selIr; if (!ir) return;
+    if (ir.status === 'AUTHORISED' || ir.status === 'SUPPRESSED') return;   // read-only
+    var pop = document.getElementById('sel-intel');
+    if (!pop) { pop = document.createElement('div'); pop.id = 'sel-intel'; pop.className = 'sel-intel'; document.body.appendChild(pop); }
+    var S = ir.structuredIntelligence || { entities: [], links: [] };
+    var typeOpts = alphaPinOther(Object.keys(SI.ENTITY_TYPES), function (k) { return SI.ENTITY_TYPES[k].label; })
+      .map(function (k) { return '<option value="' + k + '">' + esc(SI.ENTITY_TYPES[k].label) + '</option>'; }).join('');
+    var entOpts = S.entities.map(function (e) { return '<option value="' + esc(e.id) + '">' + esc(e.label) + '</option>'; }).join('');
+    var linkOpts = alphaPinOther(Object.keys(SI.LINK_TYPES), function (k) { return SI.LINK_TYPES[k]; })
+      .map(function (k) { return '<option value="' + k + '">' + esc(SI.LINK_TYPES[k]) + '</option>'; }).join('');
+    pop.innerHTML =
+      '<div class="si-pop-h">▲ Add to structured intelligence</div>' +
+      '<input class="si-pop-label" type="text" aria-label="label">' +
+      '<select class="si-pop-type" aria-label="entity type">' + typeOpts + '</select>' +
+      (S.entities.length ? '<div class="si-pop-link"><select class="si-pop-lt" aria-label="link type">' + linkOpts + '</select>'
+        + '<select class="si-pop-to" aria-label="link to entity"><option value="">— no link —</option>' + entOpts + '</select></div>' : '') +
+      '<div class="si-pop-actions"><button type="button" class="btn secondary si-pop-add">Add intel</button>'
+        + '<button type="button" class="btn si-pop-x">Cancel</button></div>';
+    pop.hidden = false;
+    pop.querySelector('.si-pop-label').value = text;
+    var px = Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - 290);
+    pop.style.left = Math.max(8, px) + 'px';
+    pop.style.top = (rect.bottom + window.scrollY + 7) + 'px';
+    // default the type to the entity kind if the selection was already an extracted mark
+    pop.querySelector('.si-pop-add').addEventListener('click', function () {
+      var label = pop.querySelector('.si-pop-label').value.trim();
+      if (!label) { setStatus('Give the intel a label.', 'err'); return; }
+      var type = pop.querySelector('.si-pop-type').value;
+      var ent = SI.addEntity(ir, { type: type, label: label });
+      var toSel = pop.querySelector('.si-pop-to');
+      if (toSel && toSel.value) SI.addLink(ir, { from: ent.id, to: toSel.value, type: pop.querySelector('.si-pop-lt').value });
+      M.addAudit(ir, currentUser(), 'si-select', 'added "' + label + '" (' + type + ') from selected report text' + (toSel && toSel.value ? ' + link' : ''));
+      persistSI(ir); renderMiniChart(ir);
+      setStatus('Added "' + label + '" to structured intelligence' + (toSel && toSel.value ? ' and linked it.' : '.'), 'ok');
+      hideSelIntel();
+      var s = window.getSelection(); if (s) s.removeAllRanges();
+    });
+    pop.querySelector('.si-pop-x').addEventListener('click', function () { hideSelIntel(); var s = window.getSelection(); if (s) s.removeAllRanges(); });
+  }
+  function wireSelIntel(root) {
+    if (root._selWired) return;
+    root._selWired = true;
+    root.addEventListener('mouseup', function (ev) {
+      if (ev.target.closest && ev.target.closest('.sel-intel')) return;
+      setTimeout(function () {
+        var sel = window.getSelection();
+        if (!sel || sel.isCollapsed) return;
+        var txt = sel.toString().trim();
+        if (txt.length < 2 || txt.length > 120) return;
+        var a = sel.anchorNode, el = a && (a.nodeType === 3 ? a.parentElement : a);
+        if (!el || !(el.closest && el.closest('.item-text'))) return;
+        showSelIntel(txt, sel.getRangeAt(0).getBoundingClientRect());
+      }, 0);
+    });
+    document.addEventListener('mousedown', function (ev) {
+      if (!(ev.target.closest && ev.target.closest('.sel-intel'))) hideSelIntel();
+    });
+  }
+
   var _siAutoTried = {};
   function renderSI(ir) {
     var panel = document.getElementById("si-panel"); if (!panel) return;

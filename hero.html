@@ -73,6 +73,30 @@ body.warping #cosmos { opacity: 0; }
 body.warping #orrery { opacity: 0; }
 @media (max-width: 900px) { #orrery { display: none; } }  /* phones: copy owns the frame */
 
+/* layer 1.5 mirror — an NCA intelligence report writing itself on the left,
+   the prose counterpart to the orrery's entities/links on the right */
+#report {
+  position: fixed;
+  left: 3.4vw; top: 50%;
+  transform: translateY(-50%);
+  width: min(33vmin, 372px);
+  z-index: 2;                     /* below the wordmark (.content, later in DOM) — reads as atmosphere */
+  pointer-events: none;
+  font-family: var(--mono);
+  color: rgba(244, 243, 232, 0.6);
+  opacity: 0;
+  animation: fade 1.4s ease 0.35s forwards;
+}
+body.warping #report { opacity: 0; transition: opacity 0.5s ease; }
+@media (max-width: 900px) { #report { display: none; } }
+#report .r-line { font-size: 12px; line-height: 1.7; letter-spacing: 0.01em; min-height: 1.7em; }
+#report .r-h { font-size: 11px; letter-spacing: 0.22em; color: var(--accent); }
+#report .r-meta { font-size: 10px; letter-spacing: 0.12em; color: rgba(244,243,232,0.38); margin-bottom: 14px; }
+#report .ent { color: #ccd6ff; font-weight: 500; }        /* extracted entities glow a touch brighter */
+#report .caret { border-right: 2px solid var(--accent); margin-left: 1px; animation: rblink 1s step-end infinite; }
+@keyframes rblink { 50% { border-color: transparent; } }
+@media (prefers-reduced-motion: reduce) { #report { animation: none; opacity: 1; } #report .caret { animation: none; } }
+
 /* layer 1 — the shooting-star cursor trail, above the nebula */
 #trail  { position: fixed; inset: 0; z-index: 1; display: block; pointer-events: none; }
 /* layer 5 — the ENTER explosion overlay, above everything */
@@ -305,6 +329,7 @@ body.warping .content {
   <canvas id="stars" aria-hidden="true"></canvas>
   <canvas id="nebula" aria-label="Living nebula background" aria-hidden="true"></canvas>
   <canvas id="orrery" aria-hidden="true"></canvas>
+  <div id="report" aria-hidden="true"></div>
   <canvas id="trail" aria-hidden="true"></canvas>
 
 
@@ -758,6 +783,62 @@ body.warping .content {
   /* trail loop */
   function loop(now) { drawTrail(now); requestAnimationFrame(loop); }
   if (!reduceMotion) requestAnimationFrame(loop);
+})();
+</script>
+
+<!-- the report writing itself on the left — the prose mirror of the orrery -->
+<script>
+(function () {
+  "use strict";
+  var host = document.getElementById("report");
+  if (!host) return;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function parse(str){                         /* [[entity]] → highlighted segments */
+    var out=[], re=/\[\[(.+?)\]\]/g, last=0, m;
+    while((m=re.exec(str))){ if(m.index>last) out.push({t:str.slice(last,m.index),e:false}); out.push({t:m[1],e:true}); last=re.lastIndex; }
+    if(last<str.length) out.push({t:str.slice(last),e:false});
+    return out;
+  }
+  var LINES = [
+    { cls:"r-h",    seg:parse("INTELLIGENCE REPORT") },
+    { cls:"r-meta", seg:parse("URN 24/0113 · OFFICIAL–SENSITIVE") },
+    { seg:parse("[[SUBJECT]] uses [[PHONE NUMBER]] and [[EMAIL ADDRESS]] to coordinate activity.") },
+    { seg:parse("[[SUBJECT]] holds a [[FINANCIAL ACCOUNT]] under a third-party name.") },
+    { seg:parse("[[SUBJECT]] travels to [[LOCATION]], departing via [[AIRPORT]].") },
+    { seg:parse("[[SUBJECT]] stays at an [[ADDRESS]] and is linked to a [[VEHICLE]].") },
+    { seg:parse("[[SUBJECT]] is an associate of [[PERSON]], employed by [[ORGANISATION]].") },
+    { seg:parse("[[ORGANISATION]] transferred [[CASH]] prior to travel.") }
+  ];
+  var els = LINES.map(function (L) { var d=document.createElement("div"); d.className="r-line "+(L.cls||""); host.appendChild(d); return d; });
+
+  function fullLen(seg){ var n=0; for(var i=0;i<seg.length;i++) n+=seg[i].t.length; return n; }
+  function render(el, seg, n){
+    var html="", count=0;
+    for(var i=0;i<seg.length;i++){
+      var s=seg[i], take=Math.max(0, Math.min(s.t.length, n-count));
+      if(take>0){ var p=esc(s.t.slice(0,take)); html += s.e ? '<span class="ent">'+p+'</span>' : p; }
+      count += s.t.length;
+      if(count>=n) break;
+    }
+    el.innerHTML = html;
+  }
+
+  if (reduce) { LINES.forEach(function (L,i){ render(els[i], L.seg, 9999); }); return; }
+
+  var caret = document.createElement("span"); caret.className="caret"; caret.textContent=" ";
+  var li=0, ci=0;
+  function step(){
+    if (li>=LINES.length) return;                       /* done — caret rests on the last line */
+    var L=LINES[li], len=fullLen(L.seg);
+    ci++;
+    render(els[li], L.seg, ci);
+    els[li].appendChild(caret);
+    if (ci>=len) { li++; ci=0; setTimeout(step, 260); }
+    else setTimeout(step, 15 + ((Math.random()*12)|0));
+  }
+  setTimeout(step, 700);                                 /* mirrors the orrery's assembly delay */
 })();
 </script>
 

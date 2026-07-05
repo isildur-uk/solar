@@ -93,13 +93,14 @@ body {
   border: 1px solid transparent;
   color: var(--text);
   font: 12px var(--mono);
-  padding: 4px 8px;
-  flex: 0 1 auto;
-  min-width: 150px;
-  width: 30ch;         /* long case names stay readable, not clipped at 140px */
-  max-width: 34vw;
+  padding: 5px 8px;
+  border-radius: 3px;
+  flex: 1 1 220px;     /* grows into spare topbar space; shrinks no smaller than the min */
+  min-width: 160px;
+  width: auto;
   text-overflow: ellipsis;
 }
+#topbar .btn { flex: 0 0 auto; }   /* buttons keep natural width so the case name gets the slack */
 #case-name:hover, #case-name:focus { border-color: var(--line); color: var(--text); outline: none; }
 
 #search {
@@ -798,7 +799,7 @@ html[data-theme="light"]{
 }
 /* global cursor torch — a soft light that follows the pointer over everything */
 #cursor-torch{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483000;opacity:0;transition:opacity .35s ease;
-  background:radial-gradient(70px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 9%, transparent), transparent 58%)}
+  background:radial-gradient(34px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 6%, transparent), transparent 62%)}
 #cursor-torch.on{opacity:1}
 @media (prefers-reduced-motion: reduce){ #cursor-torch{display:none} }
 /* theme toggle button */

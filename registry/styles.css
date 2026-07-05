@@ -566,7 +566,18 @@ table.ir-items tr:first-child td{border-top:0}
 table.ir-items .c-no{width:38px;text-align:center;font:700 12px/1 var(--mono);color:var(--dim)}
 table.ir-items .c-src{width:130px;color:var(--dim);font:500 12px/1.4 var(--mono)}
 table.ir-items .c-si{width:34px;text-align:center;font:700 13px/1 var(--mono);color:var(--accent)}
-table.ir-items .c-report pre.item-text{margin:0;white-space:pre-wrap;font-family:var(--sans);font-size:13px;line-height:1.5;color:var(--ink);background:none;border:0;padding:0}
+table.ir-items .c-report pre.item-text{margin:0;white-space:pre-wrap;font-family:var(--sans);font-size:13px;line-height:1.5;color:var(--ink);background:none;border:0;padding:0;-webkit-user-select:text;user-select:text;cursor:text}
+.item-text::selection,.item-text *::selection{background:color-mix(in srgb,var(--accent) 34%,transparent)}
+/* selection → structured-intelligence popover */
+.sel-intel{position:absolute;z-index:6000;width:270px;background:var(--panel);border:1px solid var(--line-2);border-radius:var(--radius);box-shadow:var(--shadow-2);padding:10px;display:flex;flex-direction:column;gap:6px}
+.sel-intel[hidden]{display:none}
+.sel-intel .si-pop-h{font:600 10px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.sel-intel input,.sel-intel select{background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:3px;padding:5px 7px;font:12px var(--sans);width:100%}
+.sel-intel input:focus,.sel-intel select:focus{outline:none;border-color:var(--accent-dim)}
+.sel-intel .si-pop-link{display:flex;gap:5px}
+.sel-intel .si-pop-link select{width:50%}
+.sel-intel .si-pop-actions{display:flex;gap:6px;margin-top:2px}
+.sel-intel .si-pop-actions .btn{flex:1;text-align:center;justify-content:center}
 .ir-prov-h{font-size:14px;margin:14px 0 4px;display:flex;align-items:center;gap:8px;color:var(--ink)}
 .ir-notchart{font:600 10px/1.6 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--faint);border:1px solid var(--line-2);border-radius:3px;padding:1px 6px}
 table.ir-prov .c-no{color:var(--accent)}
@@ -776,7 +787,7 @@ html[data-theme="light"]{
   --spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(125,143,52,0.42),rgba(107,122,47,0.16) 26%,transparent 54%);
 }
 #cursor-torch{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483000;opacity:0;transition:opacity .35s ease;
-  background:radial-gradient(70px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 9%, transparent), transparent 58%)}
+  background:radial-gradient(34px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 6%, transparent), transparent 62%)}
 #cursor-torch.on{opacity:1}
 @media (prefers-reduced-motion: reduce){ #cursor-torch{display:none} }
 #theme-toggle{background:var(--panel-2);border:1px solid var(--line-2);color:var(--text);border-radius:var(--radius);

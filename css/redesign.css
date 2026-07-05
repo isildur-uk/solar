@@ -77,6 +77,13 @@ input[type="text"], input[type="search"], textarea,
 /* light theme: cream chart canvas, cosmic nebula hidden (the cosmic brand lives in dark mode) */
 html[data-theme="light"] #chart-wrap { background: #f2ecdd; }
 html[data-theme="light"] #space-bg   { opacity: 0; }
+/* the cockpit chrome must turn light too — these glass surfaces were hardcoded dark,
+   leaving the inspector text, case name and status bar dark-on-dark (invisible) in light mode */
+html[data-theme="light"] #topbar    { background: rgba(251, 248, 239, 0.94); }
+html[data-theme="light"] #side       { background: rgba(251, 248, 239, 0.82); }
+html[data-theme="light"] #statusbar  { background: rgba(251, 248, 239, 0.82); }
+html[data-theme="light"] .modal      { background: rgba(251, 248, 239, 0.94); }
+html[data-theme="light"] .modal-veil { background: rgba(40, 36, 26, 0.38); }
 #chart      { position: absolute; inset: 0; z-index: 1; background: transparent; }
 #chart-tools  { z-index: 30; }
 #legend-panel { z-index: 20; }
