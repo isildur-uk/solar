@@ -175,6 +175,23 @@
         '<circle cx="30" cy="92" r="4"/><circle cx="82" cy="34" r="5.5"/>' +
         '<circle cx="138" cy="66" r="4.5"/><circle cx="196" cy="22" r="4"/>' +
         '<circle cx="110" cy="96" r="3.5"/></g></svg>';
+  /* Level indicator for report confidence (TRUST-CRITICAL, DESIGN.md):
+     an ordinal 3-segment pip scale — Low 1 · Medium 2 · High 3 — NOT a
+     percentage. Defensible: it renders exactly the model's confidence band
+     and nothing more; the text label always accompanies it. Static (no
+     motion on the persisted value). aria-label makes it screen-reader clear. */
+  var CONF_RANK = { high: 3, medium: 2, med: 2, low: 1 };
+  function confidenceLevel(value) {
+    var v = String(value == null ? "" : value).trim();
+    var n = CONF_RANK[v.toLowerCase()] || 0;
+    if (!n) { return '<span class="conf-level conf-none">' + esc(v || "—") + '</span>'; }
+    var pips = "";
+    for (var i = 1; i <= 3; i++) { pips += '<span class="conf-pip' + (i <= n ? " is-on" : "") + '" aria-hidden="true"></span>'; }
+    return '<span class="conf-level conf-l' + n + '" role="img" aria-label="Confidence ' + esc(v) + ' (' + n + ' of 3)">' +
+      '<span class="conf-pips">' + pips + '</span>' +
+      '<span class="conf-text">' + esc(v) + '</span></span>';
+  }
+
   function emptyState(opts) {
     opts = opts || {};
     var action = opts.action
@@ -887,7 +904,7 @@
           '<div class="ir-si"><div class="ir-si-h">Supporting information</div>' +
             irSiRow('Threats', irThreatLine) +
             irSiRow('Handling code', irHandLine) +
-            irSiRow('Confidence', esc(ir.confidence || '—')) +
+            irSiRow('Confidence', confidenceLevel(ir.confidence)) +
           '</div>' +
           (ssSection ? '<div class="ir-sssrc">' + ssSection + '</div>' : '') +
           irGrade +
@@ -1068,7 +1085,7 @@
       '<div class="meta-grid">' +
         metaCell('Date of collection', esc(ir.dateOfCollection)) +
         metaCell('Threat area', esc(ir.threatArea)) +
-        metaCell('Confidence', esc(ir.confidence)) +
+        metaCell('Confidence', confidenceLevel(ir.confidence)) +
         metaCell('Handling code', esc(h.code)) +
       '</div>' +
       '<section class="sensitive-source" role="note" aria-label="Sensitive source"><div class="ss-label"><span class="ss-mark" aria-hidden="true">\u25b2</span>SENSITIVE SOURCE</div>' + ssBody + '</section>' +

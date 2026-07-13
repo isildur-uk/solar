@@ -176,6 +176,17 @@ h1[tabindex="-1"]:focus{outline:none}
 .reg-empty-c .reg-empty-glyph{width:96px}
 .reg-empty-c .reg-empty-title{font-size:var(--fs-sm)}
 
+/* Confidence level indicator — ordinal 3-segment pip scale (TRUST-CRITICAL).
+   Static (no motion on the persisted value); text label always present. */
+.conf-level{display:inline-flex;align-items:center;gap:8px}
+.conf-pips{display:inline-flex;gap:3px;align-items:center}
+.conf-pip{width:14px;height:6px;border-radius:2px;background:var(--line-2);flex:0 0 auto}
+.conf-level.conf-l3 .conf-pip.is-on{background:var(--ok)}
+.conf-level.conf-l2 .conf-pip.is-on{background:var(--warn)}
+.conf-level.conf-l1 .conf-pip.is-on{background:var(--bad)}
+.conf-text{font-family:var(--mono);font-size:var(--fs-xs);color:var(--text);letter-spacing:.02em}
+.conf-none{font-family:var(--mono);font-size:var(--fs-xs);color:var(--faint)}
+
 /* Pills — hairline outline, semantic hue text */
 .pill{display:inline-block;font-size:var(--fs-2xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.08rem .4rem;border:1px solid currentColor;border-radius:var(--radius)}
 .pill.mk-OFFICIAL{color:var(--mk-official)}
