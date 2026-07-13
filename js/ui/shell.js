@@ -209,6 +209,7 @@
         { h: "Chart layout", items: [
           { label: "Fit to view", icon: ico.fit, run: api("CRGraph.fit", [], "btn-fit") },
           { label: "Force layout (physics)", icon: ico.net, run: api("CRGraph.togglePhysics", [], "btn-physics") },
+          { label: "Snap to grid (on / off)", icon: ico.grid, run: function () { if (window.CRGraph && window.CRGraph.setSnap) { window.CRGraph.setSnap(); } } },
           { label: "Organic", icon: ico.layout, run: layout("organic") },
           { label: "Grouped by type", icon: ico.grid, run: layout("grouped") },
           { label: "Circle", icon: ico.layout, run: layout("circle") },

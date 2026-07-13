@@ -26,6 +26,9 @@
   var store = null;
   var physicsOn = true;
   var container = null;
+  var snapOn = false;          // snap-to-grid on manual drag-release
+  var SNAP_GRID = 40;          // canvas units between grid lines
+  function snapVal(v) { return Math.round(v / SNAP_GRID) * SNAP_GRID; }
 
   var TYPE_SIZE = { person: 22, organisation: 20, location: 18, address: 16 };
   var ICON_SIZE = { person: 24, organisation: 22, location: 20, address: 18 };
@@ -602,18 +605,25 @@
       var positions = network.getPositions(p.nodes);
       var touched = false;
       p.nodes.forEach(function (id) {
+        var px = positions[id].x, py = positions[id].y;
+        // snap-to-grid applies only on manual drag-release, never to the
+        // physics/layout engine — we move the node to the nearest grid point.
+        if (snapOn) {
+          px = snapVal(px); py = snapVal(py);
+          try { network.moveNode(id, px, py); } catch (e) { /* noop */ }
+        }
         if (isBendNode(id)) {
           var bits = String(id).split("|");
           var l = store.links.find(function (x) { return x.id === bits[1]; });
           var bi = parseInt(bits[2], 10);
           if (l && l.bends && l.bends[bi]) {
-            l.bends[bi] = { x: Math.round(positions[id].x), y: Math.round(positions[id].y) };
+            l.bends[bi] = { x: Math.round(px), y: Math.round(py) };
             touched = true;
           }
         } else {
           var e = store.getEntity(id);
           if (e) {
-            e.chart = { x: Math.round(positions[id].x), y: Math.round(positions[id].y), fixed: physicsOn };
+            e.chart = { x: Math.round(px), y: Math.round(py), fixed: physicsOn };
             touched = true;
           }
         }
@@ -798,6 +808,12 @@
     setColorMode: setColorMode,
     setGeoHidden: function (b) { geoHidden = !!b; rebuild(); },
     geoHidden: function () { return geoHidden; },
+    setSnap: function (b) {
+      snapOn = (b == null) ? !snapOn : !!b;   // toggle when called with no arg
+      if (container) { container.classList.toggle("snap-on", snapOn); }
+      return snapOn;
+    },
+    snapEnabled: function () { return snapOn; },
     applyLayout: applyLayout, addBendAt: addBendAt, removeBend: removeBend,
     straighten: straighten, setPinned: setPinned, isPinned: isPinned,
     nodeAtDOM: nodeAtDOM, edgeAtDOM: edgeAtDOM, bendAtDOM: bendAtDOM, canvasPos: canvasPos
