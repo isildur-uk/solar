@@ -769,5 +769,44 @@
   if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", build); }
   else { build(); }
 
-  window.SolarShell = { rebuild: build, isRegistry: IS_REGISTRY, registerCommands: registerCommands, openPalette: openPalette, setBreadcrumb: setBreadcrumb, setBreadcrumbRoot: setBreadcrumbRoot };
+  /* ---- fx-marker one-shot driver -------------------------------------------
+     markHeading(el) wraps the heading's text in a .fx-marker span (if not
+     already) and fires the cosmic Hi-Liter sweep ONCE when it scrolls into
+     view. A per-element guard (data-marked) means a re-render that calls this
+     again won't re-highlight. Reduced-motion is handled in CSS (no sweep). */
+  var _markObserver = null;
+  function markHeading(host) {
+    if (!host || host.getAttribute("data-marked") === "1") { return; }
+    host.setAttribute("data-marked", "1");
+    // wrap the text content so the marker paints behind the glyphs only
+    var span;
+    if (host.querySelector(".fx-marker")) {
+      span = host.querySelector(".fx-marker");
+    } else {
+      span = document.createElement("span");
+      span.className = "fx-marker";
+      // move existing text nodes into the span (plain text — no HTML injection)
+      span.textContent = host.textContent;
+      host.textContent = "";
+      host.appendChild(span);
+    }
+    var fire = function () { span.classList.add("is-marking"); };
+    if (typeof IntersectionObserver === "function") {
+      if (!_markObserver) {
+        _markObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (en) {
+            if (en.isIntersecting) {
+              en.target.classList.add("is-marking");
+              _markObserver.unobserve(en.target);
+            }
+          });
+        }, { threshold: 0.6 });
+      }
+      _markObserver.observe(span);
+    } else {
+      fire();   // no IO support -> just fire on call
+    }
+  }
+
+  window.SolarShell = { rebuild: build, isRegistry: IS_REGISTRY, registerCommands: registerCommands, openPalette: openPalette, setBreadcrumb: setBreadcrumb, setBreadcrumbRoot: setBreadcrumbRoot, markHeading: markHeading };
 })();

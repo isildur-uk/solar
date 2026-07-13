@@ -1649,6 +1649,8 @@
         action: q ? { id: 'home-empty-clear', label: 'Clear search' } : { id: 'home-empty-demo', label: 'Reload demo' }
       })) + '</div>' +
       '</div>';
+    // Hi-Liter: cosmic marker sweep on the signature "Operations" heading (one-shot).
+    try { var _opH = els.main.querySelector(".detail.home > h1"); if (_opH && window.SolarShell && window.SolarShell.markHeading) { window.SolarShell.markHeading(_opH); } } catch (e) { /* noop */ }
     els.main.querySelectorAll(".op-card").forEach(function (c) { c.addEventListener("click", function () { selectOp(c.getAttribute("data-op")); }); });
     var hn = document.getElementById("home-new"); if (hn) hn.addEventListener("click", function () { showForm(null); });
     var ha = document.getElementById("home-all"); if (ha) ha.addEventListener("click", function () { selectOp(""); });

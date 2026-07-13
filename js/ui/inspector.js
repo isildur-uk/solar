@@ -8,6 +8,7 @@
   var U = window.CRUtil;
   var store = null;
   var current = null; // {kind:'entity'|'link', id}
+  var overviewMarked = false; // fx-marker fires once per page load on "Case overview"
 
   function init(caseStore) {
     store = caseStore;
@@ -64,6 +65,16 @@
       '<div class="sec">Entity mix</div>' +
       '<table class="em-table">' + rows + "</table>" +
       '<div class="audit" style="margin-top:10px">Select an entity or link on the chart for its detail, provenance and source.</div>';
+    // Hi-Liter: cosmic marker sweep on the workbench's signature "Case overview"
+    // heading — ONCE per page load (the overview re-renders, so a module guard
+    // stops it re-highlighting on every refresh).
+    if (!overviewMarked) {
+      overviewMarked = true;
+      try {
+        var _chip = el.querySelector(".type-chip");
+        if (_chip && window.SolarShell && window.SolarShell.markHeading) { window.SolarShell.markHeading(_chip); }
+      } catch (e) { /* noop */ }
+    }
   }
 
   function show(sel) {

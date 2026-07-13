@@ -151,6 +151,36 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
 /* Chunk 5 — retire the old toolbars (kept in DOM as the control substrate) */
 .sh-retired { display: none !important; }
 
+/* ---- fx-marker: Hi-Liter (Ben's #28), cosmic-recoloured, ONE-SHOT ----------
+   A periwinkle marker-pen sweeps across a signature heading once, on scroll-
+   into-view, then lifts off. NOT a loop (a heading that re-highlights forever is
+   distracting). The JS adds .is-marking to run it a single time.
+   --mk-ink is the marker colour (cosmic periwinkle, not Ben's magenta). */
+.fx-marker {
+  --mk-ink: var(--accent, #8ea2ff);
+  display: inline;
+  padding: 0.06em 0.22em;
+  background:
+    linear-gradient(100deg,
+      color-mix(in srgb, var(--mk-ink) 42%, transparent),
+      color-mix(in srgb, var(--mk-ink) 26%, transparent)) no-repeat 0 82%;
+  background-size: 0% 44%;      /* resting: no highlight painted */
+  border-radius: 1px;
+}
+.fx-marker.is-marking {
+  animation: fx-marker 0.92s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes fx-marker {
+  0%   { background-size: 0% 44%;   background-position: 0 82%; }
+  60%  { background-size: 100% 44%; background-position: 0 82%; }
+  100% { background-size: 100% 44%; background-position: 0 82%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* no sweep: the heading is plain (no marker paint at all) */
+  .fx-marker { background-size: 0% 44%; }
+  .fx-marker.is-marking { animation: none; background-size: 0% 44%; }
+}
+
 /* ---- theme switch (Switch component) ---------------------------------
    Track lights periwinkle in the "on" (light) position; thumb glides and
    swaps sun/moon. Full form (Settings) shows a text label; compact form
