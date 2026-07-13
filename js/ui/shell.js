@@ -408,6 +408,8 @@
     var gear = el("button", { class: "sh-icobtn sh-ctx-gear", type: "button", title: "Settings", "aria-label": "Settings" }, svg.gear);
     gear.addEventListener("click", function () { openSettings("settings"); });
     ctx.appendChild(gear);
+    // compact theme switch — one-click theme, far right of Row 3
+    ctx.appendChild(buildThemeSwitch(true));
 
     // collapse/expand row 3
     ctxToggle.addEventListener("click", function () {
@@ -471,20 +473,52 @@
     if (tog) { tog.click(); }
   }
 
+  /* ---- theme switch (Switch, not Checkbox) ---------------------------
+     A real dark/light toggle. Drives #theme-toggle (theme.js owns apply +
+     localStorage persistence), reflects state via aria-checked, and stays
+     in sync across every instance (Settings + Row 3) via the cr-theme event
+     theme.js dispatches. Sun = will-go-light, Moon = will-go-dark.        */
+  var SUN_G = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="3.1" fill="currentColor"/><g stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 1.4v1.8M8 12.8v1.8M1.4 8h1.8M12.8 8h1.8M3.2 3.2l1.3 1.3M11.5 11.5l1.3 1.3M12.8 3.2l-1.3 1.3M4.5 11.5l-1.3 1.3"/></g></svg>';
+  var MOON_G = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M13 9.6A5.6 5.6 0 0 1 6.4 3 5.6 5.6 0 1 0 13 9.6z" fill="currentColor"/></svg>';
+  var themeSwitches = [];
+
+  function buildThemeSwitch(compact) {
+    // isLight == the "on" position (periwinkle-lit); toggling flips the theme
+    var sw = el("button", {
+      type: "button", class: "sh-switch" + (compact ? " sh-switch-c" : ""),
+      role: "switch", "aria-label": "Toggle light theme"
+    });
+    sw.innerHTML =
+      '<span class="sh-switch-track"><span class="sh-switch-thumb">' +
+        '<span class="sh-switch-ico sh-ico-moon">' + MOON_G + '</span>' +
+        '<span class="sh-switch-ico sh-ico-sun">' + SUN_G + '</span>' +
+      '</span></span>' +
+      (compact ? '' : '<span class="sh-switch-label"></span>');
+    function reflect() {
+      var light = currentTheme() === "light";
+      sw.setAttribute("aria-checked", light ? "true" : "false");
+      var lbl = sw.querySelector(".sh-switch-label");
+      if (lbl) { lbl.textContent = light ? "Light" : "Dark"; }
+      sw.title = light ? "Switch to dark theme" : "Switch to light theme";
+    }
+    sw.addEventListener("click", function () {
+      setTheme(currentTheme() === "light" ? "dark" : "light");
+    });
+    themeSwitches.push(reflect);
+    reflect();
+    return sw;
+  }
+  // keep all switch instances in sync whenever the theme actually changes
+  window.addEventListener("cr-theme", function () { themeSwitches.forEach(function (r) { try { r(); } catch (e) { /* noop */ } }); });
+
   function openSettings(focusSection) {
     closeSettings();
     var veil = el("div", { class: "sh-modal-veil", role: "dialog", "aria-modal": "true", "aria-label": "settings" });
     var m = el("div", { class: "sh-modal" });
-    var theme = currentTheme();
     m.innerHTML =
       '<h2>Settings</h2>' +
       '<div class="sh-modal-sec" id="sh-set-appearance"><h3>Appearance</h3>' +
-        '<label>Theme' +
-          '<select id="sh-set-theme">' +
-            '<option value="dark"' + (theme === "dark" ? " selected" : "") + '>Dark (periwinkle)</option>' +
-            '<option value="light"' + (theme === "light" ? " selected" : "") + '>Light (cream)</option>' +
-          '</select>' +
-        '</label>' +
+        '<div class="sh-set-row"><span class="sh-set-row-label">Theme</span><span id="sh-set-theme-slot"></span></div>' +
       '</div>' +
       '<div class="sh-modal-sec"><h3>Identity</h3>' +
         '<label>Signed in as<span style="font-family:var(--mono);color:var(--dim)">G5 · Benedict WILSON</span></label>' +
@@ -500,12 +534,13 @@
     veil.appendChild(m);
     document.body.appendChild(veil);
 
-    byId("sh-set-theme").addEventListener("change", function () { setTheme(this.value); });
+    var themeSwitch = buildThemeSwitch(false);
+    byId("sh-set-theme-slot").appendChild(themeSwitch);
     byId("sh-set-close").addEventListener("click", closeSettings);
     veil.addEventListener("click", function (e) { if (e.target === veil) { closeSettings(); } });
     document.addEventListener("keydown", settingsEsc);
 
-    var focusTarget = focusSection === "about" ? byId("sh-set-about") : byId("sh-set-theme");
+    var focusTarget = focusSection === "about" ? byId("sh-set-about") : themeSwitch;
     if (focusTarget && focusTarget.focus) { try { focusTarget.focus(); } catch (e) { /* noop */ } }
   }
   function settingsEsc(e) { if (e.key === "Escape") { closeSettings(); } }

@@ -141,6 +141,51 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
 /* Chunk 5 — retire the old toolbars (kept in DOM as the control substrate) */
 .sh-retired { display: none !important; }
 
+/* ---- theme switch (Switch component) ---------------------------------
+   Track lights periwinkle in the "on" (light) position; thumb glides and
+   swaps sun/moon. Full form (Settings) shows a text label; compact form
+   (Row 3) is track-only. Motion gated below. */
+.sh-switch {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: none; border: 0; padding: 0; cursor: pointer; color: var(--dim);
+}
+.sh-switch-track {
+  position: relative; display: inline-block;
+  width: 46px; height: 24px; border-radius: 999px;
+  background: var(--panel-2); border: 1px solid var(--glass-border);
+  transition: background .16s ease, border-color .16s ease;
+}
+.sh-switch[aria-checked="true"] .sh-switch-track {
+  background: color-mix(in srgb, var(--accent) 34%, transparent);
+  border-color: var(--accent);
+}
+.sh-switch-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--text); color: var(--bg);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform .18s cubic-bezier(.4,.9,.3,1);
+}
+.sh-switch[aria-checked="true"] .sh-switch-thumb { transform: translateX(22px); }
+.sh-switch-thumb svg { width: 12px; height: 12px; }
+.sh-switch-ico { position: absolute; display: inline-flex; transition: opacity .16s ease; }
+.sh-switch[aria-checked="true"] .sh-ico-moon { opacity: 0; }
+.sh-switch[aria-checked="true"] .sh-ico-sun  { opacity: 1; }
+.sh-switch[aria-checked="false"] .sh-ico-moon { opacity: 1; }
+.sh-switch[aria-checked="false"] .sh-ico-sun  { opacity: 0; }
+.sh-switch-label { font-size: var(--fs-sm); font-family: var(--sans); color: var(--text); min-width: 34px; text-align: left; }
+.sh-switch:focus-visible { outline: none; }
+.sh-switch:focus-visible .sh-switch-track { box-shadow: 0 0 0 2px rgba(142,162,255,0.4); }
+.sh-switch-c { margin-left: 10px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-switch-track, .sh-switch-thumb, .sh-switch-ico { transition: none; }
+}
+
+/* Settings row (label + control) */
+.sh-set-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.sh-set-row-label { font-size: var(--fs-sm); color: var(--text); }
+
 /* ---- the mega-menu panel (full-width, drops from the tab bar) ---- */
 .sh-mega {
   position: absolute; left: 0; right: 0; top: 100%;
