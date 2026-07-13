@@ -1587,7 +1587,9 @@
     }).then(function () { focusView(); });
   }
   function renderHome(all) {
-    var q = ((document.getElementById("op-search") || {}).value || "").toLowerCase();
+    // The Row-3 shell search (#search) is the live query on the home dashboard;
+    // #op-search is retired. Fall back to op-search only if #search is absent.
+    var q = ((els.search || document.getElementById("op-search") || {}).value || "").toLowerCase();
     var counts = {}; all.forEach(function (ir) { if (ir.operation) counts[ir.operation] = (counts[ir.operation] || 0) + 1; });
     var names = O.names().slice().sort();
     var shown = q ? names.filter(function (nm) { return nm.toLowerCase().indexOf(q) !== -1 || String(O.threatOf(nm)).toLowerCase().indexOf(q) !== -1; }) : names;
@@ -1644,7 +1646,7 @@
     var hacc = document.getElementById("home-access"); if (hacc) hacc.addEventListener("click", showAccessLog);
     var hhit = document.getElementById("home-hits"); if (hhit) hhit.addEventListener("click", showSilentHits);
     var hEmptyClear = document.getElementById("home-empty-clear");
-    if (hEmptyClear) hEmptyClear.addEventListener("click", function () { var ob = document.getElementById("op-search"); if (ob) { ob.value = ""; } renderOpTabs(); allRows().then(renderHome); });
+    if (hEmptyClear) hEmptyClear.addEventListener("click", function () { if (els.search) { els.search.value = ""; } var ob = document.getElementById("op-search"); if (ob) { ob.value = ""; } renderOpTabs(); allRows().then(renderHome); });
     var hEmptyDemo = document.getElementById("home-empty-demo"); if (hEmptyDemo) hEmptyDemo.addEventListener("click", loadDemo);
     var hent = document.getElementById("home-entities"); if (hent) hent.addEventListener("click", function(){ requireAccess({action:'Entity search'}, showEntities); });
     try{ if(window.RegistryWatchlist){ var _sc=window.RegistryWatchlist.scan(all); var _n=_sc.reduce(function(a,x){return a+x.hitCount;},0); if(_n && hhit) hhit.textContent="Silent hits ("+_n+")"; } }catch(e){}
@@ -1851,7 +1853,17 @@
     var lk=document.getElementById("reg-lock"); if(lk) lk.addEventListener("click", lockWorkspace);
   })();
   var _searchT;
-  els.search.addEventListener("input", function () { filterState.text = els.search.value; filterState.page = 1; clearTimeout(_searchT); _searchT = setTimeout(showResults, 150); });
+  els.search.addEventListener("input", function () {
+    clearTimeout(_searchT);
+    // context-aware: on the home (operations) dashboard the search filters the
+    // operation groups; everywhere else it filters reports.
+    if (view === "home") {
+      _searchT = setTimeout(function () { allRows().then(renderHome); }, 120);
+    } else {
+      filterState.text = els.search.value; filterState.page = 1;
+      _searchT = setTimeout(showResults, 150);
+    }
+  });
   (function () { var sb = document.getElementById("op-search"); if (sb) sb.addEventListener("input", function () { renderOpTabs(); if (view === "home") { allRows().then(renderHome); } }); })();
   (function () { var br = document.querySelector(".masthead .brand"); if (br) { br.style.cursor = "pointer"; br.setAttribute("role", "button"); br.setAttribute("tabindex", "0"); br.addEventListener("click", showHome); br.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showHome(); } }); } })();
   var SEED_VERSION = (window.RegistryDemo && window.RegistryDemo.SEED_VERSION) || "";
