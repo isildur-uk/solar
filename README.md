@@ -1,5 +1,5 @@
 # SOLAR — link analysis & smart matching
-*(formerly Chart Room — a connections map looks like a solar system)*
+*(Solar — a connections map looks like a solar system)*
 
 i2-Analyst's-Notebook-style charting workbench. Single-page app: the cinematic cover `hero.html` is the one front door — served at `/` on Vercel, by the LAN server (`serve-lan.js`) and by the `.exe` — and its ENTER leads into the workbench `index.html`
 (or host the folder — Vercel/static hosting works as-is). There is no frontend build step;

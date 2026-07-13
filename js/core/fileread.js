@@ -175,7 +175,7 @@
         var raw = await file.text();
         var obj; try { obj = JSON.parse(raw); } catch (e) { return { kind: "unsupported", name: name, reason: "invalid JSON" }; }
         if (looksLikeCase(obj)) return { kind: "case", name: name, json: obj };
-        return { kind: "unsupported", name: name, reason: "JSON is not a Chart Room case" };
+        return { kind: "unsupported", name: name, reason: "JSON is not a Solar case" };
       }
       if (ext === "csv") return { kind: "csv", name: name, file: file };
       if (ext === "txt" || ext === "md" || ext === "log" || ext === "text" || ext === "") {

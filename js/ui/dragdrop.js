@@ -238,7 +238,7 @@
         var extra = results.length - 1;
         status("Loaded case " + c.name + (extra > 0 ? " (" + extra + " other file(s) ignored - drop a case on its own)" : ""));
       } catch (e) {
-        status("Case load failed: not a valid Chart Room file");
+        status("Case load failed: not a valid Solar file");
       }
       return;
     }

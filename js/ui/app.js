@@ -282,7 +282,7 @@
           status("Loaded " + f.name);
           setTimeout(function () { window.CRGraph.fit(); window.CRMapPane.fitToData(); }, 400);
         } catch (err) {
-          status("Load failed: not a Chart Room case file");
+          status("Load failed: not a Solar case file");
         }
       };
       rd.readAsText(f);

@@ -12,7 +12,7 @@
   var V = (typeof window !== "undefined" && window.CRIntelVocab) ||
           (typeof require === "function" ? require("./intelvocab.js") : null);
 
-  var CAVEAT = "Auto-drafted by Chart Room — verify before dissemination.";
+  var CAVEAT = "Auto-drafted by Solar — verify before dissemination.";
 
   /* Strict parse: returns a Date for a real value, or null for empty/invalid.
    * We never fabricate "today" inside disclosure text — an unknown date stays a
