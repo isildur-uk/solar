@@ -334,7 +334,8 @@ details.facet>summary .c{background:var(--accent-soft);color:var(--accent);borde
 .linklike{background:none;border:0;color:var(--accent);font:inherit;cursor:pointer;padding:0;font-size:.82rem}
 .linklike:hover{text-decoration:underline}
 .linklike:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-.op-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem}
+/* decision: cap at 4 columns + centre (not auto-fit) so wide viewports don't trail a dead gutter; gap snapped to 8px grid */
+.op-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;max-width:calc(4 * 220px + 3 * 8px);margin-inline:auto}
 .op-card{display:flex;flex-direction:column;gap:.28rem;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--line);border-radius:var(--radius);padding:.75rem .85rem;cursor:pointer;color:var(--text);transition:box-shadow .15s,border-color .15s}
 .op-card:hover{box-shadow:0 0 16px -7px var(--accent);border-left-color:var(--accent)}
 .op-card:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
@@ -464,10 +465,16 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 /* Report detail: two columns (content + "Also appears in" rail) so the rail is a
    real column and can never overlap the meta grid / sensitive-source block. */
 @media (min-width: 901px) {
-  .detail.page { display: grid; grid-template-columns: minmax(0, 1fr) 292px; column-gap: 22px; align-items: start; }
-  .detail.page > .detail-head { grid-column: 1 / -1; }
-  .detail.page > .overlap-rail { grid-column: 2; grid-row: 2 / span 999; align-self: start; position: sticky; top: 72px; float: none; width: auto; margin: 0; }
-  .detail.page > :not(.detail-head):not(.overlap-rail) { grid-column: 1; min-width: 0; }
+  /* Only reserve the 292px rail when it actually holds overlap items (.ov-report,
+     emitted by renderOverlaps in registry/app.js). No overlaps -> full-width content. */
+  .detail.page:has(.overlap-rail .ov-report) { display: grid; grid-template-columns: minmax(0, 1fr) 292px; column-gap: 22px; align-items: start; }
+  .detail.page:has(.overlap-rail .ov-report) > .detail-head { grid-column: 1 / -1; }
+  .detail.page:has(.overlap-rail .ov-report) > .overlap-rail { grid-column: 2; grid-row: 2 / span 999; align-self: start; position: sticky; top: 72px; float: none; width: auto; margin: 0; }
+  .detail.page:has(.overlap-rail .ov-report) > :not(.detail-head):not(.overlap-rail) { grid-column: 1; min-width: 0; }
+
+  /* no overlaps: single full-width column; hide the empty rail entirely */
+  .detail.page:not(:has(.overlap-rail .ov-report)) { display: block; }
+  .detail.page:not(:has(.overlap-rail .ov-report)) > .overlap-rail { display: none; }
 }
 
 
