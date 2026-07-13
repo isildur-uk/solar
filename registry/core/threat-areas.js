@@ -52,7 +52,10 @@
     "BC & Sanctions Evasion - Bribery, Corruption & Sanctions Evasion": "bribery-corruption-sanctions",
     "Fraud": "fraud",
     "Cyber - Cyber Crime": "cyber-crime",
-    "Cross-Cutting - Border vulnerabilities": "border-vulnerabilities"
+    "Cross-Cutting - Border vulnerabilities": "border-vulnerabilities",
+    "ENV - Environmental Crime": "environmental-crime",
+    "OAT - Organised Acquisitive Crime": "organised-acquisitive",
+    "Cross-Cutting - Criminal use of technology": "criminal-use-technology"
   };
   var api = {
     list: function () { return THREAT_AREAS.slice(); },
