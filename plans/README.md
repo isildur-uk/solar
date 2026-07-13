@@ -39,7 +39,7 @@ UI/UX audit by `improve-ui` (dual-input: source `Solar/` + rendered `docs/ux-sho
 | 006 | unify-detail-layout | Hierarchy | S | — | DONE (dead CSS removed; layouts left divergent by design per escape hatch) |
 | 007 | toggle-pressed-state | Int/A11y | S | — | DONE |
 | 008 | cursor-ring-compositor-motion | Motion | S | — | DONE |
-| 009 | widescreen-density | Responsive | S | — | TODO |
+| 009 | widescreen-density | Responsive | S | — | DONE (op-grid: cap+centre chosen) |
 | 010 | mobile-mono-identifiers | Responsive/Type | M | — | TODO |
 | 011 | perf-investigate-workbench | Perf | M | — | TODO |
 | 012 | consolidate-glass-button-css | Cleanup | S | — | TODO |

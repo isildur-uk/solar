@@ -217,8 +217,8 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif !important;
     letter-spacing: normal !important;
   }
-  /* monospace ONLY where it's actually tabular data */
-  .num, .an-kpi-v, .kp-score, #status-counts { font-family: "Geist Mono", ui-monospace, monospace !important; }
+  /* monospace where it's tabular data or a flagged identifier (.id/.mono opt back in) */
+  .num, .an-kpi-v, .kp-score, #status-counts, .id, .mono { font-family: var(--mono) !important; }
 
   /* consistent control sizing */
   #topbar .btn, #more-drawer .btn, select.btn { font-size: 13px !important; }

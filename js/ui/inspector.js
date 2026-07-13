@@ -112,9 +112,9 @@
       if (k[0] === "_" || k === "cmStatus" || k === "cmWarnings" || k === "cm" || k === "cmValid" || k === "cmDate") return;
       rows += "<tr><td>" + U.esc(attrLabel(k)) + "</td><td>" + U.esc(attrValue(k, e.attrs[k])) + "</td></tr>";
     });
-    if (e.ids && e.ids.e164) rows += "<tr><td>E.164</td><td>" + U.esc(e.ids.e164) + "</td></tr>";
-    if (e.ids && e.ids.email) rows += "<tr><td>canonical</td><td>" + U.esc(e.ids.email) + "</td></tr>";
-    if (e.geo) rows += "<tr><td>coords</td><td>" + U.esc(e.geo.lat.toFixed(4) + ", " + e.geo.lon.toFixed(4)) + "</td></tr>";
+    if (e.ids && e.ids.e164) rows += '<tr><td>E.164</td><td class="id">' + U.esc(e.ids.e164) + "</td></tr>";
+    if (e.ids && e.ids.email) rows += '<tr><td>canonical</td><td class="id">' + U.esc(e.ids.email) + "</td></tr>";
+    if (e.geo) rows += '<tr><td>coords</td><td class="id">' + U.esc(e.geo.lat.toFixed(4) + ", " + e.geo.lon.toFixed(4)) + "</td></tr>";
     if (rows) html += '<div class="sec">Attributes</div><table>' + rows + "</table>";
 
     // CM — recognised terms + canonical string
@@ -151,7 +151,7 @@
         '<img src="' + mm.dataUrl + '" alt="' + U.escAttr(mm.name) + '" style="width:64px;height:64px;object-fit:cover;border:2px solid ' +
         (mm.face ? "#8ea2ff" : "#1f2a38") + ';border-radius:6px;cursor:pointer" data-med="' + U.escAttr(mm.id) + '" class="insp-med" title="' +
         U.escAttr(mm.name + (mm.face ? " (node face)" : " — click to set as node face")) + '">' +
-        '<figcaption style="font:8px Consolas,monospace;color:#76879b;max-width:64px;overflow:hidden;text-overflow:ellipsis">' +
+        '<figcaption style="font:8px var(--mono);color:#76879b;max-width:64px;overflow:hidden;text-overflow:ellipsis">' +
         U.esc(mm.name) + '</figcaption>' +
         '<button class="btn danger insp-med-del" data-med="' + U.escAttr(mm.id) + '" style="font-size:8px;padding:1px 4px" aria-label="remove image">✕</button>' +
         "</figure>";
