@@ -65,7 +65,7 @@ UI/UX audit by `improve-ui` (dual-input: source `Solar/` + rendered `docs/ux-sho
 | 012 | consolidate-glass-button-css | Cleanup | S | — | DONE |
 | 013 | rename-chart-room-to-solar | Content/Brand | S | — | DONE |
 | 014 | ocr-scanning-loader | Motion/States | S | — | DONE |
-| 015 | panel-seed-loader | Motion/States | S | — | TODO |
+| 015 | panel-seed-loader | Motion/States | S | — | DONE |
 | 016 | result-count-tick | Motion | M | — | TODO |
 | 017 | empty-constellation-twinkle | Motion/Empty | S | — | TODO |
 | 018 | hero-wordmark-sheen | Motion/Brand | S | — | TODO (flagged surface — see note) |

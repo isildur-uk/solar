@@ -1722,7 +1722,7 @@
     if (!window.RegistryDemo) { showWelcome(); return refreshList(); }
     var ds; try { ds = window.RegistryDemo.buildDemoDataset(); } catch (e) { showWelcome(); return refreshList(); }
     setStatus("Loading demo dataset…");
-    els.main.innerHTML = '<div class="loading-state"><span class="dot"></span>Loading the demo dataset (' + (window.RegistryDemo.OPERATION_COUNT * window.RegistryDemo.REPORTS_PER_OP) + ' reports)…</div>';
+    els.main.innerHTML = '<div class="loading-state"><span class="ld-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>Loading the demo dataset (' + (window.RegistryDemo.OPERATION_COUNT * window.RegistryDemo.REPORTS_PER_OP) + ' reports)…</div>';
     return repo.clear()
       .then(function () { return ds.reduce(function (p, ir) { return p.then(function () { return repo.save(N.normaliseIR(ir)); }); }, Promise.resolve()); })
       .then(function () { dataCache = null; markSeed(); return showHome(); })
