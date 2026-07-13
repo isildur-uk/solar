@@ -1874,6 +1874,37 @@
     return autoSeed();  // empty store OR the demo generator changed -> rebuild from current demo-seed.js
   });
 
+  /* ---- command-palette provider (registry domain) ------------------
+     Feeds the shell's ⌘K palette with operations, reports and the entity
+     view, wired to the SAME navigation handlers the UI uses (one source of
+     truth). Reads sync from O.list() (operations, always available) and the
+     dataCache (reports, populated after first load). */
+  (function () {
+    // shell.js loads AFTER app.js, so SolarShell may not exist yet — defer the
+    // registration until it does (bounded poll, then give up).
+    function provider() {
+      var cmds = [];
+      try {
+        O.list().forEach(function (o) {
+          cmds.push({ label: o.name, hint: "Operation · " + String(o.threatArea || ""), group: "Operations", run: (function (nm) { return function () { selectOp(nm); }; })(o.name) });
+        });
+      } catch (e) { /* ops not ready */ }
+      try {
+        (dataCache || []).slice(0, 300).forEach(function (r) {
+          cmds.push({ label: r.urn + " — " + String(r.title || ""), hint: "Report · " + String(r.operation || ""), group: "Reports", run: (function (u) { return function () { showDetail(u); }; })(r.urn) });
+        });
+      } catch (e) { /* reports not loaded */ }
+      cmds.push({ label: "Entity search", hint: "Master / lower nominals", group: "Registry", run: function () { requireAccess({ action: 'Entity search' }, showEntities); } });
+      return cmds;
+    }
+    var tries = 0;
+    (function wait() {
+      if (window.SolarShell && window.SolarShell.registerCommands) { window.SolarShell.registerCommands(provider); return; }
+      if (++tries > 40) { return; }  // ~2s ceiling, then give up
+      setTimeout(wait, 50);
+    })();
+  })();
+
   /* ---- Shared SOLAR case: the intel-logs live on the SAME localStorage case
      as the charting workbench, so Database and Chart work one case, not two
      copies. Re-load before opening so we pick up anything the Chart changed. */

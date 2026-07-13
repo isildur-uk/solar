@@ -569,8 +569,168 @@
     });
   }
 
+  /* ==================================================================
+     Command palette (⌘K / Ctrl+K) — the shared power surface.
+     Fuzzy-searches commands from providers: the mega-menu actions + the
+     surface switch are built in; each surface can registerCommands() to
+     add its own domain data (operations, reports, entities) that reuse the
+     same navigation handlers, so there is ONE source of truth. All rendered
+     analyst text is escaped. Fully keyboard-driven + focus-trapped.       */
+  function escHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  // subsequence fuzzy match — returns a score (lower = better) or -1 if no match
+  function fuzzy(query, text) {
+    if (!query) { return 0; }
+    var q = query.toLowerCase(), t = text.toLowerCase();
+    var idx = t.indexOf(q);
+    if (idx !== -1) { return idx === 0 ? -5 : idx; }  // contiguous hit ranks best
+    var qi = 0, ti = 0, first = -1, last = -1;
+    while (qi < q.length && ti < t.length) {
+      if (q[qi] === t[ti]) { if (first < 0) { first = ti; } last = ti; qi++; }
+      ti++;
+    }
+    if (qi < q.length) { return -1; }               // not all chars matched
+    return 40 + (last - first);                     // subsequence spread penalty
+  }
+
+  var commandProviders = [];
+  // providers are functions returning [{ label, hint, group, run }]
+  function registerCommands(fn) { if (typeof fn === "function") { commandProviders.push(fn); } }
+
+  // built-in provider: every live mega-menu item + the surface switch
+  function builtinCommands() {
+    var out = [];
+    if (SPEC) {
+      Object.keys(SPEC).forEach(function (tab) {
+        (SPEC[tab] || []).forEach(function (col) {
+          (col.items || []).forEach(function (it) {
+            if (!it.soon && typeof it.run === "function") {
+              out.push({ label: it.label, hint: tab + " · " + col.h, group: "Actions", run: it.run });
+            }
+          });
+        });
+      });
+    }
+    out.push({
+      label: IS_REGISTRY ? "Go to Case Management (workbench)" : "Go to Entity Management (database)",
+      hint: "Switch surface", group: "Navigate", run: function () { location.href = OTHER; }
+    });
+    out.push({ label: "Settings", hint: "Theme, identity, about", group: "Navigate", run: function () { openSettings("settings"); } });
+    return out;
+  }
+
+  function collectCommands() {
+    var all = builtinCommands();
+    commandProviders.forEach(function (fn) {
+      try { var extra = fn(); if (extra && extra.length) { all = all.concat(extra); } } catch (e) { /* a bad provider never breaks the palette */ }
+    });
+    return all;
+  }
+
+  var pal = null;      // { veil, input, list, items, active, prevFocus }
+
+  function openPalette() {
+    if (pal) { return; }
+    var prevFocus = document.activeElement;
+    var veil = el("div", { class: "sh-pal-veil", role: "dialog", "aria-modal": "true", "aria-label": "Command palette" });
+    var box = el("div", { class: "sh-pal" });
+    var input = el("input", { class: "sh-pal-input", type: "text", role: "combobox", "aria-expanded": "true", "aria-controls": "sh-pal-list", "aria-autocomplete": "list", placeholder: "Type a command, operation, report or entity…", autocomplete: "off", spellcheck: "false" });
+    var list = el("ul", { class: "sh-pal-list", id: "sh-pal-list", role: "listbox" });
+    box.appendChild(input); box.appendChild(list);
+    veil.appendChild(box);
+    document.body.appendChild(veil);
+
+    pal = { veil: veil, input: input, list: list, items: [], active: 0, prevFocus: prevFocus, all: collectCommands() };
+
+    input.addEventListener("input", function () { renderPalette(input.value); });
+    input.addEventListener("keydown", paletteKeydown);
+    veil.addEventListener("mousedown", function (e) { if (e.target === veil) { closePalette(); } });
+
+    renderPalette("");
+    input.focus();
+  }
+
+  function renderPalette(query) {
+    var q = query.trim();
+    var scored = [];
+    pal.all.forEach(function (cmd) {
+      var s = fuzzy(q, cmd.label + " " + (cmd.hint || ""));
+      if (s !== -1) { scored.push({ cmd: cmd, score: s }); }
+    });
+    scored.sort(function (a, b) { return a.score - b.score; });
+    scored = scored.slice(0, 40);
+    pal.items = scored.map(function (x) { return x.cmd; });
+    pal.active = 0;
+
+    if (!pal.items.length) {
+      pal.list.innerHTML = '<li class="sh-pal-empty" role="option" aria-disabled="true">No matches</li>';
+      return;
+    }
+    var lastGroup = null, html = "";
+    pal.items.forEach(function (cmd, i) {
+      if (cmd.group && cmd.group !== lastGroup) { html += '<li class="sh-pal-group" role="presentation">' + escHtml(cmd.group) + '</li>'; lastGroup = cmd.group; }
+      html += '<li class="sh-pal-item' + (i === 0 ? ' is-active' : '') + '" role="option" id="sh-pal-opt-' + i + '" data-i="' + i + '"' + (i === 0 ? ' aria-selected="true"' : '') + '>' +
+        '<span class="sh-pal-label">' + escHtml(cmd.label) + '</span>' +
+        (cmd.hint ? '<span class="sh-pal-hint">' + escHtml(cmd.hint) + '</span>' : '') + '</li>';
+    });
+    pal.list.innerHTML = html;
+    pal.input.setAttribute("aria-activedescendant", "sh-pal-opt-0");
+    [].forEach.call(pal.list.querySelectorAll(".sh-pal-item"), function (li) {
+      li.addEventListener("mousemove", function () { setActive(+li.getAttribute("data-i")); });
+      li.addEventListener("click", function () { runPalette(+li.getAttribute("data-i")); });
+    });
+  }
+
+  function setActive(i) {
+    if (!pal || !pal.items.length) { return; }
+    if (i < 0) { i = pal.items.length - 1; }
+    if (i >= pal.items.length) { i = 0; }
+    pal.active = i;
+    [].forEach.call(pal.list.querySelectorAll(".sh-pal-item"), function (li) {
+      var on = +li.getAttribute("data-i") === i;
+      li.classList.toggle("is-active", on);
+      if (on) { li.setAttribute("aria-selected", "true"); li.scrollIntoView({ block: "nearest" }); }
+      else { li.removeAttribute("aria-selected"); }
+    });
+    pal.input.setAttribute("aria-activedescendant", "sh-pal-opt-" + i);
+  }
+
+  function runPalette(i) {
+    if (!pal || !pal.items.length) { return; }
+    var cmd = pal.items[i == null ? pal.active : i];
+    closePalette();
+    if (cmd && typeof cmd.run === "function") { try { cmd.run(); } catch (e) { /* noop */ } }
+  }
+
+  function paletteKeydown(e) {
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive(pal.active + 1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive(pal.active - 1); }
+    else if (e.key === "Enter") { e.preventDefault(); runPalette(); }
+    else if (e.key === "Escape") { e.preventDefault(); closePalette(); }
+    else if (e.key === "Tab") { e.preventDefault(); setActive(pal.active + (e.shiftKey ? -1 : 1)); }  // trap focus in the input
+  }
+
+  function closePalette() {
+    if (!pal) { return; }
+    var prev = pal.prevFocus;
+    pal.veil.remove();
+    pal = null;
+    if (prev && prev.focus) { try { prev.focus(); } catch (e) { /* noop */ } }
+  }
+
+  // global ⌘K / Ctrl+K
+  document.addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+      e.preventDefault();
+      if (pal) { closePalette(); } else { openPalette(); }
+    }
+  });
+
   if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", build); }
   else { build(); }
 
-  window.SolarShell = { rebuild: build, isRegistry: IS_REGISTRY };
+  window.SolarShell = { rebuild: build, isRegistry: IS_REGISTRY, registerCommands: registerCommands, openPalette: openPalette };
 })();

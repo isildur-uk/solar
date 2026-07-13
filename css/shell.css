@@ -281,3 +281,45 @@ html[data-theme="light"] .sh-modal { background: var(--panel); }
 @media (prefers-reduced-motion: reduce) {
   .has-tip::after, .has-tip::before { transition-duration: .01s; }
 }
+
+/* ---- command palette (⌘K) -------------------------------------------
+   Centered cosmic-glass panel, periwinkle active row, ~120ms fade.
+   Reduced-motion gated. */
+.sh-pal-veil {
+  position: fixed; inset: 0; z-index: 5000;
+  background: rgba(6,6,5,0.55);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 12vh;
+  animation: sh-pal-in .12s ease;
+}
+@keyframes sh-pal-in { from { opacity: 0; } to { opacity: 1; } }
+.sh-pal {
+  width: min(620px, 92vw); max-height: 64vh; display: flex; flex-direction: column;
+  background: rgba(18,18,15,0.97); border: 1px solid var(--glass-border);
+  border-radius: 8px; box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+html[data-theme="light"] .sh-pal { background: var(--panel); }
+.sh-pal-input {
+  border: 0; border-bottom: 1px solid var(--line); background: transparent;
+  color: var(--text); font: var(--fs-md) var(--sans); padding: 15px 18px;
+  outline: none; width: 100%; box-sizing: border-box;
+}
+.sh-pal-input::placeholder { color: var(--faint); }
+.sh-pal-list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; }
+.sh-pal-group {
+  font: 600 var(--fs-2xs) var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--faint); padding: 8px 12px 4px;
+}
+.sh-pal-item {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 8px 12px; border-radius: var(--radius); cursor: pointer;
+}
+.sh-pal-item.is-active { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+.sh-pal-label { color: var(--text); font-size: var(--fs-sm); }
+.sh-pal-hint { margin-left: auto; color: var(--faint); font: var(--fs-2xs) var(--mono); white-space: nowrap; }
+.sh-pal-empty { padding: 18px 14px; color: var(--faint); font-size: var(--fs-sm); text-align: center; }
+@media (prefers-reduced-motion: reduce) {
+  .sh-pal-veil { animation: none; }
+}
