@@ -236,6 +236,10 @@ body {
   word-break: break-word;
 }
 #inspector td:first-child { color: var(--dim); width: 34%; }
+/* Entity-mix rows: label sizes to content on ONE line; the count column takes the slack.
+   (Overrides the 34% attribute-table width so 'Bank Account', 'IP Address' etc. never wrap.) */
+#inspector .em-table td:first-child { width: auto; white-space: nowrap; word-break: normal; }
+#inspector .em-table td:last-child { width: 1%; white-space: nowrap; padding-left: 12px; }
 #inspector .sec {
   margin: 12px 0 4px;
   font: 600 var(--fs-2xs) var(--mono);

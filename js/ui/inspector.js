@@ -62,7 +62,7 @@
       '<tr><td>Timeline events</td><td style="text-align:right;font-variant-numeric:tabular-nums">' + store.events.length + "</td></tr>" +
       '<tr><td>Located on map</td><td style="text-align:right;font-variant-numeric:tabular-nums">' + located + "</td></tr></table>" +
       '<div class="sec">Entity mix</div>' +
-      "<table>" + rows + "</table>" +
+      '<table class="em-table">' + rows + "</table>" +
       '<div class="audit" style="margin-top:10px">Select an entity or link on the chart for its detail, provenance and source.</div>';
   }
 
