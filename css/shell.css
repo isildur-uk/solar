@@ -1,0 +1,167 @@
+/* ============================================================
+   SOLAR — unified top-chrome shell (shared: workbench + registry)
+   3 rows (identity · glass menu bar · context selector) + a 5-tab
+   full-width mega-menu. Cosmic-glass-periwinkle skin using existing
+   tokens only (--glass-*, --accent, --line, --radius, --fs-*).
+   Built ALONGSIDE the existing toolbars; non-destructive.
+   ============================================================ */
+
+#solar-shell { position: relative; z-index: 120; font-family: var(--sans); }
+
+/* ---- Row 1: identity strip (dark ground) ---- */
+.sh-identity {
+  display: flex; align-items: center; gap: 18px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding: 6px 16px; min-height: 34px;
+}
+.sh-wordmark {
+  font-weight: 600; font-size: var(--fs-lg); letter-spacing: -0.03em;
+  background: linear-gradient(176deg, #ffffff 0%, #f4f3e8 50%, #c5c3b6 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  cursor: pointer; user-select: none; text-decoration: none;
+}
+html[data-theme="light"] .sh-wordmark { background: none; -webkit-text-fill-color: var(--text); color: var(--text); }
+.sh-wordmark .accent { -webkit-text-fill-color: var(--accent); color: var(--accent); }
+.sh-surface { display: flex; gap: 4px; }
+.sh-surface a {
+  font-size: var(--fs-xs); color: var(--dim); text-decoration: none;
+  padding: 3px 8px; border-radius: var(--radius); letter-spacing: .01em;
+}
+.sh-surface a:hover { color: var(--text); }
+.sh-surface a[aria-current="true"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+.sh-user { margin-left: auto; display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: var(--fs-2xs); color: var(--dim); font-variant-numeric: tabular-nums; }
+.sh-user .sh-grade { color: var(--accent); font-weight: 700; }
+
+/* ---- Row 2: glass menu bar ---- */
+.sh-menubar {
+  display: flex; align-items: center; gap: 2px;
+  background: rgba(14,14,12,0.72);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1);
+  border-bottom: 1px solid var(--line);
+  padding: 4px 10px; position: relative;
+}
+html[data-theme="light"] .sh-menubar { background: rgba(251,248,239,0.82); }
+.sh-home { display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 28px; border: 0; background: transparent; color: var(--dim);
+  cursor: pointer; border-radius: var(--radius); margin-right: 4px; }
+.sh-home:hover { color: var(--accent); background: rgba(142,162,255,0.08); }
+.sh-home svg { width: 16px; height: 16px; }
+
+/* the 5 tabs are <details class="sh-tab"> — native disclosure for free keyboard + esc */
+.sh-tab { position: static; }
+.sh-tab > summary {
+  list-style: none; cursor: pointer; user-select: none;
+  font-size: var(--fs-sm); color: var(--text); font-weight: 500;
+  padding: 5px 12px; border-radius: var(--radius);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.sh-tab > summary::-webkit-details-marker { display: none; }
+.sh-tab > summary:hover { color: var(--accent); background: rgba(142,162,255,0.06); }
+.sh-tab[open] > summary { color: var(--accent); background: rgba(142,162,255,0.10); }
+.sh-tab > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* right cluster on the menu bar */
+.sh-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.sh-oplog {
+  font-size: var(--fs-2xs); font-family: var(--mono); letter-spacing: .04em;
+  color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-dim);
+  border-radius: var(--radius); padding: 4px 9px; cursor: pointer;
+}
+.sh-oplog:hover { background: rgba(142,162,255,0.22); }
+.sh-whatsnew { font-size: var(--fs-2xs); font-family: var(--mono); color: var(--ok);
+  background: transparent; border: 0; cursor: pointer; padding: 4px 6px; letter-spacing: .04em; }
+.sh-whatsnew:hover { text-decoration: underline; }
+.sh-icobtn { display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 26px; border: 0; background: transparent; color: var(--dim);
+  cursor: pointer; border-radius: var(--radius); }
+.sh-icobtn:hover { color: var(--accent); background: rgba(142,162,255,0.08); }
+.sh-icobtn svg { width: 15px; height: 15px; }
+
+/* ---- Row 3: context selector (collapsible) ---- */
+.sh-context {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(20,20,17,0.55);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  padding: 6px 16px; min-height: 30px;
+}
+html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
+#solar-shell.sh-ctx-collapsed .sh-context { display: none; }
+.sh-ctx-label { font-size: var(--fs-2xs); font-family: var(--mono); letter-spacing: .12em;
+  text-transform: uppercase; color: var(--faint); }
+.sh-ctx-toggle { display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border: 1px solid var(--line); border-radius: 50%;
+  background: var(--panel-2); color: var(--dim); cursor: pointer; }
+.sh-ctx-toggle:hover { border-color: var(--accent-dim); color: var(--accent); }
+.sh-ctx-toggle svg { width: 11px; height: 11px; }
+.sh-ctx-picker {
+  font-size: var(--fs-xs); font-family: var(--mono); color: var(--text);
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 4px 9px; min-width: 220px;
+}
+.sh-ctx-gear { margin-left: auto; }
+
+/* ---- the mega-menu panel (full-width, drops from the tab bar) ---- */
+.sh-mega {
+  position: absolute; left: 0; right: 0; top: 100%;
+  background: rgba(16,16,14,0.94);
+  -webkit-backdrop-filter: blur(20px) saturate(1.1); backdrop-filter: blur(20px) saturate(1.1);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow-2);
+  padding: 18px 22px 22px; z-index: 130;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 26px;
+  animation: sh-mega-in 120ms ease;
+}
+html[data-theme="light"] .sh-mega { background: rgba(246,241,230,0.96); }
+@keyframes sh-mega-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sh-mega { animation: none; } }
+
+.sh-col { min-width: 0; }
+.sh-col-h {
+  font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 8px; font-family: var(--mono);
+}
+.sh-col + .sh-col .sh-col-h { }
+.sh-col .sh-sep { border: 0; border-top: 1px solid var(--line); margin: 12px 0 10px; }
+.sh-item {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  background: transparent; border: 0; color: var(--text); cursor: pointer;
+  font-size: var(--fs-sm); padding: 5px 6px; border-radius: var(--radius); line-height: 1.25;
+}
+.sh-item:hover { background: rgba(142,162,255,0.08); color: var(--accent); }
+.sh-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+.sh-item svg { width: 14px; height: 14px; flex: 0 0 auto; color: var(--dim); }
+.sh-item:hover svg { color: var(--accent); }
+/* future / disabled items — visible but subtly marked */
+.sh-item.sh-soon { color: var(--faint); cursor: default; }
+.sh-item.sh-soon:hover { background: transparent; color: var(--faint); }
+.sh-item.sh-soon::after { content: "soon"; margin-left: auto; font-size: 9px; font-family: var(--mono);
+  letter-spacing: .08em; text-transform: uppercase; color: var(--faint); border: 1px solid var(--line);
+  border-radius: 3px; padding: 0 4px; }
+/* items that route to the other surface get a subtle arrow hint */
+.sh-item .sh-route { margin-left: auto; font-size: 10px; color: var(--faint); font-family: var(--mono); }
+
+/* ---- Settings modal ---- */
+.sh-modal-veil { position: fixed; inset: 0; z-index: 4000; background: rgba(6,6,5,0.62);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; }
+.sh-modal { background: rgba(20,20,17,0.96); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow-2); width: min(560px, 92vw); max-height: 86vh; overflow: auto; padding: 20px 22px; }
+html[data-theme="light"] .sh-modal { background: var(--panel); }
+.sh-modal h2 { margin: 0 0 4px; font-size: var(--fs-lg); color: var(--text); }
+.sh-modal .sh-modal-sec { margin-top: 16px; }
+.sh-modal .sh-modal-sec h3 { font-size: var(--fs-sm); color: var(--accent); margin: 0 0 8px;
+  font-family: var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.sh-modal label { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-size: var(--fs-sm); color: var(--text); padding: 5px 0; }
+.sh-modal select, .sh-modal input[type="text"] { background: var(--panel-2); border: 1px solid var(--line);
+  color: var(--text); border-radius: var(--radius); padding: 5px 8px; font: var(--fs-sm) var(--sans); min-width: 180px; }
+.sh-modal .sh-modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* On phones the chrome collapses to essentials (mobile shell tuning is a later chunk). */
+@media (max-width: 760px) {
+  .sh-mega { grid-template-columns: 1fr 1fr; gap: 16px; }
+  .sh-surface a { padding: 3px 6px; }
+}
