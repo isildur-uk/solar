@@ -207,13 +207,18 @@
       if (gb) gb.addEventListener("click", function () {
         var hide = !window.CRGraph.geoHidden();
         window.CRGraph.setGeoHidden(hide);
-        gb.textContent = hide ? "Geo: off" : "Geo: on";
-        gb.classList.toggle("active", hide);
+        var on = !hide;
+        gb.textContent = on ? "Geo: on" : "Geo: off";
+        gb.setAttribute("aria-pressed", String(on));
+        gb.classList.toggle("active", on);
       });
     })();
     U.el("btn-physics").addEventListener("click", function () {
       var on = window.CRGraph.togglePhysics();
-      U.el("btn-physics").textContent = on ? "Physics: on" : "Physics: off";
+      var pb = U.el("btn-physics");
+      pb.textContent = on ? "Physics: on" : "Physics: off";
+      pb.setAttribute("aria-pressed", String(on));
+      pb.classList.toggle("active", on);
     });
     var layoutMenu = U.el("menu-layout");
     if (layoutMenu) layoutMenu.addEventListener("click", function (e) {
@@ -221,7 +226,11 @@
       if (!b) return;
       var kind = b.getAttribute("data-layout");
       window.CRGraph.applyLayout(kind);
-      U.el("btn-physics").textContent = kind === "organic" ? "Physics: on" : "Physics: off";
+      var pOn = kind === "organic";
+      var pb2 = U.el("btn-physics");
+      pb2.textContent = pOn ? "Physics: on" : "Physics: off";
+      pb2.setAttribute("aria-pressed", String(pOn));
+      pb2.classList.toggle("active", pOn);
       status("Layout: " + b.textContent.trim() +
         (kind === "organic" ? "" : " — nodes pinned; drag to adjust"));
     });

@@ -36,7 +36,7 @@ UI/UX audit by `improve-ui` (dual-input: source `Solar/` + rendered `docs/ux-sho
 | 003 | uk-date-field | Content/A11y | M | — | DONE |
 | 004 | accent-discipline-controls-and-cards | A11y/Brand | S | 001 | DONE |
 | 005 | selected-state-and-light-contrast | A11y | S | — | DONE |
-| 006 | unify-detail-layout | Hierarchy | S | — | TODO |
+| 006 | unify-detail-layout | Hierarchy | S | — | DONE (dead CSS removed; layouts left divergent by design per escape hatch) |
 | 007 | toggle-pressed-state | Int/A11y | S | — | TODO |
 | 008 | cursor-ring-compositor-motion | Motion | S | — | TODO |
 | 009 | widescreen-density | Responsive | S | — | TODO |

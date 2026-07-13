@@ -69,7 +69,7 @@
 
   <div id="chart-tools">
     <button class="btn" id="btn-fit" title="Fit chart to view">Fit</button>
-    <button class="btn" id="btn-physics" title="Toggle force layout">Physics: on</button>
+    <button class="btn active" id="btn-physics" aria-pressed="true" title="Toggle force layout">Physics: on</button>
     <details class="menu" id="menu-layout">
       <summary class="btn" title="Arrange the chart — dragged nodes stay where you put them">Layout &#9662;</summary>
       <div class="menu-pop" role="menu" aria-label="layout preset">
@@ -80,7 +80,7 @@
       </div>
     </details>
     <button class="btn" id="btn-legend" title="Legend and filters — hide by type, confidence or source; colour links">Legend</button>
-    <button class="btn" id="btn-geo" title="Show or hide geographic containment links (city → country)">Geo: on</button>
+    <button class="btn active" id="btn-geo" aria-pressed="true" title="Show or hide geographic containment links (city → country)">Geo: on</button>
     <div class="ct-sep" aria-hidden="true"></div>
     <button class="btn" id="btn-dedup" title="Scan the chart for potential duplicate entities">Deconflict</button>
   </div>
