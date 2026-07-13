@@ -106,7 +106,40 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
   font-size: var(--fs-xs); font-family: var(--mono); color: var(--text);
   letter-spacing: .01em;
 }
+
+/* Row-3 search slot — holds the re-parented real #search input */
+.sh-search { flex: 1 1 auto; display: flex; margin-left: 8px; max-width: 420px; }
+.sh-search-input {
+  width: 100%; box-sizing: border-box;
+  font-size: var(--fs-sm); font-family: var(--sans); color: var(--text);
+  background: var(--glass-fill); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 5px 10px;
+}
+.sh-search-input::placeholder { color: var(--faint); }
+.sh-search-input:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(142,162,255,0.28);
+}
+
 .sh-ctx-gear { margin-left: auto; }
+
+/* Row-1 case slot — holds the re-parented real #case-name input (workbench) */
+.sh-case { display: flex; align-items: center; gap: 6px; }
+.sh-case-label { font-size: var(--fs-2xs); font-family: var(--mono); letter-spacing: .12em;
+  text-transform: uppercase; color: var(--faint); }
+.sh-case-input {
+  font-size: var(--fs-xs); font-family: var(--mono); color: var(--text);
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius);
+  padding: 3px 7px; min-width: 130px; max-width: 260px;
+}
+.sh-case-input:hover { border-color: var(--line); }
+.sh-case-input:focus {
+  outline: none; background: var(--glass-fill);
+  border-color: var(--accent); box-shadow: 0 0 0 2px rgba(142,162,255,0.28);
+}
+
+/* Chunk 5 — retire the old toolbars (kept in DOM as the control substrate) */
+.sh-retired { display: none !important; }
 
 /* ---- the mega-menu panel (full-width, drops from the tab bar) ---- */
 .sh-mega {

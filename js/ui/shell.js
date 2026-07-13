@@ -330,7 +330,15 @@
     surf.children[0].addEventListener("click", function (e) { e.preventDefault(); if (IS_REGISTRY) { location.href = OTHER; } });
     surf.children[1].addEventListener("click", function (e) { e.preventDefault(); if (!IS_REGISTRY) { location.href = OTHER; } });
     var user = el("div", { class: "sh-user" }, '<span class="sh-grade">G5</span><span>Benedict WILSON</span>');
-    idRow.appendChild(wm); idRow.appendChild(surf); idRow.appendChild(user);
+    idRow.appendChild(wm); idRow.appendChild(surf);
+    // Workbench only: a slot that will receive the real #case-name input
+    // (re-parented after mount) so the active case reads/edits in Row 1.
+    if (!IS_REGISTRY) {
+      var caseSlot = el("div", { class: "sh-case" });
+      caseSlot.appendChild(el("span", { class: "sh-case-label" }, "Case"));
+      idRow.appendChild(caseSlot);
+    }
+    idRow.appendChild(user);
 
     /* ---- Row 2: menu bar ---- */
     var bar = el("div", { class: "sh-menubar" });
@@ -394,6 +402,9 @@
     // Honest, non-interactive indicator (operation scoping is driven inside
     // each surface — the shell reflects it rather than offering a dead control).
     ctx.appendChild(el("span", { class: "sh-ctx-value" }, "All operations"));
+    // Search slot — receives the real #search input (re-parented after mount).
+    var searchSlot = el("div", { class: "sh-search" });
+    ctx.appendChild(searchSlot);
     var gear = el("button", { class: "sh-icobtn sh-ctx-gear", type: "button", title: "Settings", "aria-label": "Settings" }, svg.gear);
     gear.addEventListener("click", function () { openSettings("settings"); });
     ctx.appendChild(gear);
@@ -415,6 +426,38 @@
     document.body.insertBefore(shell, document.body.firstChild);
 
     wireMenuBehaviour(shell);
+    retireToolbars(shell);
+  }
+
+  /* ---- Chunk 5: shell becomes the sole chrome ------------------------
+     Hide the old toolbars (keep their nodes — the mega-menu still proxies
+     their buttons via .click()) and RE-PARENT the two inputs that need to
+     be visible/focusable (#search, #case-name) into the shell. We move the
+     real nodes (never clone) so ids + listeners stay intact.               */
+  function retireToolbars(shell) {
+    // 1) relocate #search into Row 3 (both surfaces)
+    var search = byId("search");
+    var searchSlot = shell.querySelector(".sh-search");
+    if (search && searchSlot) {
+      search.classList.add("sh-search-input");
+      search.setAttribute("placeholder", IS_REGISTRY ? "Search reports…" : "Search entities & chart…");
+      search.setAttribute("aria-label", IS_REGISTRY ? "Search reports" : "Search entities and chart");
+      searchSlot.appendChild(search);
+    }
+
+    // 2) relocate #case-name into Row 1 (workbench only)
+    var caseName = byId("case-name");
+    var caseSlot = shell.querySelector(".sh-case");
+    if (!IS_REGISTRY && caseName && caseSlot) {
+      caseName.classList.add("sh-case-input");
+      caseName.setAttribute("aria-label", "Case name");
+      caseName.setAttribute("title", "Click to rename this case");
+      caseSlot.appendChild(caseName);
+    }
+
+    // 3) hide the old toolbars — nodes stay in the DOM as the control substrate
+    var oldBar = IS_REGISTRY ? document.querySelector("header.masthead") : byId("topbar");
+    if (oldBar) { oldBar.classList.add("sh-retired"); }
   }
 
   /* ---- Settings / About modal ---------------------------------------
