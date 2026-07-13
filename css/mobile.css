@@ -154,12 +154,18 @@
   color: var(--ink, #f4f3e8); font: 13px var(--mono, Consolas, monospace);
   min-width: 220px;
 }
+/* 014 — Korona comet ring, recoloured to the periwinkle accent (--ink = var(--accent)) */
 #ocr-overlay .ocr-spin {
   width: 34px; height: 34px; margin: 0 auto 12px;
-  border: 3px solid var(--line, #2a2a27); border-top-color: var(--accent, #8ea2ff);
-  border-radius: 50%; animation: ocr-spin 0.9s linear infinite;
+  --ink: var(--accent, #8ea2ff);
+  border: 0;                 /* drop the old border ring */
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 10%, var(--ink));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  animation: ocr-korona 1s linear infinite;
 }
-@keyframes ocr-spin { to { transform: rotate(360deg); } }
+@keyframes ocr-korona { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   #ocr-overlay .ocr-spin { animation: none; }
 }
