@@ -115,6 +115,16 @@ body.warping .content {
   animation: fade 1.2s ease 0.1s forwards;
   transition: filter 0.28s ease;
 }
+/* smoke-settle one-shot: while .smoking, the paint is displaced by the
+   #smoke-settle turbulence (driven by JS from dispersed → identity). The
+   drop-shadow halo is preserved; only the displacement/blur is added, so the
+   letters resolve INTO the untouched silver→cream paint. Removed after ~1.5s. */
+.wordmark.smoking {
+  filter:
+    drop-shadow(0 1px 30px rgba(0,0,0,0.45))
+    url(#smoke-settle);
+  animation: none;          /* JS owns opacity during the settle */
+}
 
 
 /* ENTER — liquid glass: refracts the nebula behind it, bevelled rim,
@@ -318,6 +328,61 @@ body.warping .content {
     </button>
   </div>
 
+  <!-- smoke-signal one-shot: added inline (before the wordmark's CSS fade can
+       start) so the letters form from smoke and settle INTO the signature paint.
+       Reduced-motion → the wordmark simply appears in full paint (no smoke). -->
+  <script>
+  (function () {
+    "use strict";
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;  /* static full paint */
+    var wm = document.getElementById("wordmark");
+    if (!wm) return;
+
+    /* Pre-empt the CSS fade synchronously (this script sits right after the
+       wordmark, so .smoking lands before the 0.1s fade delay elapses). The
+       filter itself is applied via the .smoking class; the rAF driver starts
+       once the SVG <defs> has parsed (DOMContentLoaded). */
+    wm.classList.add("smoking");
+    wm.style.opacity = "0";
+
+    function run() {
+      var turb = document.getElementById("smoke-turb");
+      var disp = document.getElementById("smoke-disp");
+      var blur = document.getElementById("smoke-blur");
+      if (!turb || !disp || !blur) {   /* filter unsupported → resolve to plain paint */
+        wm.classList.remove("smoking");
+        wm.style.opacity = "1";
+        return;
+      }
+      var DUR = 1500, t0 = 0;
+      var SCALE0 = 130, BASE0 = 0.022, BLUR0 = 7;   /* dispersed smoke */
+      function ease(k) { return 1 - Math.pow(1 - k, 3); }   /* easeOutCubic — settles softly */
+      function frame(now) {
+        if (!t0) t0 = now;
+        var k = Math.min((now - t0) / DUR, 1), e = ease(k);
+        disp.setAttribute("scale", (SCALE0 * (1 - e)).toFixed(2));
+        var bf = (BASE0 * (1 - e) + 0.001).toFixed(4);
+        turb.setAttribute("baseFrequency", bf + " " + bf);
+        blur.setAttribute("stdDeviation", (BLUR0 * (1 - e)).toFixed(2));
+        wm.style.opacity = Math.min(1, e * 1.15).toFixed(3);   /* fades in as it condenses */
+        if (k < 1) { requestAnimationFrame(frame); }
+        else {
+          /* settled — strip the filter entirely so the paint is pristine */
+          wm.classList.remove("smoking");
+          wm.style.opacity = "1";
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", run, { once: true });
+    } else {
+      run();
+    }
+  })();
+  </script>
+
   <canvas id="burst" aria-hidden="true"></canvas>
 
   <!-- liquid-glass refraction filter (ported from the React LiquidButton) -->
@@ -328,6 +393,15 @@ body.warping .content {
         <feGaussianBlur in="turb" stdDeviation="2" result="blurNoise"/>
         <feDisplacementMap in="SourceGraphic" in2="blurNoise" scale="55" xChannelSelector="R" yChannelSelector="B" result="disp"/>
         <feGaussianBlur in="disp" stdDeviation="0.6"/>
+      </filter>
+      <!-- smoke-settle: a ONE-SHOT entrance filter for the wordmark. JS drives
+           its turbulence + displacement + blur from smoky (dispersed) down to
+           identity, then removes the filter entirely so the resting wordmark is
+           the pristine signature paint (never altered). -->
+      <filter id="smoke-settle" x="-30%" y="-40%" width="160%" height="180%" color-interpolation-filters="sRGB">
+        <feTurbulence id="smoke-turb" type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="7" result="turb"/>
+        <feDisplacementMap id="smoke-disp" in="SourceGraphic" in2="turb" scale="120" xChannelSelector="R" yChannelSelector="G" result="disp"/>
+        <feGaussianBlur id="smoke-blur" in="disp" stdDeviation="6"/>
       </filter>
     </defs>
   </svg>
