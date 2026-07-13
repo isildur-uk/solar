@@ -98,15 +98,19 @@
 #solar-cursor-ring {
   width: 38px;
   height: 38px;
-  margin: -19px 0 0 -19px;
+  margin: -19px 0 0 -19px;          /* fixed centring — never animated now */
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.55);
   mix-blend-mode: difference;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 240ms ease, width 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
-              height 260ms cubic-bezier(0.34, 1.56, 0.64, 1), margin 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(1);
+  transform-origin: center;
+  /* compositor-only: animate transform/opacity, not width/height/margin */
+  transition: opacity 240ms ease,
+              transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 200ms ease;
 }
 #solar-cursor-ring .lbl {
   font: 600 8px var(--mono);
@@ -116,9 +120,7 @@
   transition: opacity 200ms ease;
 }
 #solar-cursor-ring.hot {
-  width: 76px;
-  height: 76px;
-  margin: -38px 0 0 -38px;
+  transform: scale(2);              /* 38px → 76px, identical to old width/height */
   border-color: rgba(255, 255, 255, 0.85);
 }
 #solar-cursor-ring.hot .lbl { opacity: 1; }
