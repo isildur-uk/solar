@@ -288,6 +288,39 @@
 
   var SPEC = null; // filled at build()
 
+  /* ---- breadcrumb trail (the Row-3 context indicator) ----------------
+     The surface root is always prepended, so callers pass only the trail
+     BELOW the root: setBreadcrumb([{label:"OP PHOENIX", run:goOp}, {label:"IR123"}]).
+     Ancestors with a run() render as buttons; the last crumb is the current
+     view (plain). XSS-safe (labels escaped). */
+  var crumbEl = null;
+  function renderCrumbs(trail) {
+    if (!crumbEl) { return; }
+    var sep = '<span class="sh-crumb-sep" aria-hidden="true">›</span>';
+    var html = "";
+    trail.forEach(function (c, i) {
+      var last = i === trail.length - 1;
+      if (i > 0) { html += sep; }
+      if (!last && typeof c.run === "function") {
+        html += '<button type="button" class="sh-crumb sh-crumb-link" data-ci="' + i + '">' + escHtml(c.label) + '</button>';
+      } else {
+        html += '<span class="sh-crumb' + (last ? ' is-current' : '') + '"' + (last ? ' aria-current="page"' : '') + '>' + escHtml(c.label) + '</span>';
+      }
+    });
+    crumbEl.innerHTML = html;
+    [].forEach.call(crumbEl.querySelectorAll(".sh-crumb-link"), function (b) {
+      var idx = +b.getAttribute("data-ci");
+      b.addEventListener("click", function () { var c = trail[idx]; if (c && typeof c.run === "function") { try { c.run(); } catch (e) { /* noop */ } } });
+    });
+  }
+  var crumbRootRun = null;   // surface sets how its root navigates (e.g. registry showHome)
+  function setBreadcrumbRoot(fn) { crumbRootRun = fn; }
+  function setBreadcrumb(trail) {
+    var root = { label: IS_REGISTRY ? "Entity Management" : "Case Management" };
+    if (typeof crumbRootRun === "function") { root.run = crumbRootRun; }
+    renderCrumbs([root].concat(trail || []));
+  }
+
   /* Render a tab's columns of items into its mega-menu panel. */
   function renderMega(mega, cols) {
     cols.forEach(function (col) {
@@ -398,10 +431,13 @@
     /* ---- Row 3: context selector ---- */
     var ctxToggle = el("button", { class: "sh-ctx-toggle", type: "button", title: "Collapse context row", "aria-label": "Toggle context row" }, svg.chevL);
     var ctx = el("div", { class: "sh-context" });
-    ctx.appendChild(el("span", { class: "sh-ctx-label" }, "Context"));
-    // Honest, non-interactive indicator (operation scoping is driven inside
-    // each surface — the shell reflects it rather than offering a dead control).
-    ctx.appendChild(el("span", { class: "sh-ctx-value" }, "All operations"));
+    // Live breadcrumb trail (the context indicator). Each surface pushes its
+    // trail via SolarShell.setBreadcrumb(); ancestors are clickable to navigate
+    // up. Seeded with the surface root so it is never empty.
+    var crumbs = el("nav", { class: "sh-crumbs", "aria-label": "Breadcrumb" });
+    ctx.appendChild(crumbs);
+    crumbEl = crumbs;
+    renderCrumbs([{ label: IS_REGISTRY ? "Entity Management" : "Case Management" }]);
     // Search slot — receives the real #search input (re-parented after mount).
     var searchSlot = el("div", { class: "sh-search" });
     ctx.appendChild(searchSlot);
@@ -732,5 +768,5 @@
   if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", build); }
   else { build(); }
 
-  window.SolarShell = { rebuild: build, isRegistry: IS_REGISTRY, registerCommands: registerCommands, openPalette: openPalette };
+  window.SolarShell = { rebuild: build, isRegistry: IS_REGISTRY, registerCommands: registerCommands, openPalette: openPalette, setBreadcrumb: setBreadcrumb, setBreadcrumbRoot: setBreadcrumbRoot };
 })();

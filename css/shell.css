@@ -107,6 +107,16 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
   letter-spacing: .01em;
 }
 
+/* Breadcrumb trail (Row-3 context indicator) */
+.sh-crumbs { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; min-width: 0; overflow: hidden; }
+.sh-crumb { font-size: var(--fs-xs); font-family: var(--mono); color: var(--dim);
+  white-space: nowrap; letter-spacing: .01em; padding: 2px 2px; }
+.sh-crumb.is-current { color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+.sh-crumb-link { background: none; border: 0; cursor: pointer; border-radius: var(--radius); }
+.sh-crumb-link:hover { color: var(--accent); }
+.sh-crumb-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.sh-crumb-sep { color: var(--faint); font-size: var(--fs-xs); padding: 0 1px; }
+
 /* Row-3 search slot — holds the re-parented real #search input */
 .sh-search { flex: 1 1 auto; display: flex; margin-left: 8px; max-width: 420px; }
 .sh-search-input {

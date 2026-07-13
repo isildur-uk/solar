@@ -746,6 +746,7 @@
   var _entIdx=null, _entMode='master';
   function showEntities(){
     view='entities';
+    crumb([{ label: 'Entity search' }]);
     allRows().then(function(all){
       _entIdx = window.RegistryEntityIndex ? window.RegistryEntityIndex.buildEntityIndex(all) : {masters:[],lower:[]};
       els.main.innerHTML='<div class="detail page"><div class="crumbs"><button type="button" class="linklike" id="em-back">← Back</button></div>'
@@ -823,6 +824,8 @@
       if (!ir) { showWelcome(); return; }
       activeDetailIR = ir;
       setBanner(ir.protectiveMarking);
+      crumb((ir.operation ? [{ label: ir.operation, run: (function (op) { return function () { selectOp(op); }; })(ir.operation) }] : [])
+        .concat([{ label: ir.urn }]));
       var h = ir.handling || {}, ss = ir.sensitiveSource || {};
       var pvd = M.coerceProvenance(ir.provenance);
       var items = (ir.items || []).filter(function (i) { return !i.isProvenance; });
@@ -1576,11 +1579,16 @@
     if (filterState.text) chips.push('<button type="button" class="chip" data-rmtext="1">\u201c' + esc(filterState.text) + '\u201d &times;</button>');
     return chips;
   }
+  // Push the current view's breadcrumb trail to the shell (root is prepended
+  // by the shell). Safe no-op if the shell isn't present.
+  function crumb(trail) { if (window.SolarShell && window.SolarShell.setBreadcrumb) { try { window.SolarShell.setBreadcrumb(trail || []); } catch (e) { /* noop */ } } }
+
   function showHome() {
     view = "home"; activeOp = "";
     filterState.filters = {}; filterState.text = ""; filterState.dateFrom = ""; filterState.dateTo = ""; filterState.page = 1;
     if (els.search) els.search.value = "";
     cameFromResults = false; lastDetailUrn = null;
+    crumb([]);   // root only
     return allRows().then(function (all) {
       setBanner(highestMarking(all.map(function (r) { return r.protectiveMarking; })));
       renderHome(all); renderSidebar(all); return renderOpTabs();
@@ -1653,6 +1661,7 @@
   }
   function showResults() {
     view = "results"; cameFromResults = true; lastDetailUrn = null;
+    crumb(activeOp ? [{ label: activeOp, run: function () { selectOp(activeOp); } }] : [{ label: "All reports" }]);
     return allRows().then(function (all) { renderMain(all); renderSidebar(all); return renderOpTabs(); })
       .then(function () { focusView(); });
   }
@@ -1899,7 +1908,11 @@
     }
     var tries = 0;
     (function wait() {
-      if (window.SolarShell && window.SolarShell.registerCommands) { window.SolarShell.registerCommands(provider); return; }
+      if (window.SolarShell && window.SolarShell.registerCommands) {
+        window.SolarShell.registerCommands(provider);
+        if (window.SolarShell.setBreadcrumbRoot) { window.SolarShell.setBreadcrumbRoot(showHome); }  // root crumb → home
+        return;
+      }
       if (++tries > 40) { return; }  // ~2s ceiling, then give up
       setTimeout(wait, 50);
     })();
