@@ -41,8 +41,9 @@
      controls (which already call the right handlers). clickId() fires an
      existing button by id; only enabled when that button is present.     */
   function byId(id) { return document.getElementById(id); }
-  // returns a run() that clicks an existing control, or null if absent (→ item shows "soon")
-  function clickId(id) { var n = byId(id); return n ? function () { n.click(); } : null; }
+  // run() that clicks a control by id, resolved at CLICK time (so it works even
+  // if the control lives inside a closed <details> or is rendered after us).
+  function clickId(id) { return function () { var n = byId(id); if (n) { n.click(); } }; }
   /* Registry home-view actions (Entity search / Silent hits / Access log) live
      only on the registry home view, which the SPA renders ASYNCHRONOUSLY when
      the brand is clicked. So: click the brand to go home, then poll briefly for
@@ -139,6 +140,59 @@
 
   function specWorkbench() {
     return {
+      CASE: [
+        { h: "Case file", items: [
+          { label: "Rename case", icon: ico.doc, run: function () { var c = byId("case-name"); if (c) { c.focus(); c.select && c.select(); } } },
+          { label: "Save case", icon: ico.save, run: clickId("btn-save") },
+          { label: "Open case", icon: ico.doc, run: clickId("btn-open") }
+        ] },
+        { h: "History", items: [
+          { label: "Undo last change", icon: ico.undo, run: clickId("btn-undo") },
+          { label: "Clear the chart", icon: ico.trash, run: clickId("btn-clear") }
+        ] },
+        { h: "Cross-reference", items: [
+          { label: "Open the database", icon: ico.grid, run: routeOther, route: true }
+        ] }
+      ],
+      INTELLIGENCE: [
+        { h: "Add intelligence", items: [
+          { label: "Paste text", icon: ico.doc, run: clickId("btn-paste") },
+          { label: "Add from URL", icon: ico.globe, run: clickId("btn-url") },
+          { label: "Import CSV", icon: ico.grid, run: clickId("btn-csv") },
+          { label: "Scan a photo", icon: ico.scan, run: clickId("btn-scan") },
+          { label: "Add files", icon: ico.doc, run: clickId("btn-files") }
+        ] },
+        { h: "Worked demos", items: [
+          { label: "1 · BAINES profile", icon: ico.doc, run: clickId("btn-demo-1") },
+          { label: "2 · Surveillance / meeting", icon: ico.doc, run: clickId("btn-demo-2") },
+          { label: "3 · Financial enquiries", icon: ico.doc, run: clickId("btn-demo-3") },
+          { label: "4 · Travel / border", icon: ico.doc, run: clickId("btn-demo-4") },
+          { label: "5 · Arrests", icon: ico.doc, run: clickId("btn-demo-5") }
+        ] }
+      ],
+      ENTITIES: [
+        { h: "Find & focus", items: [
+          { label: "Search entities", icon: ico.search, run: focusSearch() },
+          { label: "Legend & filters", icon: ico.filter, run: api("CRLegend.toggle", [], "btn-legend") },
+          { label: "Deconflict duplicates", icon: ico.merge, run: clickId("btn-dedup") }
+        ] },
+        { h: "Layout", items: [
+          { label: "Group by type", icon: ico.grid, run: layout("grouped") },
+          { label: "Fit to view", icon: ico.fit, run: api("CRGraph.fit", [], "btn-fit") }
+        ] },
+        { h: "Cross-reference", items: [
+          { label: "Manage in the database", icon: ico.grid, run: routeOther, route: true }
+        ] }
+      ],
+      EXPORTS: [
+        { h: "Chart", items: [
+          { label: "Export chart PNG", icon: ico.png, run: api("CRGraph.exportPNG", [], "btn-png") }
+        ] },
+        { h: "Operational", items: [
+          { label: "Operational exports…", icon: ico.doc, run: clickId("btn-anx") },
+          { label: "Diagnostics", icon: ico.diag, run: clickId("btn-diag") }
+        ] }
+      ],
       ANALYSIS: [
         { h: "Network", items: [
           { label: "Case analytics", icon: ico.diag, run: api("CRAnalyticsUI.open", [], "btn-analytics") },
@@ -172,10 +226,51 @@
 
   function specRegistry() {
     return {
+      CASE: [
+        { h: "Reports", items: [
+          { label: "New report", icon: ico.plus, run: clickId("btn-new") },
+          { label: "View all reports", icon: ico.grid, run: registryHomeAction("home-all") },
+          { label: "Reload demo", icon: ico.undo, run: registryHomeAction("home-reload") }
+        ] },
+        { h: "Identity", items: [
+          { label: "Set your identity", icon: ico.doc, run: clickId("reg-user") },
+          { label: "Lock workspace", icon: ico.doc, run: clickId("reg-lock") }
+        ] },
+        { h: "Cross-reference", items: [
+          { label: "Open the link chart", icon: ico.net, run: clickId("reg-chart"), route: true }
+        ] }
+      ],
+      INTELLIGENCE: [
+        { h: "Capture", items: [
+          { label: "New report", icon: ico.plus, run: clickId("btn-new") },
+          { label: "Intelligence logs", icon: ico.doc, run: clickId("reg-logs") }
+        ] },
+        { h: "Browse", items: [
+          { label: "Search reports", icon: ico.search, run: focusSearch() },
+          { label: "View all reports", icon: ico.grid, run: registryHomeAction("home-all") }
+        ] }
+      ],
+      ENTITIES: [
+        { h: "Nominals", items: [
+          { label: "Entity search", icon: ico.net, run: registryHomeAction("home-entities") },
+          { label: "Silent hit list", icon: ico.filter, run: registryHomeAction("home-hits") },
+          { label: "Access log", icon: ico.doc, run: registryHomeAction("home-access") }
+        ] },
+        { h: "Cross-reference", items: [
+          { label: "See on the link chart", icon: ico.net, run: clickId("reg-chart"), route: true }
+        ] }
+      ],
+      EXPORTS: [
+        { h: "To SOLAR", items: [
+          { label: "Export authorised → SOLAR", icon: ico.png, run: registryHomeAction("home-export") },
+          { label: "Open the link chart", icon: ico.net, run: clickId("reg-chart"), route: true }
+        ] }
+      ],
       ANALYSIS: [
         { h: "Nominals", items: [
           // registry home-view buttons — rendered by the SPA after the shell
-          // builds, so resolve at click time (lazyClickId) rather than snapshot.
+          // builds, so resolve at click time via registryHomeAction (navigate
+          // home, then poll for the button) rather than a build-time snapshot.
           { label: "Entity search", icon: ico.net, run: registryHomeAction("home-entities") },
           { label: "Silent hit list", icon: ico.filter, run: registryHomeAction("home-hits") },
           { label: "Access log", icon: ico.doc, run: registryHomeAction("home-access") }
