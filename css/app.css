@@ -152,7 +152,19 @@ body {
 }
 #chart-empty .big { font: 600 15px var(--sans); color: var(--dim); }
 #chart-empty .hint { font: 11px/1.7 var(--mono); max-width: 46ch; text-align: center; padding: 0 16px; }
-#chart-empty .constellation { width: 190px; color: var(--accent); opacity: 0.45; }
+/* 017 — empty-state constellation twinkle; opacity ceiling ≤ 0.5 per DESIGN.md */
+#chart-empty .constellation {
+  width: 190px; color: var(--accent); opacity: 0.45;
+  transform-origin: center;
+  animation: chart-empty-twinkle 7s ease-in-out infinite alternate;
+}
+@keyframes chart-empty-twinkle {
+  from { opacity: 0.32; transform: scale(0.992); }
+  to   { opacity: 0.48; transform: scale(1.008); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #chart-empty .constellation { animation: none; opacity: 0.45; }
+}
 #chart-empty .empty-actions {
   display: flex; gap: 8px; margin-top: 8px;
   flex-wrap: wrap; justify-content: center;

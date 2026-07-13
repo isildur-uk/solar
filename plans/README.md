@@ -67,7 +67,7 @@ UI/UX audit by `improve-ui` (dual-input: source `Solar/` + rendered `docs/ux-sho
 | 014 | ocr-scanning-loader | Motion/States | S | — | DONE |
 | 015 | panel-seed-loader | Motion/States | S | — | DONE |
 | 016 | result-count-tick | Motion | M | — | PARTIAL (Part A tabular-nums DONE on the 3 real selectors; Part B count-up STOPPED per escape hatch — all 3 counts are innerHTML-rebuilt strings with the number fused into word+digit text, no persistent numeric node to animate) |
-| 017 | empty-constellation-twinkle | Motion/Empty | S | — | TODO |
+| 017 | empty-constellation-twinkle | Motion/Empty | S | — | DONE |
 | 018 | hero-wordmark-sheen | Motion/Brand | S | — | TODO (flagged surface — see note) |
 | 019 | physics-geo-real-toggles | Interaction/Brand | M | 007 | TODO (flagged surface — see note) |
 | 020 | button-press-feedback | Motion/Interaction | S | — | TODO |
