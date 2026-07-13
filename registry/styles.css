@@ -328,7 +328,7 @@ details.facet>summary .c{background:var(--accent-soft);color:var(--accent);borde
 .chip.clear{border-color:var(--line-2);background:var(--panel-2);color:var(--dim)}
 .chip.clear:hover{border-color:var(--accent-dim);color:var(--accent)}
 .result-count{margin-top:.55rem;font-size:.82rem;color:var(--faint)}
-.result-count strong{color:var(--text)}
+.result-count strong{color:var(--text);font-variant-numeric:tabular-nums}
 .pager{display:flex;align-items:center;gap:.6rem;margin-top:.75rem;flex-wrap:wrap}
 .pager .btn[disabled]{opacity:.45;cursor:not-allowed}
 .pager .pg-info{font-size:.85rem;font-variant-numeric:tabular-nums;color:var(--dim)}
@@ -353,7 +353,7 @@ details.facet>summary .c{background:var(--accent-soft);color:var(--accent);borde
 .op-card:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
 .op-card .oc-name{font-family:var(--mono);font-weight:600;letter-spacing:.02em}
 .op-card .oc-threat{font-size:.78rem;color:var(--dim);line-height:1.25}
-.op-card .oc-count{font-size:.74rem;color:var(--accent-dim);font-family:var(--mono)}
+.op-card .oc-count{font-size:.74rem;color:var(--accent-dim);font-family:var(--mono);font-variant-numeric:tabular-nums}
 @media(prefers-reduced-motion:reduce){.op-card{transition:none}}
 
 /* ---------- Inline structured-intelligence mini chart ---------- */
@@ -706,7 +706,7 @@ tr.dos-appear:hover{background:rgba(142,162,255,.06)}
 .sh-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .sh-name{font:700 14px var(--sans);color:var(--ink)}
 .sh-note{color:var(--faint);font-size:12px}
-.sh-count{font:700 11px var(--mono);color:var(--accent);background:var(--accent-soft);border-radius:10px;padding:2px 9px;margin-right:8px}
+.sh-count{font:700 11px var(--mono);color:var(--accent);background:var(--accent-soft);border-radius:10px;padding:2px 9px;margin-right:8px;font-variant-numeric:tabular-nums}
 .sh-hits{list-style:none;margin:0;padding:0}
 .sh-hit{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:10px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);cursor:pointer;font-size:12px}
 .sh-hit:first-child{border-top:0}
