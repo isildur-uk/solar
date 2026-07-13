@@ -67,44 +67,6 @@ body.warping #cosmos { opacity: 0; }
 #stars  { position: fixed; inset: 0; z-index: 0; display: block; }
 /* layer 1 — the living nebula bloom, additive over the stars */
 #nebula { position: fixed; inset: 0; z-index: 1; display: block; pointer-events: none; }
-/* layer 1.5 — the demo case orbiting as an orrery: the product IS the cosmos.
-   Bleeds off the right edge (asymmetric balance) so its labels never fight the copy.
-   Explicit width/height matter: canvas is a replaced element, inset alone won't stretch it. */
-#orrery {
-  position: fixed;
-  top: 50%; right: -10vmin;
-  width: 82vmin; height: 82vmin;
-  transform: translateY(-50%);
-  z-index: 1; display: block; pointer-events: none;
-  opacity: 0.7;
-  transition: opacity 0.45s ease;
-}
-body.warping #orrery { opacity: 0; }
-@media (max-width: 900px) { #orrery { display: none; } }  /* phones: copy owns the frame */
-
-/* layer 1.5 mirror — an NCA intelligence report writing itself on the left,
-   the prose counterpart to the orrery's entities/links on the right */
-#report {
-  position: fixed;
-  left: 3.4vw; top: 50%;
-  transform: translateY(-50%);
-  width: min(33vmin, 372px);
-  z-index: 2;                     /* below the wordmark (.content, later in DOM) — reads as atmosphere */
-  pointer-events: none;
-  font-family: var(--mono);
-  color: rgba(244, 243, 232, 0.6);
-  opacity: 0;
-  animation: fade 1.4s ease 0.35s forwards;
-}
-body.warping #report { opacity: 0; transition: opacity 0.5s ease; }
-@media (max-width: 900px) { #report { display: none; } }
-#report .r-line { font-size: var(--fs-xs); line-height: 1.7; letter-spacing: 0.01em; min-height: 1.7em; }
-#report .r-h { font-size: var(--fs-2xs); letter-spacing: 0.22em; color: var(--accent); }
-#report .r-meta { font-size: var(--fs-2xs); letter-spacing: 0.12em; color: rgba(244,243,232,0.38); margin-bottom: 14px; }
-#report .ent { color: #ccd6ff; font-weight: 500; }        /* extracted entities glow a touch brighter */
-#report .caret { border-right: 2px solid var(--accent); margin-left: 1px; animation: rblink 1s step-end infinite; }
-@keyframes rblink { 50% { border-color: transparent; } }
-@media (prefers-reduced-motion: reduce) { #report { animation: none; opacity: 1; } #report .caret { animation: none; } }
 
 /* layer 1 — the shooting-star cursor trail, above the nebula */
 #trail  { position: fixed; inset: 0; z-index: 1; display: block; pointer-events: none; }
@@ -161,7 +123,7 @@ body.warping .content {
   position: relative;
   isolation: isolate;
   pointer-events: auto;
-  margin-top: 54px;
+  margin-top: 18px;
   font-family: var(--mono);
   font-size: var(--fs-sm);
   line-height: 1;
@@ -176,7 +138,7 @@ body.warping .content {
   padding: 17px 44px;
   cursor: pointer;
   opacity: 0;
-  animation: fade 1.1s ease 0.6s forwards;
+  animation: fade 1.1s ease 0.78s forwards;
   transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
 }
 .enter:hover  { transform: scale(1.05); }
@@ -238,10 +200,10 @@ body.warping .content {
 .launch-nav {
   display: flex;
   gap: 14px;
-  margin-top: 18px;
+  margin-top: 54px;
   pointer-events: auto;
   opacity: 0;
-  animation: rise 1s cubic-bezier(0.16,1,0.3,1) 0.75s forwards;
+  animation: rise 1s cubic-bezier(0.16,1,0.3,1) 0.6s forwards;
 }
 /* glass pills — same liquid-glass language as ENTER, smaller + periwinkle hover */
 .pill {
@@ -337,24 +299,23 @@ body.warping .content {
   <video id="cosmos" muted playsinline loop preload="none" aria-hidden="true"></video>
   <canvas id="stars" aria-hidden="true"></canvas>
   <canvas id="nebula" aria-label="Living nebula background" aria-hidden="true"></canvas>
-  <canvas id="orrery" aria-hidden="true"></canvas>
-  <div id="report" aria-hidden="true"></div>
   <canvas id="trail" aria-hidden="true"></canvas>
 
 
   <div class="content">
     <h1 class="wordmark" id="wordmark">SOLAR</h1>
+    <!-- Database is the primary product (top); Charting is the second, in tandem -->
+    <nav class="launch-nav" aria-label="SOLAR functions">
+      <a class="pill pill-primary" id="go-database" href="registry/">
+        <span class="pill-rim" aria-hidden="true"></span>
+        <span class="pill-label">Database</span>
+      </a>
+    </nav>
     <button class="enter" id="enter" type="button" aria-label="Open the charting workbench">
       <span class="enter-fx" aria-hidden="true"></span>
       <span class="enter-rim" aria-hidden="true"></span>
       <span class="enter-label">Charting</span>
     </button>
-    <nav class="launch-nav" aria-label="SOLAR functions">
-      <a class="pill" id="go-database" href="registry/">
-        <span class="pill-rim" aria-hidden="true"></span>
-        <span class="pill-label">Database</span>
-      </a>
-    </nav>
   </div>
 
   <canvas id="burst" aria-hidden="true"></canvas>
@@ -795,70 +756,11 @@ body.warping .content {
 })();
 </script>
 
-<!-- the report writing itself on the left — the prose mirror of the orrery -->
+<!-- filmed cosmos backdrop — desktop only, fades in when playable; canvas cosmos
+     remains the base so a missing/slow file costs nothing (gate-then-reveal) -->
 <script>
 (function () {
   "use strict";
-  var host = document.getElementById("report");
-  if (!host) return;
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-  function parse(str){                         /* [[entity]] → highlighted segments */
-    var out=[], re=/\[\[(.+?)\]\]/g, last=0, m;
-    while((m=re.exec(str))){ if(m.index>last) out.push({t:str.slice(last,m.index),e:false}); out.push({t:m[1],e:true}); last=re.lastIndex; }
-    if(last<str.length) out.push({t:str.slice(last),e:false});
-    return out;
-  }
-  var LINES = [
-    { cls:"r-h",    seg:parse("INTELLIGENCE REPORT") },
-    { cls:"r-meta", seg:parse("URN 24/0113 · OFFICIAL–SENSITIVE") },
-    { seg:parse("[[SUBJECT]] uses [[PHONE NUMBER]] and [[EMAIL ADDRESS]] to coordinate activity.") },
-    { seg:parse("[[SUBJECT]] holds a [[FINANCIAL ACCOUNT]] under a third-party name.") },
-    { seg:parse("[[SUBJECT]] travels to [[LOCATION]], departing via [[AIRPORT]].") },
-    { seg:parse("[[SUBJECT]] stays at an [[ADDRESS]] and is linked to a [[VEHICLE]].") },
-    { seg:parse("[[SUBJECT]] is an associate of [[PERSON]], employed by [[ORGANISATION]].") },
-    { seg:parse("[[ORGANISATION]] transferred [[CASH]] prior to travel.") }
-  ];
-  var els = LINES.map(function (L) { var d=document.createElement("div"); d.className="r-line "+(L.cls||""); host.appendChild(d); return d; });
-
-  function fullLen(seg){ var n=0; for(var i=0;i<seg.length;i++) n+=seg[i].t.length; return n; }
-  function render(el, seg, n){
-    var html="", count=0;
-    for(var i=0;i<seg.length;i++){
-      var s=seg[i], take=Math.max(0, Math.min(s.t.length, n-count));
-      if(take>0){ var p=esc(s.t.slice(0,take)); html += s.e ? '<span class="ent">'+p+'</span>' : p; }
-      count += s.t.length;
-      if(count>=n) break;
-    }
-    el.innerHTML = html;
-  }
-
-  if (reduce) { LINES.forEach(function (L,i){ render(els[i], L.seg, 9999); }); return; }
-
-  var caret = document.createElement("span"); caret.className="caret"; caret.textContent=" ";
-  var li=0, ci=0;
-  function step(){
-    if (li>=LINES.length) return;                       /* done — caret rests on the last line */
-    var L=LINES[li], len=fullLen(L.seg);
-    ci++;
-    render(els[li], L.seg, ci);
-    els[li].appendChild(caret);
-    if (ci>=len) { li++; ci=0; setTimeout(step, 260); }
-    else setTimeout(step, 15 + ((Math.random()*12)|0));
-  }
-  setTimeout(step, 700);                                 /* mirrors the orrery's assembly delay */
-})();
-</script>
-
-<!-- the demo case as a living orrery behind the wordmark — the product is the cosmos -->
-<script src="js/ui/icons.js"></script>
-<script src="js/ui/orrery.js"></script>
-<script>
-(function () {
-  "use strict";
-  /* filmed cosmos backdrop — desktop only, fades in when playable; canvas cosmos
-     remains the base so a missing/slow file costs nothing (gate-then-reveal) */
   var cv = document.getElementById("cosmos");
   var noMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (cv && !noMotion && window.innerWidth >= 768) {
@@ -867,24 +769,6 @@ body.warping .content {
     var pp = cv.play();
     if (pp && pp.catch) pp.catch(function () { /* autoplay refused: canvas cosmos stands */ });
   }
-
-  var oc = document.getElementById("orrery");
-  if (!oc || !window.CROrrery) return;
-  window.CROrrery.setAccent("#8ea2ff");
-  if (!window.CROrrery.mount(oc)) return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    window.CROrrery.setProgress(1);            /* settled still frame */
-    return;
-  }
-  /* time-driven assembly (this page has no scroll): particles converge,
-     links draw with their verbs, the orbital plane opens — then steady orbit */
-  var DELAY = 500, DUR = 3800, a0 = 0;
-  (function drive(now) {
-    if (!a0) a0 = now;
-    var k = Math.min(Math.max((now - a0 - DELAY) / DUR, 0), 1);
-    window.CROrrery.setProgress(k);
-    if (k < 1) requestAnimationFrame(drive);
-  })(performance.now());
 })();
 </script>
 </body>
