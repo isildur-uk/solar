@@ -94,7 +94,7 @@ input[type="text"], input[type="search"], textarea,
 
 /* ---- the animated nebula sits behind the chart ---- */
 #chart-wrap { background: #0a0a09; }
-#space-bg   { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.15; }
+#space-bg   { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.22; }
 /* light theme: cream chart canvas, cosmic nebula hidden (the cosmic brand lives in dark mode) */
 html[data-theme="light"] #chart-wrap { background: #f2ecdd; }
 html[data-theme="light"] #space-bg   { opacity: 0; }

@@ -34,6 +34,11 @@
   --fs-xl:  20px;   /* panel titles */
   --fs-2xl: 24px;   /* page headings */
   --fs-3xl: 32px;   /* hero-adjacent display */
+  /* nebula ramp — DECORATION-ONLY cosmic sub-palette (never encodes state, never
+     carries text). Formalises the inline rgba scattered across the space-bg canvas. */
+  --neb-violet: #402c97;
+  --neb-blue:   #245cb4;
+  --neb-warm:   #fe7b02;
   /* unified shape + elevation (redesign) */
   --radius: 4px;
   --accent-soft: rgba(142, 162, 255, 0.14);
