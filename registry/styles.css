@@ -37,7 +37,11 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{font-family:var(--sans);color:var(--text);background:var(--bg);line-height:1.45;font-size:var(--fs-sm)}
+body{font-family:var(--sans);color:var(--text);background:var(--bg);line-height:1.45;font-size:var(--fs-sm);position:relative}
+/* dark theme: the fixed #reg-cosmos nebula IS the ground — let it show through
+   chrome/main; chrome sits above via z-index. Light theme keeps the cream fill. */
+html:not([data-theme="light"]) body{background:#0a0a09}
+#reg-cosmos{position:fixed;inset:0;z-index:0;pointer-events:none}
 a{color:var(--accent)}
 a:hover{color:var(--accent-dim)}
 button{font-family:inherit;font-size:var(--fs-sm)}
@@ -60,6 +64,20 @@ input,select,textarea{font:inherit;color:inherit}
   border-bottom:1px solid var(--line);
   padding:.6rem 1.25rem;position:sticky;top:0;z-index:20;
 }
+/* dark: glass masthead floating over the cosmos (comet sweeps beneath the hairline) */
+html:not([data-theme="light"]) .masthead{
+  background:rgba(14,14,12,0.72);
+  -webkit-backdrop-filter:blur(14px) saturate(1.1); backdrop-filter:blur(14px) saturate(1.1);
+  position:sticky; overflow:hidden;
+}
+/* masthead comet — a slow periwinkle streak along the bar, matching the workbench topbar */
+html:not([data-theme="light"]) .masthead::after{
+  content:""; position:absolute; left:-30%; bottom:0; width:30%; height:1px;
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity:.55; animation:reg-comet 13s linear infinite;
+}
+@keyframes reg-comet{ 0%{left:-30%} 100%{left:130%} }
+@media (prefers-reduced-motion: reduce){ html:not([data-theme="light"]) .masthead::after{ animation:none; opacity:0; } }
 .masthead .brand{font-weight:700;letter-spacing:.14em;color:var(--text);flex:0 0 auto;text-decoration:none;cursor:pointer}
 .masthead a.brand:hover{color:var(--accent)}
 .masthead .brand:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -68,7 +86,9 @@ input,select,textarea{font:inherit;color:inherit}
 
 /* Page model — full-bleed scroll area; each view centres in a max-width column
  * so content uses the width with structure, not edge-to-edge sprawl. */
-.main{padding:1.5rem;overflow:auto;background:var(--bg);min-height:calc(100vh - 84px);scroll-behavior:smooth}
+.main{padding:1.5rem;overflow:auto;background:var(--bg);min-height:calc(100vh - 84px);scroll-behavior:smooth;position:relative;z-index:1}
+/* dark: main is transparent so the fixed cosmic ground shows; solid panels/cards read on top */
+html:not([data-theme="light"]) .main{background:transparent}
 @media(prefers-reduced-motion:reduce){.main{scroll-behavior:auto}}
 .page,.detail,.form{max-width:1120px;margin:0 auto}
 .detail.home,.detail.results{max-width:1280px}
