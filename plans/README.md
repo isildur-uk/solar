@@ -31,7 +31,7 @@ UI/UX audit by `improve-ui` (dual-input: source `Solar/` + rendered `docs/ux-sho
 
 | # | Plan | Dim | Effort | Depends | Status |
 |---|------|-----|--------|---------|--------|
-| 001 | ratify-periwinkle-accent | Colour/Contract | S–M | — | TODO |
+| 001 | ratify-periwinkle-accent | Colour/Contract | S–M | — | DONE |
 | 002 | csv-extraction-feedback | States/Int | M | — | TODO |
 | 003 | uk-date-field | Content/A11y | M | — | TODO |
 | 004 | accent-discipline-controls-and-cards | A11y/Brand | S | 001 | TODO |

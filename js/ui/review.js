@@ -23,6 +23,13 @@
     sourceText = text;
     sourceName = name || "";
     result = window.CRExtract.extract(text, { dateFormat: store.meta.dateFormat });
+    // Zero-result guard: don't open an empty review modal. Reopen the paste modal
+    // so the analyst can edit and retry. Lives here so every caller (paste, drag-drop) benefits.
+    if (!result.entities.length && !result.relationships.length && !((result.events || []).length)) {
+      if (window.CRApp) window.CRApp.status("No entities recognised — check the text, or add manually", true);
+      U.openModal("paste-veil");
+      return;
+    }
     cardState = {};
     relState = {};
 
@@ -354,6 +361,7 @@
 
   function commit() {
     store.snapshot();
+    var linksBefore = store.links.length;
     var refToId = {};
     var batch = "Text extract " + new Date().toISOString().slice(0, 16).replace("T", " ") +
       (sourceName ? " — " + sourceName : "");
@@ -446,7 +454,12 @@
     }
 
     U.closeModal("review-veil");
-    if (window.CRApp) window.CRApp.afterImport();
+    if (window.CRApp) {
+      window.CRApp.afterImport();
+      var nEntities = Object.keys(refToId).length;
+      var nLinks = store.links.length - linksBefore;
+      window.CRApp.status(nEntities + " entities · " + nLinks + " links added to chart");
+    }
   }
 
   function contextSnippet(ent) {

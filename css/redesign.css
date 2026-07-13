@@ -49,6 +49,7 @@ input[type="text"], input[type="search"], textarea,
   box-shadow: var(--shadow-2);
 }
 #status-msg { box-shadow: var(--shadow-1); border: 1px solid var(--line); }
+#status-msg.bad { color: var(--bad); }   /* error / no-op phrasing (reuses the --bad token) */
 .ctx-menu   { box-shadow: var(--shadow-2); }
 
 /* ---- buttons: ghost with a single periwinkle breath (hero restraint) ---- */

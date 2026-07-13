@@ -205,7 +205,11 @@
     parsed = null;
     if (window.CRApp) {
       window.CRApp.afterImport();
-      window.CRApp.status(added + " added, " + matched + " matched existing, " + links + " links — run Deconflict to review fuzzy duplicates");
+      if (added + matched + links === 0) {
+        window.CRApp.status("No entities imported — check the column mapping", true);
+      } else {
+        window.CRApp.status(added + " added, " + matched + " matched existing, " + links + " links — run Deconflict to review fuzzy duplicates");
+      }
     }
   }
 

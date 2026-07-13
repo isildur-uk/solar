@@ -134,8 +134,17 @@
     U.el("paste-run").addEventListener("click", function () {
       var t = U.el("paste-text").value;
       if (!t.trim()) return;
-      U.closeModal("paste-veil");
-      window.CRReview.open(t);
+      var btn = U.el("paste-run");
+      btn.disabled = true; btn.setAttribute("aria-busy", "true");
+      // Yield one frame so the busy paint lands before the synchronous extract blocks the thread.
+      requestAnimationFrame(function () {
+        try {
+          U.closeModal("paste-veil");
+          window.CRReview.open(t);   // open() guards zero-result internally
+        } finally {
+          btn.disabled = false; btn.removeAttribute("aria-busy");
+        }
+      });
     });
     U.el("paste-cancel").addEventListener("click", function () { U.closeModal("paste-veil"); });
 
@@ -175,7 +184,18 @@
       if (picked && picked.length && window.CRDragDrop) window.CRDragDrop.ingestFiles(picked);
       e.target.value = "";
     });
-    U.el("csv-commit").addEventListener("click", function () { window.CRImporter.commit(); });
+    U.el("csv-commit").addEventListener("click", function () {
+      var btn = U.el("csv-commit");
+      btn.disabled = true; btn.setAttribute("aria-busy", "true");
+      // Yield one frame so the busy paint lands before the synchronous CSV commit blocks the thread.
+      requestAnimationFrame(function () {
+        try {
+          window.CRImporter.commit();
+        } finally {
+          btn.disabled = false; btn.removeAttribute("aria-busy");
+        }
+      });
+    });
     U.el("csv-cancel").addEventListener("click", function () { U.closeModal("csv-veil"); });
 
     U.el("btn-dedup").addEventListener("click", openDedup);
@@ -419,9 +439,12 @@
   var _selectedEntityId = null;
 
   var statusTimer = null;
-  function status(msg) {
+  function status(msg, isError) {
     var n = U.el("status-msg");
     n.textContent = msg;
+    // Reuse the existing token palette: .ok (green) for normal, .bad for error/no-op phrasing.
+    n.classList.toggle("ok", !isError);
+    n.classList.toggle("bad", !!isError);
     clearTimeout(statusTimer);
     statusTimer = setTimeout(function () { n.textContent = ""; }, 6000);
   }
