@@ -161,6 +161,19 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
+  // Date filters display DD/MM (UK) but filterState stores ISO (yyyy-mm-dd) so the
+  // query layer (query.js isoKey/passDate) is untouched. Convert only at the input boundary.
+  function dmyToISO(s) {
+    var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s || "").trim());
+    if (!m) return "";
+    var d = +m[1], mo = +m[2];
+    if (d < 1 || d > 31 || mo < 1 || mo > 12) return "";   // genuinely invalid → clears
+    return m[3] + "-" + m[2] + "-" + m[1];
+  }
+  function isoToDMY(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ""));
+    return m ? m[3] + "/" + m[2] + "/" + m[1] : "";
+  }
   function setStatus(msg, kind) {
     if (!msg) { els.status.hidden = true; els.status.textContent = ""; els.status.className = "statusline"; return; }
     els.status.hidden = false;
@@ -1508,8 +1521,8 @@
         chips.push('<button type="button" class="chip" data-rmfilter="' + esc(key) + '" data-rmval="' + esc(v) + '">' + esc(v) + ' &times;</button>');
       });
     });
-    if (filterState.dateFrom) chips.push('<button type="button" class="chip" data-rmdate="from">from ' + esc(filterState.dateFrom) + ' &times;</button>');
-    if (filterState.dateTo) chips.push('<button type="button" class="chip" data-rmdate="to">to ' + esc(filterState.dateTo) + ' &times;</button>');
+    if (filterState.dateFrom) chips.push('<button type="button" class="chip" data-rmdate="from">from ' + esc(isoToDMY(filterState.dateFrom)) + ' &times;</button>');
+    if (filterState.dateTo) chips.push('<button type="button" class="chip" data-rmdate="to">to ' + esc(isoToDMY(filterState.dateTo)) + ' &times;</button>');
     if (filterState.text) chips.push('<button type="button" class="chip" data-rmtext="1">\u201c' + esc(filterState.text) + '\u201d &times;</button>');
     return chips;
   }
@@ -1604,8 +1617,10 @@
       return '<details class="facet"' + (sel.length ? " open" : "") + '><summary>' + esc(f.label) + (sel.length ? ' <span class="c">' + sel.length + '</span>' : '') + '</summary><div class="facet-opts">' + opts + '</div></details>';
     }).join("");
     var dateHtml = '<details class="facet"' + ((filterState.dateFrom || filterState.dateTo) ? " open" : "") + '><summary>Date of collection</summary><div class="facet-opts daterange">' +
-      '<label>From <input type="date" id="f-date-from" value="' + esc(filterState.dateFrom) + '"></label>' +
-      '<label>To <input type="date" id="f-date-to" value="' + esc(filterState.dateTo) + '"></label></div></details>';
+      '<p class="hint" id="f-date-facet-hint">Format DD/MM/YYYY</p>' +
+      '<label>From <input type="text" inputmode="numeric" id="f-date-from" placeholder="DD/MM/YYYY" aria-describedby="f-date-facet-hint" value="' + esc(isoToDMY(filterState.dateFrom)) + '"></label>' +
+      '<label>To <input type="text" inputmode="numeric" id="f-date-to" placeholder="DD/MM/YYYY" aria-describedby="f-date-facet-hint" value="' + esc(isoToDMY(filterState.dateTo)) + '"></label>' +
+      '<p class="field-error" id="f-date-err" hidden>Enter a valid date as DD/MM/YYYY</p></div></details>';
     var chips = activeFilterChips();
     var chipBar = (chips.length ? '<div class="chips">' + chips.join("") + '<button type="button" class="chip clear" id="clear-filters">Clear all</button></div>' : "");
     var countLine = '<div class="result-count">' + (res.total
@@ -1656,8 +1671,30 @@
         filterState.page = 1; showResults();
       });
     });
-    var dF = document.getElementById("f-date-from"); if (dF) dF.addEventListener("change", function () { filterState.dateFrom = dF.value; filterState.page = 1; showResults(); });
-    var dT = document.getElementById("f-date-to"); if (dT) dT.addEventListener("change", function () { filterState.dateTo = dT.value; filterState.page = 1; showResults(); });
+    // DD/MM text entry → ISO for filterState (empty clears; invalid non-empty flags inline, keeps prior filter).
+    function applyDateInput(inputEl, key) {
+      if (!inputEl) return;
+      inputEl.addEventListener("change", function () {
+        var raw = inputEl.value.trim();
+        var err = document.getElementById("f-date-err");
+        var field = inputEl.closest("label");
+        if (raw === "") {
+          filterState[key] = "";
+          inputEl.classList.remove("invalid"); if (field) field.classList.remove("invalid"); if (err) err.hidden = true;
+        } else {
+          var iso = dmyToISO(raw);
+          if (!iso) {
+            inputEl.classList.add("invalid"); if (field) field.classList.add("invalid"); if (err) err.hidden = false;
+            return;   // keep the prior filter rather than silently ignoring a bad value
+          }
+          filterState[key] = iso;
+          inputEl.classList.remove("invalid"); if (field) field.classList.remove("invalid"); if (err) err.hidden = true;
+        }
+        filterState.page = 1; showResults();
+      });
+    }
+    applyDateInput(document.getElementById("f-date-from"), "dateFrom");
+    applyDateInput(document.getElementById("f-date-to"), "dateTo");
     els.main.querySelectorAll("[data-rmfilter]").forEach(function (c) { c.addEventListener("click", function () {
       var key = c.getAttribute("data-rmfilter"), val = c.getAttribute("data-rmval");
       var arr = filterState.filters[key] || []; var i = arr.indexOf(val); if (i !== -1) arr.splice(i, 1);

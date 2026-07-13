@@ -308,6 +308,7 @@ details.facet>summary .c{background:var(--accent-soft);color:var(--accent);borde
 .facet-opt .c{color:var(--faint);font-variant-numeric:tabular-nums;font-family:var(--mono)}
 .facet-opts.daterange{display:flex;flex-direction:column;gap:.4rem}
 .facet-opts.daterange label{display:flex;justify-content:space-between;gap:.5rem;align-items:center;font-size:.82rem}
+.facet-opts.daterange input.invalid{border-color:var(--bad)}
 .chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem}
 .chip{border:1px solid var(--accent-dim);background:var(--accent-soft);color:var(--accent);font-size:.75rem;font-weight:600;padding:.12rem .45rem;cursor:pointer;border-radius:var(--radius);font-family:var(--mono)}
 .chip:hover{background:rgba(142,162,255,0.22)}
