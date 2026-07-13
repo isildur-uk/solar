@@ -77,6 +77,7 @@
       bottomNav.id = "bottom-nav";
       bottomNav.setAttribute("aria-label", "view");
       bottomNav.innerHTML =
+        '<span class="seg-pill" aria-hidden="true"></span>' +
         tab("chart", "Chart") + tab("map", "Map") +
         tab("timeline", "Timeline") + tab("inspector", "Details");
       document.body.appendChild(bottomNav);
@@ -118,6 +119,8 @@
     // Toolbar actions now live in dropdown menus, so no overflow move is needed.
     document.body.classList.add("mobile-mode");
     if (!document.body.getAttribute("data-mview")) setView("chart");
+    // 022 — align the pill once the nav is visible in mobile mode
+    setTimeout(function () { positionSegPill(bottomNav); }, 90);
   }
 
   function exitMobile() {
@@ -136,6 +139,17 @@
 
   /* ---------- bottom view nav ---------- */
 
+  /* 022 — measure the active view button and glide the pill to it */
+  function positionSegPill(group) {
+    if (!group) return;
+    var pill = group.querySelector('.seg-pill');
+    var active = group.querySelector('button[aria-pressed="true"]');
+    if (!pill || !active) return;
+    if (!active.offsetWidth) return;   // group hidden (display:none) — skip; re-runs on next show
+    pill.style.left = active.offsetLeft + 'px';
+    pill.style.width = active.offsetWidth + 'px';
+  }
+
   function setView(view) {
     document.body.setAttribute("data-mview", view);
     if (bottomNav) {
@@ -147,6 +161,7 @@
     if (moreBtn) moreBtn.setAttribute("aria-expanded", "false");
     // Let CSS apply, then nudge the revealed view to recompute its size.
     setTimeout(function () {
+      positionSegPill(bottomNav);
       try {
         if (view === "chart" && window.CRGraph && window.CRGraph.fit) window.CRGraph.fit();
         if (view === "map" && window.CRMapPane) {
@@ -190,6 +205,8 @@
     watchInspector();
     if (MQ.addEventListener) MQ.addEventListener("change", apply);
     else if (MQ.addListener) MQ.addListener(apply); // older WebViews
+    // 022 — keep the pill aligned when the group reflows (resize / orientation)
+    window.addEventListener("resize", function () { positionSegPill(bottomNav); });
   }
 
   if (document.readyState === "loading") {

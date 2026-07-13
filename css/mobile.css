@@ -121,6 +121,20 @@
   }
   #bottom-nav button .bn-ico { font-size: 18px; line-height: 1; }
   #bottom-nav button[aria-pressed="true"] { color: var(--accent, #8ea2ff); }
+  /* 022 — Tab Pill Glide indicator; var(--accent), 4px radius */
+  #bottom-nav button { position: relative; z-index: 1; }
+  #bottom-nav .seg-pill {
+    position: absolute; top: 6px; left: 0; width: 0;
+    height: var(--bottom-nav-h); box-sizing: border-box;
+    border-radius: var(--radius, 4px);
+    background: color-mix(in srgb, var(--accent, #8ea2ff) 20%, transparent);
+    box-shadow: inset 0 0 0 1px var(--accent, #8ea2ff);
+    transition: left .4s cubic-bezier(0.65, 0, 0.35, 1), width .4s cubic-bezier(0.65, 0, 0.35, 1);
+    pointer-events: none; z-index: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #bottom-nav .seg-pill { transition: none; }   /* indicator jumps instantly */
 }
 
 /* ===================== "More" drawer ===================== */
