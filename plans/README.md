@@ -35,7 +35,7 @@ UI/UX audit by `improve-ui` (dual-input: source `Solar/` + rendered `docs/ux-sho
 | 002 | csv-extraction-feedback | States/Int | M | — | DONE |
 | 003 | uk-date-field | Content/A11y | M | — | DONE |
 | 004 | accent-discipline-controls-and-cards | A11y/Brand | S | 001 | DONE |
-| 005 | selected-state-and-light-contrast | A11y | S | — | TODO |
+| 005 | selected-state-and-light-contrast | A11y | S | — | DONE |
 | 006 | unify-detail-layout | Hierarchy | S | — | TODO |
 | 007 | toggle-pressed-state | Int/A11y | S | — | TODO |
 | 008 | cursor-ring-compositor-motion | Motion | S | — | TODO |
