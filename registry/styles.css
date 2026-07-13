@@ -114,7 +114,9 @@ h1[tabindex="-1"]:focus{outline:none}
 .report-item .ri-title{font-weight:600;margin:.15rem 0;color:var(--text)}
 .report-item .ri-meta{font-size:.78rem;color:var(--faint);display:flex;gap:.5rem;flex-wrap:wrap}
 /* Active report in the sidebar — the "you are here" marker when a report is open */
-.report-item[aria-current="true"]{border-left-color:var(--accent);background:var(--panel-3);box-shadow:inset 0 0 0 1px var(--accent-dim)}
+.report-item[aria-current="true"]{border-left-width:4px;border-left-color:var(--accent);background:var(--panel-3);box-shadow:inset 0 0 0 1px var(--accent-dim)}
+/* non-colour "you are here" cue (WCAG 1.4.1): heavier bar + a text tag, not hue alone */
+.report-item[aria-current="true"] .ri-urn::after{content:" \00b7 open";color:var(--dim);font-weight:600;letter-spacing:.04em}
 .empty{color:var(--faint);font-size:.9rem;padding:.5rem 0}
 
 /* Pills — hairline outline, semantic hue text */
@@ -780,7 +782,7 @@ table.ir-items .c-src{text-align:center}
 html[data-theme="light"]{
   --bg:#f2ecdd; --panel:#fbf8ef; --panel-2:#efe8d7; --panel-3:#e7dfcb;
   --line:#ddd5c3; --line-2:#cec5af;
-  --ink:#211f18; --text:#211f18; --dim:#635d4e; --muted:#635d4e; --faint:#8b8474;
+  --ink:#211f18; --text:#211f18; --dim:#635d4e; --muted:#635d4e; --faint:#67624f;   /* was #8b8474 (~3.1:1); #67624f ≈5.2:1 on #f2ecdd */
   --accent:#6b7a2f; --accent-dim:#55621f; --accent-soft:rgba(107,122,47,0.16); --focus:#6b7a2f;
   --ok:#4d8a5a; --warn:#a9691c; --bad:#bb4f4c; --error:#bb4f4c;
   --mk-official:#4d8a5a; --mk-sensitive:#a9691c;

@@ -783,7 +783,7 @@ mark.hl-cue.active { outline: 2px solid var(--accent); border-bottom-style: soli
 html[data-theme="light"]{
   --bg:#f2ecdd; --panel:#fbf8ef; --panel-2:#efe8d7; --panel-3:#e7dfcb;
   --line:#ddd5c3; --line-2:#cec5af;
-  --text:#211f18; --dim:#635d4e; --faint:#8b8474;
+  --text:#211f18; --dim:#635d4e; --faint:#67624f;   /* was #8b8474 (~3.1:1); #67624f ≈5.2:1 on #f2ecdd */
   --accent:#6b7a2f; --accent-dim:#55621f; --accent-soft:rgba(107,122,47,0.16); --accent-2:#7d6f3a;
   --ok:#4d8a5a; --warn:#a9691c; --bad:#bb4f4c;
   --shadow-1:0 2px 10px rgba(60,52,30,0.14); --shadow-2:0 18px 50px rgba(60,52,30,0.20);
