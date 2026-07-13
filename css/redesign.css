@@ -273,3 +273,5 @@ details.menu[open]>summary{ color:var(--accent); border-color:var(--accent-dim);
 #timeline-head .tl-caret{ width:11px; height:11px; transition:transform .18s cubic-bezier(0.16,1,0.3,1); }
 #timeline-wrap:not(.collapsed) #timeline-head .tl-caret{ transform:rotate(90deg); }
 @media (prefers-reduced-motion: reduce){ #timeline-head .tl-caret{ transition:none; } }
+#theme-toggle{ display:inline-flex; align-items:center; gap:6px; }
+#theme-toggle .ico{ width:13px; height:13px; }
