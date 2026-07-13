@@ -353,23 +353,49 @@
       bar.appendChild(tab);
     });
 
+    /* ---- right cluster (surface-aware: only real handlers get a button) ----
+       Operation log → CRLogPanel.open() (workbench) / #reg-logs (registry).
+       What's New / Lock exist on the registry only. Help + Settings open the
+       shell's own modal. Logout returns to the cover on both surfaces. */
     var right = el("div", { class: "sh-right" });
+
     var oplog = el("button", { class: "sh-oplog", type: "button", title: "Operation log" }, "Operation log");
-    var wn = el("button", { class: "sh-whatsnew", type: "button", title: "What’s New" }, "What’s New");
-    var help = el("button", { class: "sh-icobtn", type: "button", title: "Help", "aria-label": "Help" }, svg.help);
-    var lock = el("button", { class: "sh-icobtn", type: "button", title: "Lock workspace", "aria-label": "Lock workspace" }, svg.lock);
+    oplog.addEventListener("click", function () {
+      if (IS_REGISTRY) { var b = byId("reg-logs"); if (b) { b.click(); } }
+      else if (window.CRLogPanel && window.CRLogPanel.open) { window.CRLogPanel.open(); }
+    });
+    right.appendChild(oplog);
+
+    if (IS_REGISTRY) {
+      var wn = el("button", { class: "sh-whatsnew", type: "button", title: "What’s New" }, "What’s New");
+      wn.addEventListener("click", function () { var b = byId("reg-whatsnew"); if (b) { b.click(); } });
+      right.appendChild(wn);
+    }
+
+    var help = el("button", { class: "sh-icobtn", type: "button", title: "Help & about", "aria-label": "Help and about" }, svg.help);
+    help.addEventListener("click", function () { openSettings("about"); });
+    right.appendChild(help);
+
+    if (IS_REGISTRY) {
+      var lock = el("button", { class: "sh-icobtn", type: "button", title: "Lock workspace", "aria-label": "Lock workspace" }, svg.lock);
+      lock.addEventListener("click", function () { var b = byId("reg-lock"); if (b) { b.click(); } });
+      right.appendChild(lock);
+    }
+
     var logout = el("button", { class: "sh-icobtn", type: "button", title: "Return to cover", "aria-label": "Return to cover" }, svg.logout);
-    // wire the universally-safe ones now (both surfaces)
     logout.addEventListener("click", function () { location.href = HERO; });
-    right.appendChild(oplog); right.appendChild(wn); right.appendChild(help); right.appendChild(lock); right.appendChild(logout);
+    right.appendChild(logout);
     bar.appendChild(right);
 
     /* ---- Row 3: context selector ---- */
     var ctxToggle = el("button", { class: "sh-ctx-toggle", type: "button", title: "Collapse context row", "aria-label": "Toggle context row" }, svg.chevL);
     var ctx = el("div", { class: "sh-context" });
-    ctx.appendChild(el("span", { class: "sh-ctx-label" }, "Select context"));
-    ctx.appendChild(el("select", { class: "sh-ctx-picker", "aria-label": "Select operation", disabled: "disabled" }, '<option>All operations</option>'));
+    ctx.appendChild(el("span", { class: "sh-ctx-label" }, "Context"));
+    // Honest, non-interactive indicator (operation scoping is driven inside
+    // each surface — the shell reflects it rather than offering a dead control).
+    ctx.appendChild(el("span", { class: "sh-ctx-value" }, "All operations"));
     var gear = el("button", { class: "sh-icobtn sh-ctx-gear", type: "button", title: "Settings", "aria-label": "Settings" }, svg.gear);
+    gear.addEventListener("click", function () { openSettings("settings"); });
     ctx.appendChild(gear);
 
     // collapse/expand row 3
@@ -389,6 +415,60 @@
     document.body.insertBefore(shell, document.body.firstChild);
 
     wireMenuBehaviour(shell);
+  }
+
+  /* ---- Settings / About modal ---------------------------------------
+     Real, working controls only: theme (drives the existing #theme-toggle),
+     identity (read-only display of the current user), and an About panel.
+     Opened by the gear (settings) and the help icon (about).            */
+  function currentTheme() { return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
+  function setTheme(t) {
+    if (currentTheme() === t) { return; }
+    var tog = byId("theme-toggle"); // theme.js owns the real toggle + persistence
+    if (tog) { tog.click(); }
+  }
+
+  function openSettings(focusSection) {
+    closeSettings();
+    var veil = el("div", { class: "sh-modal-veil", role: "dialog", "aria-modal": "true", "aria-label": "settings" });
+    var m = el("div", { class: "sh-modal" });
+    var theme = currentTheme();
+    m.innerHTML =
+      '<h2>Settings</h2>' +
+      '<div class="sh-modal-sec" id="sh-set-appearance"><h3>Appearance</h3>' +
+        '<label>Theme' +
+          '<select id="sh-set-theme">' +
+            '<option value="dark"' + (theme === "dark" ? " selected" : "") + '>Dark (periwinkle)</option>' +
+            '<option value="light"' + (theme === "light" ? " selected" : "") + '>Light (cream)</option>' +
+          '</select>' +
+        '</label>' +
+      '</div>' +
+      '<div class="sh-modal-sec"><h3>Identity</h3>' +
+        '<label>Signed in as<span style="font-family:var(--mono);color:var(--dim)">G5 · Benedict WILSON</span></label>' +
+        '<p style="font-size:var(--fs-xs);color:var(--faint);margin:2px 0 0">Set your working identity from the header user chip on the ' + (IS_REGISTRY ? "database" : "workbench") + '.</p>' +
+      '</div>' +
+      '<div class="sh-modal-sec" id="sh-set-about"><h3>About</h3>' +
+        '<p style="font-size:var(--fs-sm);color:var(--dim);margin:0 0 6px">SOLAR — link-analysis workbench and structured-intelligence database. Local-only: all case data stays in this browser.</p>' +
+        '<p style="font-size:var(--fs-xs);color:var(--faint);margin:0">OFFICIAL · one shared case across both surfaces.</p>' +
+      '</div>' +
+      '<div class="sh-modal-foot">' +
+        '<button class="btn" id="sh-set-close" type="button">Close</button>' +
+      '</div>';
+    veil.appendChild(m);
+    document.body.appendChild(veil);
+
+    byId("sh-set-theme").addEventListener("change", function () { setTheme(this.value); });
+    byId("sh-set-close").addEventListener("click", closeSettings);
+    veil.addEventListener("click", function (e) { if (e.target === veil) { closeSettings(); } });
+    document.addEventListener("keydown", settingsEsc);
+
+    var focusTarget = focusSection === "about" ? byId("sh-set-about") : byId("sh-set-theme");
+    if (focusTarget && focusTarget.focus) { try { focusTarget.focus(); } catch (e) { /* noop */ } }
+  }
+  function settingsEsc(e) { if (e.key === "Escape") { closeSettings(); } }
+  function closeSettings() {
+    var v = document.querySelector(".sh-modal-veil");
+    if (v) { v.remove(); document.removeEventListener("keydown", settingsEsc); }
   }
 
   /* Only one tab menu open at a time; Esc closes; outside-click closes. */

@@ -102,6 +102,10 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
   background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 4px 9px; min-width: 220px;
 }
+.sh-ctx-value {
+  font-size: var(--fs-xs); font-family: var(--mono); color: var(--text);
+  letter-spacing: .01em;
+}
 .sh-ctx-gear { margin-left: auto; }
 
 /* ---- the mega-menu panel (full-width, drops from the tab bar) ---- */
