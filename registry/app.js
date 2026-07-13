@@ -685,7 +685,7 @@
       var W=window.RegistryWatchlist; var results=W?W.scan(all):[];
       function rulesOf(a){ return a.map(function(s){return String(s).split('::')[0];}).filter(function(v,i,arr){return arr.indexOf(v)===i;}).join(', '); }
       var body = results.length ? results.map(function(res){ var w=res.watch;
-        var hits = res.hits.length ? '<ul class="sh-hits">'+res.hits.map(function(h){ return '<li class="sh-hit" data-urn="'+esc(h.urn)+'"><span class="sh-urn">'+esc(h.urn)+'</span><span class="sh-op">'+esc(h.operation)+'</span><span class="sh-t">'+esc(h.title)+'</span><span class="sh-date">'+esc(h.date)+'</span><span class="sh-by">'+esc(rulesOf(h.matchedBy))+'</span></li>'; }).join('')+'</ul>' : '<p class="empty">No hits yet.</p>';
+        var hits = res.hits.length ? '<ul class="sh-hits">'+res.hits.map(function(h){ return '<li class="sh-hit" data-urn="'+esc(h.urn)+'"><span class="sh-urn">'+esc(h.urn)+'</span><span class="sh-op">'+esc(h.operation)+'</span><span class="sh-t" title="'+esc(h.title)+'">'+esc(h.title)+'</span><span class="sh-date">'+esc(h.date)+'</span><span class="sh-by">'+esc(rulesOf(h.matchedBy))+'</span></li>'; }).join('')+'</ul>' : '<p class="empty">No hits yet.</p>';
         return '<div class="sh-card"><div class="sh-head"><div><span class="sh-name">'+esc(w.label)+'</span>'+(w.dob?' <span class="dos-dim">DOB '+esc(w.dob)+'</span>':'')+(w.note?' <span class="sh-note">'+esc(w.note)+'</span>':'')+'</div><div><span class="sh-count">'+res.hitCount+' hit'+(res.hitCount===1?'':'s')+'</span> <button type="button" class="btn danger sh-rm" data-id="'+esc(w.id)+'">Remove</button></div></div>'+hits+'</div>'; }).join('')
         : '<p class="empty">Watchlist is empty. Open a nominal record (Dossier) and use Add to watchlist to receive silent hits.</p>';
       els.main.innerHTML='<div class="detail page"><div class="crumbs"><button type="button" class="linklike" id="sh-back">\u2190 Back</button></div><h1 tabindex="-1">Silent Hit List</h1><p class="hint">Nominals of interest, matched against every report by the same engine as Master/Lower.</p>'+body+'</div>';
@@ -1560,9 +1560,12 @@
     var groupsHTML = _groups.map(function (g) {
       var repTotal = g.ops.reduce(function (s, nm) { return s + (counts[nm] || 0); }, 0);
       var ic = T.icon(g.ta);
+      // swatch is now accessible: role=img + aria-label names the threat area
+      // (was aria-hidden decoration) so screen readers announce the icon's meaning.
+      var swLabel = esc(g.ta) + ' threat area';
       var sw = ic
-        ? '<span class="ta-swatch has-icon" style="--ta-icon:url(assets/threat/' + ic + '.png)" aria-hidden="true"></span>'
-        : '<span class="ta-swatch" aria-hidden="true"></span>';
+        ? '<span class="ta-swatch has-icon" style="--ta-icon:url(assets/threat/' + ic + '.png)" role="img" aria-label="' + swLabel + '"></span>'
+        : '<span class="ta-swatch" role="img" aria-label="' + swLabel + '"></span>';
       return '<details class="ta-group"' + (q ? ' open' : '') + ' data-ta="' + esc(g.ta) + '" style="--ta:' + esc(T.colour(g.ta)) + '">' +
         '<summary class="ta-head">' + sw +
           '<span class="ta-name">' + esc(g.ta) + '</span>' +
