@@ -1,5 +1,5 @@
 /* CHART ROOM — theme.js
- * Dark (blue/purple, default) + light (cream/olive) theming with a toggle,
+ * Dark (periwinkle, default) + light (cream/olive) theming with a toggle,
  * plus the global cursor torch and per-button glass spotlight. Additive;
  * degrades safely if elements are absent. Respects prefers-reduced-motion.
  */

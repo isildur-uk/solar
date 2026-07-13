@@ -165,7 +165,7 @@
   /* ---------------- boot ---------------- */
 
   function boot() {
-    // Bloom colour picker retired: the accent is fixed (lime) via CSS tokens.
+    // Bloom colour picker retired: the accent is fixed (cosmic periwinkle) via CSS tokens.
     // We no longer apply any saved/amber accent inline, so it can't override
     // the redesign palette. (buildBloom / applyAccent kept but unused.)
     wireCards();

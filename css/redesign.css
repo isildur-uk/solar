@@ -1,6 +1,6 @@
 /* ============================================================
    SOLAR — redesign layer (loaded LAST)
-   Brings the chart screen in line with the hero: obsidian + lime,
+   Brings the chart screen in line with the hero: obsidian + periwinkle,
    Inter / Geist Mono, glass chrome, a unified 4px radius and a
    minimal 2-level elevation, plus the animated nebula behind the
    chart. Palette + font tokens live in app.css :root; this file is
@@ -51,7 +51,7 @@ input[type="text"], input[type="search"], textarea,
 #status-msg { box-shadow: var(--shadow-1); border: 1px solid var(--line); }
 .ctx-menu   { box-shadow: var(--shadow-2); }
 
-/* ---- buttons: ghost with a single lime breath (hero restraint) ---- */
+/* ---- buttons: ghost with a single periwinkle breath (hero restraint) ---- */
 .btn { transition: border-color .2s ease, color .2s ease, background-color .2s ease, box-shadow .2s ease; }
 .btn:hover { border-color: var(--accent-dim); color: var(--accent); box-shadow: 0 0 16px -7px var(--accent); }
 .btn.primary { border-color: var(--accent-dim); color: var(--accent); }
@@ -96,10 +96,10 @@ html[data-theme="light"] .modal-veil { background: rgba(40, 36, 26, 0.38); }
    v2 — lighter liquid-glass toolbar, dropdown menus, bigger inspector
    ============================================================ */
 
-/* lock the accent to lime (defend against any runtime override) */
+/* lock the accent to periwinkle (defend against any runtime override) */
 /* accent now themed in app.css :root + [data-theme=light] */
 
-/* buttons mimic the hero ENTER exactly: glass body + bevelled rim + lime breath */
+/* buttons mimic the hero ENTER exactly: glass body + bevelled rim + periwinkle breath */
 .btn {
   position: relative; isolation: isolate;
   display: inline-flex; align-items: center; justify-content: center;
@@ -253,7 +253,7 @@ details.menu[open] > summary {
 /* ============================================================
    Toolbar buttons — refined liquid glass (supersedes the earlier
    heavy-bevel version above). Clean specular sheen + soft bevel +
-   lime states; readable on the dark console. Appended = wins on
+   periwinkle states; readable on the dark console. Appended = wins on
    source order; .menu-pop items stay flat via higher specificity.
    ============================================================ */
 .btn, details.menu > summary {
@@ -299,7 +299,7 @@ details.menu[open] > summary {
 .btn:focus-visible, details.menu > summary:focus-visible {
   outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--accent), inset 0 1px 0 rgba(255,255,255,0.16);
 }
-/* ADD / primary — brighter lime glass so it leads the row without shouting */
+/* ADD / primary — brighter periwinkle glass so it leads the row without shouting */
 .btn.primary, details.menu.primary > summary {
   color: var(--accent); border-color: rgba(142,162,255,0.55);
   background:
@@ -320,7 +320,7 @@ details.menu[open] > summary {
     0 5px 14px rgba(0,0,0,0.42),
     0 0 22px -6px var(--accent);
 }
-/* the open dropdown trigger reads as an active lime-glass tab */
+/* the open dropdown trigger reads as an active periwinkle-glass tab */
 details.menu[open] > summary {
   color: var(--accent); border-color: var(--accent-dim);
   background:

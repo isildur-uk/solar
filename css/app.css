@@ -1,6 +1,6 @@
 ﻿/* CHART ROOM â€” app.css
  * Deliberate design language (BRIEF.md): dark analyst console, near-black
- * blue-grey ground, single lime accent, hairline borders, ~4px corners,
+ * blue-grey ground, single periwinkle accent, hairline borders, ~4px corners,
  * monospace for identifiers. No gradients, no purple, no card grids.
  */
 
@@ -765,7 +765,7 @@ mark.hl-cue.active { outline: 2px solid var(--accent); border-bottom-style: soli
 
 #layout-select { appearance: none; -webkit-appearance: none; }
 /* ============================================================
-   THEME SYSTEM — dark (blue/purple, default) + light (cream/olive)
+   THEME SYSTEM — dark (periwinkle, default) + light (cream/olive)
    plus liquid-glass tokens and the global cursor torch.
    ============================================================ */
 :root{

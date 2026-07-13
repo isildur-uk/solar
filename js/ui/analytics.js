@@ -1,6 +1,6 @@
 /* SOLAR — analytics.js (UI)
  * Case Analytics view. Hand-rolled SVG (no chart library) applying NYT/Upshot
- * discipline in SOLAR's dark palette: one hero accent (lime) with the rest in
+ * discipline in SOLAR's dark palette: one hero accent (periwinkle) with the rest in
  * grey, tabular figures, bars sorted descending from zero, direct value labels
  * (no legends), a declarative headline + subtitle + source per panel, the time
  * series annotated in-place at its peak, and crucial info visible without hover

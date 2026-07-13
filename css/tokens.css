@@ -30,7 +30,7 @@
   --sol-bone:        #dedcc9;   /* secondary luminance */
   --sol-white:       #ffffff;   /* emitted light — wordmark, primary text */
   --sol-signal:      #2563eb;   /* functional accent — focus only */
-  --sol-amber:       #8ea2ff;   /* the horizon glow — our brand accent */
+  --sol-accent:      #8ea2ff;   /* cosmic periwinkle — the horizon glow / brand accent */
   --sol-glow:        142, 162, 255;
 
   /* ---- type ---- */
