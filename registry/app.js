@@ -161,6 +161,30 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
+  /* Designed empty state — the sanctioned constellation motif (DESIGN.md):
+     quiet twinkling glyph (opacity ≤ .5, reduced-motion gated in CSS) + a
+     one-line explanation + an optional primary action button. XSS-safe:
+     title/hint are esc()'d; the action id/label are caller-provided literals.
+     opts = { title, hint, action:{ id, label } }                          */
+  var EMPTY_CONSTELLATION =
+    '<svg class="reg-empty-glyph" viewBox="0 0 220 120" aria-hidden="true" focusable="false">' +
+      '<g fill="none" stroke="currentColor" stroke-width="1">' +
+        '<path d="M30 92 82 34 138 66 196 22" opacity=".5"/>' +
+        '<path d="M82 34 110 96 138 66" opacity=".35"/></g>' +
+      '<g fill="currentColor">' +
+        '<circle cx="30" cy="92" r="4"/><circle cx="82" cy="34" r="5.5"/>' +
+        '<circle cx="138" cy="66" r="4.5"/><circle cx="196" cy="22" r="4"/>' +
+        '<circle cx="110" cy="96" r="3.5"/></g></svg>';
+  function emptyState(opts) {
+    opts = opts || {};
+    var action = opts.action
+      ? '<div class="reg-empty-actions"><button type="button" class="btn primary" id="' + opts.action.id + '">' + esc(opts.action.label) + '</button></div>'
+      : '';
+    return '<div class="reg-empty' + (opts.compact ? ' reg-empty-c' : '') + '">' + EMPTY_CONSTELLATION +
+      '<p class="reg-empty-title">' + esc(opts.title || '') + '</p>' +
+      (opts.hint ? '<p class="reg-empty-hint">' + esc(opts.hint) + '</p>' : '') +
+      action + '</div>';
+  }
   // Date filters display DD/MM (UK) but filterState stores ISO (yyyy-mm-dd) so the
   // query layer (query.js isoKey/passDate) is untouched. Convert only at the input boundary.
   function dmyToISO(s) {
@@ -685,11 +709,16 @@
       var W=window.RegistryWatchlist; var results=W?W.scan(all):[];
       function rulesOf(a){ return a.map(function(s){return String(s).split('::')[0];}).filter(function(v,i,arr){return arr.indexOf(v)===i;}).join(', '); }
       var body = results.length ? results.map(function(res){ var w=res.watch;
-        var hits = res.hits.length ? '<ul class="sh-hits">'+res.hits.map(function(h){ return '<li class="sh-hit" data-urn="'+esc(h.urn)+'"><span class="sh-urn">'+esc(h.urn)+'</span><span class="sh-op">'+esc(h.operation)+'</span><span class="sh-t" title="'+esc(h.title)+'">'+esc(h.title)+'</span><span class="sh-date">'+esc(h.date)+'</span><span class="sh-by">'+esc(rulesOf(h.matchedBy))+'</span></li>'; }).join('')+'</ul>' : '<p class="empty">No hits yet.</p>';
+        var hits = res.hits.length ? '<ul class="sh-hits">'+res.hits.map(function(h){ return '<li class="sh-hit" data-urn="'+esc(h.urn)+'"><span class="sh-urn">'+esc(h.urn)+'</span><span class="sh-op">'+esc(h.operation)+'</span><span class="sh-t" title="'+esc(h.title)+'">'+esc(h.title)+'</span><span class="sh-date">'+esc(h.date)+'</span><span class="sh-by">'+esc(rulesOf(h.matchedBy))+'</span></li>'; }).join('')+'</ul>' : '<p class="sh-nohits">No hits yet — this nominal has not matched any report.</p>';
         return '<div class="sh-card"><div class="sh-head"><div><span class="sh-name">'+esc(w.label)+'</span>'+(w.dob?' <span class="dos-dim">DOB '+esc(w.dob)+'</span>':'')+(w.note?' <span class="sh-note">'+esc(w.note)+'</span>':'')+'</div><div><span class="sh-count">'+res.hitCount+' hit'+(res.hitCount===1?'':'s')+'</span> <button type="button" class="btn danger sh-rm" data-id="'+esc(w.id)+'">Remove</button></div></div>'+hits+'</div>'; }).join('')
-        : '<p class="empty">Watchlist is empty. Open a nominal record (Dossier) and use Add to watchlist to receive silent hits.</p>';
+        : emptyState({
+            title: 'Your watchlist is empty',
+            hint: 'Open a nominal record (Dossier) and use “Add to watchlist”. Any report that matches will surface here as a silent hit.',
+            action: { id: 'sh-empty-browse', label: 'Browse operations' }
+          });
       els.main.innerHTML='<div class="detail page"><div class="crumbs"><button type="button" class="linklike" id="sh-back">\u2190 Back</button></div><h1 tabindex="-1">Silent Hit List</h1><p class="hint">Nominals of interest, matched against every report by the same engine as Master/Lower.</p>'+body+'</div>';
       document.getElementById('sh-back').addEventListener('click', showHome);
+      var shBrowse = document.getElementById('sh-empty-browse'); if (shBrowse) shBrowse.addEventListener('click', showHome);
       [].forEach.call(els.main.querySelectorAll('.sh-hit'), function(li){ li.addEventListener('click', function(){ showDetail(li.getAttribute('data-urn')); }); });
       [].forEach.call(els.main.querySelectorAll('.sh-rm'), function(b){ b.addEventListener('click', function(){ if(window.RegistryWatchlist) window.RegistryWatchlist.remove(b.getAttribute('data-id')); showSilentHits(); }); });
       focusView();
@@ -728,10 +757,10 @@
           +(m.memberCount>1?'<button type="button" class="btn secondary em-review" data-mid="'+esc(m.masterId)+'">'+(m.confirmed?'Reviewed':'Review '+m.memberCount)+'</button>':'')+'</span></div>';
         var review = m.memberCount>1 ? '<div class="em-review-box" id="rev-'+esc(m.masterId)+'" hidden><div class="em-review-h">These '+m.memberCount+' lower entities were resolved into one master by: '+esc(m.matchedBy.join(', '))+'</div><ul class="em-members">'+m.memberEntities.map(function(me){ return '<li data-urn="'+esc(me.urn)+'"><span class="em-m-urn">'+esc(me.urn)+'</span> '+esc(me.label)+' <span class="dos-dim">'+esc(me.operation)+'</span>'+(me.confirmed?' <span class="em-ok">confirmed</span>':'')+'</li>'; }).join('')+'</ul><div class="rm-actions"><button type="button" class="btn em-confirm" data-mid="'+esc(m.masterId)+'">Confirm matches</button></div></div>' : '';
         return '<div class="em-card">'+head+review+'</div>';
-      }).join('') : '<p class="empty">No master entities match.</p>';
+      }).join('') : emptyState({ compact: true, title: ql ? 'No master entities match “' + ql + '”' : 'No master entities', hint: 'Adjust the search above, or switch to the Lower view.' });
     } else {
       var ls=_entIdx.lower.filter(function(x){ return matchQ(x.e.label,x.e.attrs); });
-      html = ls.length ? ls.slice(0,300).map(function(x){ return '<div class="em-card"><div class="em-row em-lower" data-urn="'+esc(x.urn)+'">'+typeChip(x.e.type)+'<span class="em-label">'+esc(x.e.label)+'</span><span class="em-meta">'+esc(x.urn)+' · '+esc(x.operation)+'</span></div></div>'; }).join('') : '<p class="empty">No lower entities match.</p>';
+      html = ls.length ? ls.slice(0,300).map(function(x){ return '<div class="em-card"><div class="em-row em-lower" data-urn="'+esc(x.urn)+'">'+typeChip(x.e.type)+'<span class="em-label">'+esc(x.e.label)+'</span><span class="em-meta">'+esc(x.urn)+' · '+esc(x.operation)+'</span></div></div>'; }).join('') : emptyState({ compact: true, title: ql ? 'No lower entities match “' + ql + '”' : 'No lower entities', hint: 'Adjust the search above, or switch to the Master view.' });
     }
     box.innerHTML=html;
     [].forEach.call(box.querySelectorAll('.em-dossier'), function(b){ b.addEventListener('click', function(){ requireAccess({action:'View nominal record', target:b.getAttribute('data-label')}, function(){ showPerson(b.getAttribute('data-eid')); }); }); });
@@ -1583,7 +1612,11 @@
         '<button type="button" class="btn secondary" id="home-hits">Silent hits</button> ' +
         '<button type="button" class="btn secondary" id="home-access">Access log</button> ' +
         '<button type="button" class="btn danger" id="home-clear">Clear all reports</button></div>' +
-      '<div class="ta-groups">' + (groupsHTML || '<p class="empty">No operations match.</p>') + '</div>' +
+      '<div class="ta-groups">' + (groupsHTML || emptyState({
+        title: q ? 'No operations match “' + q + '”' : 'No operations yet',
+        hint: q ? 'Try a different search term, or clear the filter to see every threat area.' : 'Load the worked demo to populate operations and reports.',
+        action: q ? { id: 'home-empty-clear', label: 'Clear search' } : { id: 'home-empty-demo', label: 'Reload demo' }
+      })) + '</div>' +
       '</div>';
     els.main.querySelectorAll(".op-card").forEach(function (c) { c.addEventListener("click", function () { selectOp(c.getAttribute("data-op")); }); });
     var hn = document.getElementById("home-new"); if (hn) hn.addEventListener("click", function () { showForm(null); });
@@ -1593,6 +1626,9 @@
     var hc = document.getElementById("home-clear"); if (hc) hc.addEventListener("click", clearAllReports);
     var hacc = document.getElementById("home-access"); if (hacc) hacc.addEventListener("click", showAccessLog);
     var hhit = document.getElementById("home-hits"); if (hhit) hhit.addEventListener("click", showSilentHits);
+    var hEmptyClear = document.getElementById("home-empty-clear");
+    if (hEmptyClear) hEmptyClear.addEventListener("click", function () { var ob = document.getElementById("op-search"); if (ob) { ob.value = ""; } renderOpTabs(); allRows().then(renderHome); });
+    var hEmptyDemo = document.getElementById("home-empty-demo"); if (hEmptyDemo) hEmptyDemo.addEventListener("click", loadDemo);
     var hent = document.getElementById("home-entities"); if (hent) hent.addEventListener("click", function(){ requireAccess({action:'Entity search'}, showEntities); });
     try{ if(window.RegistryWatchlist){ var _sc=window.RegistryWatchlist.scan(all); var _n=_sc.reduce(function(a,x){return a+x.hitCount;},0); if(_n && hhit) hhit.textContent="Silent hits ("+_n+")"; } }catch(e){}
   }
@@ -1773,13 +1809,17 @@
   function showWelcome() {
     setBanner("OFFICIAL");
     els.main.innerHTML =
-      '<div class="detail page"><h1 tabindex="-1">No reports</h1>' +
-      '<div class="toolbar">' +
-      '<button type="button" class="btn" id="w-new">+ New report</button> ' +
+      '<div class="detail page"><h1 tabindex="-1" class="visually-hidden">No reports</h1>' +
+      emptyState({
+        title: 'No reports in the registry yet',
+        hint: 'Create the first intelligence report, or load the worked demo dataset to explore a populated registry.',
+        action: { id: 'w-empty-new', label: '+ New report' }
+      }) +
+      '<div class="toolbar toolbar-centred">' +
       '<button type="button" class="btn secondary" id="w-load-demo">Load demo dataset</button> ' +
       '<button type="button" class="btn secondary" id="w-export-all">Export all authorised &rarr; SOLAR case</button> ' +
       '<button type="button" class="btn danger" id="w-clear">Clear all reports</button></div></div>';
-    document.getElementById("w-new").addEventListener("click", function () { showForm(null); });
+    document.getElementById("w-empty-new").addEventListener("click", function () { showForm(null); });
     var _ld = document.getElementById("w-load-demo"); if (_ld) _ld.addEventListener("click", loadDemo);
     var _ex = document.getElementById("w-export-all"); if (_ex) _ex.addEventListener("click", exportAllAuthorised);
     var _cl = document.getElementById("w-clear"); if (_cl) _cl.addEventListener("click", clearAllReports);

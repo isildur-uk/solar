@@ -155,6 +155,27 @@ h1[tabindex="-1"]:focus{outline:none}
 .report-item[aria-current="true"] .ri-urn::after{content:" \00b7 open";color:var(--dim);font-weight:600;letter-spacing:.04em}
 .empty{color:var(--faint);font-size:var(--fs-sm);padding:.5rem 0}
 
+/* Designed empty state — sanctioned constellation motif (mirrors #chart-empty).
+   Twinkle opacity ceiling ≤ .5 per DESIGN.md; reduced-motion gated. */
+.reg-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:44px 16px;text-align:center;color:var(--faint)}
+.reg-empty-glyph{width:150px;color:var(--accent);opacity:.42;transform-origin:center;
+  animation:reg-empty-twinkle 7s ease-in-out infinite alternate}
+@keyframes reg-empty-twinkle{
+  from{opacity:.3;transform:scale(.992)}
+  to{opacity:.46;transform:scale(1.008)}
+}
+.reg-empty-title{margin:0;font:600 var(--fs-md) var(--sans);color:var(--dim)}
+.reg-empty-hint{margin:0;font:var(--fs-xs)/1.6 var(--mono);color:var(--faint);max-width:46ch}
+.reg-empty-actions{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;justify-content:center}
+@media (prefers-reduced-motion: reduce){
+  .reg-empty-glyph{animation:none;opacity:.42}
+}
+.toolbar-centred{justify-content:center;display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.reg-empty-c{padding:26px 16px;gap:8px}
+.reg-empty-c .reg-empty-glyph{width:96px}
+.reg-empty-c .reg-empty-title{font-size:var(--fs-sm)}
+
 /* Pills — hairline outline, semantic hue text */
 .pill{display:inline-block;font-size:var(--fs-2xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.08rem .4rem;border:1px solid currentColor;border-radius:var(--radius)}
 .pill.mk-OFFICIAL{color:var(--mk-official)}
