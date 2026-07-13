@@ -55,8 +55,28 @@ input[type="text"], input[type="search"], textarea,
 /* ---- buttons: ghost with a single periwinkle breath (hero restraint) ---- */
 .btn { transition: border-color .2s ease, color .2s ease, background-color .2s ease, box-shadow .2s ease; }
 .btn:hover { border-color: var(--accent-dim); color: var(--accent); box-shadow: 0 0 16px -7px var(--accent); }
-.btn.primary { border-color: var(--accent-dim); color: var(--accent); }
-.btn.primary:hover { background: var(--accent-soft); box-shadow: 0 0 18px -6px var(--accent); }
+/* 020 — Push Button tactile depress on the primary action; 4px radius; --accent-soft kept.
+   The bottom box-shadow is the "edge"; :active drops the button onto it. */
+.btn.primary {
+  border-color: var(--accent-dim); color: var(--accent);
+  border-radius: var(--radius);                                  /* 4px */
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--accent-dim) 70%, #000);   /* the edge */
+  transition: transform .06s ease, box-shadow .06s ease, background .2s ease;
+}
+.btn.primary:hover {
+  background: var(--accent-soft);                                /* keep the soft glow bg */
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--accent-dim) 70%, #000),
+              0 0 18px -6px var(--accent);                       /* keep the hover glow, add edge */
+}
+.btn.primary:active {
+  transform: translateY(3px);                                   /* drop onto the edge */
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--accent-dim) 70%, #000),
+              0 0 18px -6px var(--accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn.primary { transition: background .2s ease; }             /* keep colour feedback, no movement */
+  .btn.primary:active { transform: none; box-shadow: 0 1px 0 color-mix(in srgb, var(--accent-dim) 70%, #000), 0 0 18px -6px var(--accent); }
+}
 .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--accent); }
 
 /* ---- brand wordmark echoes the hero's refined silver→cream fill ---- */
