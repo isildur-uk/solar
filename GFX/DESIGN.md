@@ -34,6 +34,8 @@ type), and a restrained chromatic-prism entry animation.
 
 > **Build-standard note (gate 7 — documented exception).** The Product Build Standard bans Inter *as a lazy default*. SOLAR's use of Inter 300 is the opposite: a deliberate, documented type choice — weight-300 luminosity on a cosmic-void surface, per the xAI reference lineage above, paired with Geist Mono for technical annotation. This is a conscious exception to gate 7, not a default. Keep it as specified; don't "correct" it to satisfy the gate.
 
+> **Gradient-CTA decision (Ben-approved 2026-07-13).** Gradient *fill* is permitted on **PRIMARY CTAs only** (`.btn.primary`), rendered as an animated **cosmic periwinkle→violet** sweep (`#8ea2ff → #c9d2ff → #b39dff`) that travels on hover. This is a deliberate, scoped exception — it does **not** reopen the general ban: the blue→purple / indigo→violet CTA gradient (the AI-tell) still stands, and gradient fill is **cosmic only** and **primary-CTA only** (never every button, never the hero's liquid-glass pills). Keep it tasteful/premium, not garish.
+
 ## Components
 - **Wordmark** — Inter 300, `clamp(3.4rem, 13vw, 9.5rem)`, white `#fff`, layered light bloom
   behind (asymmetric, white→amber→transparent). The typographic hero *is* the visual hero.

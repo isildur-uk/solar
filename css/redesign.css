@@ -272,9 +272,26 @@ html[data-theme="light"] .btn, html[data-theme="light"] details.menu>summary{ te
 .btn:hover, details.menu>summary:hover{ color:var(--accent); border-color:var(--accent-dim); transform:translateY(-1px); box-shadow:var(--glass-shadow), 0 0 20px -8px var(--accent) }
 .btn:active, details.menu>summary:active{ transform:translateY(0) scale(0.985) }
 .btn:focus-visible, details.menu>summary:focus-visible{ outline:none; box-shadow:0 0 0 2px var(--bg), 0 0 0 3px var(--accent) }
-.btn.primary, details.menu.primary>summary{ color:var(--primary-text); border-color:color-mix(in srgb,var(--accent) 60%,transparent); background:var(--primary-fill) }
-.btn.primary::after, details.menu.primary>summary::after{ background:var(--primary-spec) }
-.btn.primary:hover, details.menu.primary>summary:hover{ color:var(--primary-text); border-color:var(--accent) }
+/* Menu-summary primaries keep the glass fill (they're triggers, not CTAs). */
+details.menu.primary>summary{ color:var(--primary-text); border-color:color-mix(in srgb,var(--accent) 60%,transparent); background:var(--primary-fill) }
+details.menu.primary>summary::after{ background:var(--primary-spec) }
+details.menu.primary>summary:hover{ color:var(--primary-text); border-color:var(--accent) }
+/* PRIMARY CTA — Ben's .btn-grad, cosmic-recoloured: an animated periwinkle→
+   violet sweep (was blue→white→blue, the AI-tell). 220% wide, travels on hover.
+   Ben-approved 2026-07-13 (see DESIGN.md). Primary buttons only — not the hero
+   liquid-glass pills, not menu triggers. */
+.btn.primary{
+  color:#0b0d16; border-color:transparent;
+  background:linear-gradient(100deg,#8ea2ff 0%,#c9d2ff 26%,#b39dff 52%,#c9d2ff 78%,#8ea2ff 100%);
+  background-size:220% auto; background-position:left center;
+  box-shadow:0 3px 0 color-mix(in srgb,var(--accent-dim) 70%,#000), 0 0 18px -8px var(--accent);
+  transition:background-position .5s ease, box-shadow .2s ease, transform .06s ease;
+}
+.btn.primary::after{ opacity:0 }
+.btn.primary:hover{ color:#0b0d16; border-color:transparent; background-position:right center;
+  box-shadow:0 3px 0 color-mix(in srgb,var(--accent-dim) 70%,#000), 0 0 22px -6px var(--accent) }
+.btn.primary:focus-visible{ outline:none; box-shadow:0 0 0 2px var(--bg), 0 0 0 3px #fff }
+@media (prefers-reduced-motion: reduce){ .btn.primary{ transition:box-shadow .2s ease } }
 details.menu[open]>summary{ color:var(--accent); border-color:var(--accent-dim); background:var(--primary-fill) }
 .btn.danger:hover{ color:var(--bad); border-color:var(--bad); box-shadow:var(--glass-shadow), 0 0 20px -8px var(--bad) }
 .btn:disabled{ opacity:0.42 }

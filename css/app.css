@@ -144,8 +144,10 @@ body {
 }
 .btn:hover { border-color: var(--accent-dim); color: var(--accent); }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* PRIMARY CTA base — the cosmic gradient (Ben's .btn-grad) is defined in the
+   authoritative redesign.css layer, which loads after this file and wins. This
+   base keeps the periwinkle ink for the no-redesign.css case. */
 .btn.primary { border-color: var(--accent-dim); color: var(--accent); }
-.btn.primary:hover { background: rgba(142, 162, 255, 0.08); }
 .btn:disabled { opacity: 0.4; cursor: default; }
 .btn.danger:hover { border-color: var(--bad); color: var(--bad); }
 

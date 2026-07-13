@@ -461,7 +461,7 @@
       '</fieldset>' +
 
       '<div class="toolbar">' +
-        '<button type="submit" class="btn">Save report</button>' +
+        '<button type="submit" class="btn primary">Save report</button>' +
         '<button type="button" id="btn-cancel" class="btn secondary">Cancel</button>' +
       '</div>' +
       '</form>';
