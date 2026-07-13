@@ -71,7 +71,7 @@ UI/UX audit by `improve-ui` (dual-input: source `Solar/` + rendered `docs/ux-sho
 | 018 | hero-wordmark-sheen | Motion/Brand | S | — | TODO — STOPPED per escape hatch. The plan targets `#solar-mark .word` in `css/hero.css`, but `css/hero.css` is linked by index.html, NOT hero.html, and NO element has `id="solar-mark"` in any HTML (orphan component). The cover wordmark that actually renders is `<h1 class="wordmark" id="wordmark">` painted by the inline `.wordmark` rule at hero.html:123, whose `background:` is a star-tracking radial light-spot + silver→cream clip gradient. A Chromia `background-image` sheen would overwrite that signature paint (escape-hatch STOP #2). No edits made. |
 | 019 | physics-geo-real-toggles | Interaction/Brand | M | 007 | DONE (Option A — restyled the aria-pressed buttons as switches; CSS-only, plan-007 wiring preserved) |
 | 020 | button-press-feedback | Motion/Interaction | S | — | DONE |
-| 021 | menu-popover-glide | Motion | S | — | TODO |
+| 021 | menu-popover-glide | Motion | S | — | DONE (curve swap on .menu-pop; #ct-pop left static per escape hatch — it does not animate; added a reduced-motion guard as no blanket rule existed) |
 | 022 | tab-segment-pill-glide | Motion/Interaction | M | — | TODO (flagged surface — see note) |
 | 023 | grade-chip-tooltips | A11y/Content/Trust | S | — | TODO |
 

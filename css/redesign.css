@@ -142,9 +142,12 @@ details.menu[open] > summary {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow-2);
-  animation: menuIn .14s ease;
+  animation: menuIn .14s cubic-bezier(0.16, 1, 0.3, 1);   /* 021 — glide easing (kinetics #06) */
 }
 @keyframes menuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .menu-pop { animation-duration: .01s; }   /* 021 — popover opens near-instant */
+}
 .menu-pop .btn, #ct-pop .btn, #ct-pop select, #ct-pop summary {
   width: 100%; text-align: left; justify-content: flex-start;
   background: transparent; border-color: transparent; box-shadow: none;
