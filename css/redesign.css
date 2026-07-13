@@ -162,6 +162,14 @@ details.menu[open] > summary {
   padding: 7px 10px;
 }
 .menu-pop .btn::before, #ct-pop .btn::before { display: none; }
+/* Inside a menu, a .primary item was getting the periwinkle fill and read as "selected"
+   for no reason (Ben #5). Menu items are equal options — neutralise the fill; keep the
+   recommended one bold + accent-coloured text so it still leads, without a filled state. */
+.menu-pop .btn.primary, #ct-pop .btn.primary {
+  background: transparent; border-color: transparent; box-shadow: none;
+  color: var(--accent); font-weight: 600;
+}
+.menu-pop .btn.primary::after, #ct-pop .btn.primary::after { display: none; }
 .menu-pop .btn:hover, #ct-pop .btn:hover { background: rgba(142, 162, 255, 0.08); border-color: transparent; box-shadow: none; transform: none; color: var(--accent); }
 .menu-pop .btn.danger:hover, #ct-pop .btn.danger:hover { background: rgba(217, 128, 128, 0.10); color: var(--bad); }
 
