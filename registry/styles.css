@@ -95,6 +95,10 @@ html:not([data-theme="light"]) .main{background:transparent}
 @media(max-width:820px){.main{padding:1rem}}
 
 .toolbar{display:flex;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap;align-items:center}
+/* Registry-home action row is retired from view — every action lives in the
+   mega-menu now. The buttons stay in the DOM (the mega-menu proxies some by id
+   via .click()); this hides the whole row + removes it from the tab order. */
+.toolbar.is-proxy-only{display:none !important}
 .search{width:100%;padding:.5rem .6rem;border:1px solid var(--line);background:var(--panel-2);color:var(--text);font-family:var(--mono);font-size:var(--fs-sm);border-radius:var(--radius)}
 .search::placeholder{color:var(--faint)}
 .search:focus{outline:none;border-color:var(--accent-dim)}

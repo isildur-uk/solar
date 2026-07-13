@@ -1630,15 +1630,19 @@
     }).join('');
     els.main.innerHTML = '<div class="detail home">' +
       '<h1 tabindex="-1">Operations' + (q ? ' \u00b7 matching \u201c' + esc(q) + '\u201d' : '') + '</h1>' +
-      '<div class="toolbar">' +
-        '<button type="button" class="btn" id="home-new">+ New report</button> ' +
-        '<button type="button" class="btn secondary" id="home-all">View all reports &rarr;</button> ' +
-        '<button type="button" class="btn secondary" id="home-export">Export authorised &rarr; SOLAR case</button> ' +
-        '<button type="button" class="btn secondary" id="home-reload">Reload demo</button> ' +
-        '<button type="button" class="btn secondary" id="home-entities">Entity search</button> ' +
-        '<button type="button" class="btn secondary" id="home-hits">Silent hits</button> ' +
-        '<button type="button" class="btn secondary" id="home-access">Access log</button> ' +
-        '<button type="button" class="btn danger" id="home-clear">Clear all reports</button></div>' +
+      // The home action row is retired from view: every action lives in the
+      // mega-menu now (Ben: redundant pills). The buttons are KEPT but hidden
+      // (class="toolbar is-proxy-only") because the mega-menu proxies several of
+      // them by id via .click() \u2014 deleting them would break those menu items.
+      '<div class="toolbar is-proxy-only" aria-hidden="true">' +
+        '<button type="button" class="btn" id="home-new" tabindex="-1">+ New report</button> ' +
+        '<button type="button" class="btn secondary" id="home-all" tabindex="-1">View all reports &rarr;</button> ' +
+        '<button type="button" class="btn secondary" id="home-export" tabindex="-1">Export authorised &rarr; SOLAR case</button> ' +
+        '<button type="button" class="btn secondary" id="home-reload" tabindex="-1">Reload demo</button> ' +
+        '<button type="button" class="btn secondary" id="home-entities" tabindex="-1">Entity search</button> ' +
+        '<button type="button" class="btn secondary" id="home-hits" tabindex="-1">Silent hits</button> ' +
+        '<button type="button" class="btn secondary" id="home-access" tabindex="-1">Access log</button> ' +
+        '<button type="button" class="btn danger" id="home-clear" tabindex="-1">Clear all reports</button></div>' +
       '<div class="ta-groups">' + (groupsHTML || emptyState({
         title: q ? 'No operations match “' + q + '”' : 'No operations yet',
         hint: q ? 'Try a different search term, or clear the filter to see every threat area.' : 'Load the worked demo to populate operations and reports.',
