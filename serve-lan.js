@@ -6,7 +6,8 @@ const T={html:"text/html; charset=utf-8",js:"text/javascript; charset=utf-8",css
 json:"application/json",csv:"text/csv",svg:"image/svg+xml",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",
 gif:"image/gif",ico:"image/x-icon",woff:"font/woff",woff2:"font/woff2",ttf:"font/ttf",
 docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-wasm:"application/wasm",gz:"application/gzip",map:"application/json",txt:"text/plain; charset=utf-8"};
+wasm:"application/wasm",gz:"application/gzip",map:"application/json",txt:"text/plain; charset=utf-8",
+mp3:"audio/mpeg",ogg:"audio/ogg"};
 const mime=p=>T[(p.split(".").pop()||"").toLowerCase()]||"application/octet-stream";
 http.createServer((req,res)=>{
   let p=decodeURIComponent((req.url.split("?")[0]||"/"));

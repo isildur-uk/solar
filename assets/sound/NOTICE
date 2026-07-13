@@ -1,0 +1,28 @@
+SOLAR — UI sound cues
+======================
+
+The UI sound effects in this directory are drawn from the "minimal" pack of
+uisfx by Romain Simon.
+
+  Source : https://github.com/romainsimon/uisfx
+  Audio  : CC0 1.0 Universal (public domain dedication) — no attribution required
+  Code   : MIT (the uisfx runtime; not used here — we ship a small local manager)
+
+Because the audio is released under CC0, no attribution is legally required.
+This NOTICE is a courtesy credit recording provenance.
+
+Files used (semantic cue -> file):
+  menu / palette open   -> open.{mp3,ogg}
+  toggle on             -> toggle-on.{mp3,ogg}
+  toggle off            -> toggle-off.{mp3,ogg}
+  success / commit      -> success.{mp3,ogg}
+  error / access-denied -> error.{mp3,ogg}
+  notify / silent-hit   -> notification.{mp3,ogg}
+  select (report/entity)-> select.{mp3,ogg}
+
+Only these curated cues are copied in. The full 78-cue taxonomy and the other
+packs (organic, mechanical, cinematic) were auditioned and deliberately not
+shipped — "minimal" was chosen for the most restrained, professional tone.
+
+Sound is always supplementary. It reinforces visible feedback and is never the
+sole signal for any state. A persistent mute preference is provided.
