@@ -57,13 +57,22 @@ Record the decision even if the answer is "measured, cost is negligible, change 
 - Do NOT delete `css/redesign.css:124` as a perf action — it is dead CSS with zero runtime cost; its removal belongs to plan 012.
 
 ## Decision log
-(Executor fills this in with the measured numbers before closing the plan.)
-- At-rest compositor busy? __  Idle frame cost: __
-- Workbench INP (baseline): __ ms.  Lighthouse Performance: __.
-- Cut A (`.btn` blur) — apply? __  evidence: __
-- Cut B (`#cursor-torch`) — apply? __  evidence: __
-- Cut C (at-rest loops) — apply? __  evidence: __
-- Post-change INP (if any cut applied): __ ms.
+Status: **BLOCKED — needs live perf session.** Executor (2026-07-13) confirmed the STATIC facts but could not run a live INP/Lighthouse trace (no browser session with the demo case loaded in this environment). Per the operating rule "no effect removed without a before/after number", NO cut was applied.
+
+Static verification (done, at current commit — line numbers post-plan-shift):
+- Dead CSS confirmed: `url(#liquid-glass)` exists ONLY at `css/redesign.css:125` (block 1). Block 3 redefines `.btn::before` at `css/redesign.css:353` with a noise-SVG background and NO `url(#liquid-glass)` — so the filter never renders. (Its removal is plan 012, not a perf action.)
+- Live per-button cost confirmed as block 3's `backdrop-filter:blur(12px) saturate(1.2)` at `css/redesign.css:348`, applied to every `.btn` and `details.menu > summary`.
+- At-rest infinite loops present and reduced-motion-gated (`css/solar.css`): twinkle, comet, status-pulse. `#cursor-torch` full-viewport layer present, reduced-motion-gated (`css/app.css`).
+
+Measurements (require a live session — NOT captured here):
+- At-rest compositor busy? __needs live trace__  Idle frame cost: __needs live trace__
+- Workbench INP (baseline): __needs live trace__ ms.  Lighthouse Performance: __needs live trace__.
+- Cut A (`.btn` blur, `redesign.css:348`) — apply? __deferred: needs live trace__
+- Cut B (`#cursor-torch`) — apply? __deferred: needs live trace__
+- Cut C (at-rest loops) — apply? __deferred: needs live trace__
+- Post-change INP (if any cut applied): __n/a — no cut applied__
+
+Next step to close: serve the app, load a demo case, record a 6s at-rest Performance trace + an interaction trace (toolbar clicks, node drag) for INP, run Lighthouse Performance, then decide A/B/C with the numbers attached.
 
 ## Maintenance note
 Any future "make it snappier" request must attach a trace before removing a Solar effect — this plan sets that precedent. If plan 012 lands, re-verify the winning glass block is the one traced here (line numbers will shift).
