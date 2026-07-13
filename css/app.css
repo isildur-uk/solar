@@ -839,9 +839,12 @@ mark.hl-cue.active { outline: 2px solid var(--accent); border-bottom-style: soli
   --grain-blend:overlay; --grain-opacity:0.05;
 }
 html[data-theme="light"]{
-  --bg:#f2ecdd; --panel:#fbf8ef; --panel-2:#efe8d7; --panel-3:#e7dfcb;
-  --line:#ddd5c3; --line-2:#cec5af;
-  --text:#211f18; --dim:#635d4e; --faint:#67624f;   /* was #8b8474 (~3.1:1); #67624f ≈5.2:1 on #f2ecdd */
+  /* Softer, warmer light palette (Ben: the old one read harsh). Cream is gentler,
+     text is a warm dark rather than near-black, so contrast is calmer — still AA:
+     text 11.8:1, dim 5.3:1, faint 4.7:1, accent 4.6:1. */
+  --bg:#efe9db; --panel:#f6f1e6; --panel-2:#e9e2d1; --panel-3:#e0d8c4;
+  --line:#d9d0bd; --line-2:#cabfa8;
+  --text:#2e2a21; --dim:#655e50; --faint:#6e6656;
   /* light-theme accent RE-MAPS to periwinkle that passes AA on cream (#4a5bd6 ≈5.2:1);
      the old chartreuse/olive (#6b7a2f) is retired per the cosmic-periwinkle ratification. */
   --accent:#4a5bd6; --accent-dim:#3b49ac; --accent-soft:rgba(74,91,214,0.14); --accent-2:#6a5fc4;
@@ -850,7 +853,7 @@ html[data-theme="light"]{
   --glass-fill:linear-gradient(180deg,rgba(255,255,255,0.75) 0%,rgba(255,255,255,0.30) 46%,rgba(0,0,0,0.03) 100%),rgba(251,248,239,0.55);
   --glass-border:rgba(80,74,58,0.24);
   --glass-shadow:inset 0 1px 0 rgba(255,255,255,0.9),inset 0 -1px 0 rgba(0,0,0,0.08),0 2px 8px rgba(60,52,30,0.14);
-  --btn-text:#211f18;
+  --btn-text:var(--text);
   --spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(150,163,255,0.42),rgba(74,91,214,0.16) 26%,transparent 54%);
   --primary-fill:linear-gradient(180deg,rgba(74,91,214,0.9) 0%,rgba(59,73,172,0.85) 100%),rgba(251,248,239,0.6);
   --primary-text:#fbfaf1;

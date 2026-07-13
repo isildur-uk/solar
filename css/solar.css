@@ -390,19 +390,16 @@
   font: 600 var(--fs-2xs) var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: color-mix(in srgb, #17171a 80%, transparent);
-}
-#topbar .btn.primary {
-  background: color-mix(in srgb, var(--accent) 12%, #17171a);
+  /* background inherits the themed --glass-fill from redesign.css (light + dark aware);
+     the old hardcoded #17171a made these pills dark & invisible in light theme. */
 }
 #case-name { letter-spacing: 0.04em; }
 
 /* chart tool buttons float as glass chips */
 #chart-tools .btn {
-  background: color-mix(in srgb, #131311 72%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-color: color-mix(in srgb, var(--accent) 20%, #2a2a27);
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--line));
 }
 
 /* timeline dots inherit the accent glow language */

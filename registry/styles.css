@@ -862,9 +862,10 @@ html[data-theme="light"]{
   --primary-text:#fbfaf1;
   --primary-spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(255,255,255,0.5),rgba(255,255,255,0.14) 26%,transparent 56%);
   --grain-blend:multiply; --grain-opacity:0.04;
-  --bg:#f2ecdd; --panel:#fbf8ef; --panel-2:#efe8d7; --panel-3:#e7dfcb;
-  --line:#ddd5c3; --line-2:#cec5af;
-  --ink:#211f18; --text:#211f18; --dim:#635d4e; --muted:#635d4e; --faint:#67624f;   /* was #8b8474 (~3.1:1); #67624f ≈5.2:1 on #f2ecdd */
+  /* softened warm light palette — matches the workbench (Ben: old one read harsh); AA held */
+  --bg:#efe9db; --panel:#f6f1e6; --panel-2:#e9e2d1; --panel-3:#e0d8c4;
+  --line:#d9d0bd; --line-2:#cabfa8;
+  --ink:#2e2a21; --text:#2e2a21; --dim:#655e50; --muted:#655e50; --faint:#6e6656;
   /* light-theme accent RE-MAPS to periwinkle (#4a5bd6 ≈5.2:1 on cream); old olive retired. */
   --accent:#4a5bd6; --accent-dim:#3b49ac; --accent-soft:rgba(74,91,214,0.14); --focus:#4a5bd6;
   --ok:#4d8a5a; --warn:#a9691c; --bad:#bb4f4c; --error:#bb4f4c;

@@ -91,6 +91,13 @@ input[type="text"], input[type="search"], textarea,
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45));
 }
 #brand .accent { -webkit-text-fill-color: var(--accent); color: var(--accent); }
+/* light theme: the silver->cream wordmark gradient vanishes on cream — use a warm dark ink
+   so 'SOL' is visible (the periwinkle 'AR' accent already reads). */
+html[data-theme="light"] #brand .brand-line {
+  background: none; -webkit-text-fill-color: var(--text); color: var(--text);
+  filter: none;
+}
+html[data-theme="light"] #brand .accent { -webkit-text-fill-color: var(--accent); color: var(--accent); }
 
 /* ---- the animated nebula sits behind the chart ---- */
 #chart-wrap { background: #0a0a09; }
