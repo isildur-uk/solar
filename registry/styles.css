@@ -85,18 +85,31 @@ input,select,textarea{font:inherit;color:inherit}
 .op-switch select{padding:.42rem .55rem;border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:var(--radius);font-family:var(--mono);font-size:var(--fs-sm)}
 .op-switch select:focus{border-color:var(--accent-dim)}
 
-/* Buttons — SOLAR ghost button: panel body, hairline, periwinkle breath */
+/* Buttons — the shared SOLAR liquid-glass family (same language as the workbench):
+   glass fill + grain + cursor spotlight; periwinkle on hover/focus ONLY; no gradient fill. */
 .btn{
-  padding:.45rem .8rem;border:1px solid var(--line);background:var(--panel-2);
-  color:var(--text);cursor:pointer;font-weight:500;font-family:var(--sans);
-  border-radius:var(--radius);
-  transition:border-color .2s ease,color .2s ease,background-color .2s ease,box-shadow .2s ease;
+  position:relative; isolation:isolate; overflow:hidden;
+  padding:.45rem .8rem; border:1px solid var(--glass-border); border-radius:var(--radius);
+  color:var(--btn-text); cursor:pointer; font-weight:500; font-family:var(--sans);
+  text-shadow:0 1px 2px rgba(0,0,0,0.38);
+  background:var(--glass-fill);
+  -webkit-backdrop-filter:blur(12px) saturate(1.2); backdrop-filter:blur(12px) saturate(1.2);
+  box-shadow:var(--glass-shadow); --mx:50%; --my:0%;
+  transition:color .18s ease, border-color .18s ease, transform .16s ease, box-shadow .2s ease;
 }
-.btn:hover{border-color:var(--accent-dim);color:var(--accent);box-shadow:0 0 16px -7px var(--accent)}
-.btn.secondary{background:var(--panel-2);color:var(--text)}
-.btn.danger{background:var(--panel-2);color:var(--text)}
-.btn.danger:hover{border-color:var(--bad);color:var(--bad);box-shadow:0 0 16px -7px var(--bad)}
-.btn:disabled{opacity:.4;cursor:default}
+html[data-theme="light"] .btn{ text-shadow:0 1px 0 rgba(255,255,255,0.5) }
+.btn::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; border-radius:inherit;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:120px; opacity:var(--grain-opacity); mix-blend-mode:var(--grain-blend) }
+.btn::after{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; border-radius:inherit; opacity:0; transition:opacity .2s ease; background:var(--spec) }
+.btn:hover::after{ opacity:1 }
+.btn:hover{ color:var(--accent); border-color:var(--accent-dim); transform:translateY(-1px); box-shadow:var(--glass-shadow), 0 0 20px -8px var(--accent) }
+.btn:active{ transform:translateY(0) scale(0.985) }
+.btn.primary{ color:var(--primary-text); border-color:color-mix(in srgb,var(--accent) 60%,transparent); background:var(--primary-fill) }
+.btn.primary::after{ background:var(--primary-spec) }
+.btn.primary:hover{ color:var(--primary-text); border-color:var(--accent) }
+.btn.danger:hover{ color:var(--bad); border-color:var(--bad); box-shadow:var(--glass-shadow), 0 0 20px -8px var(--bad) }
+.btn:disabled{opacity:.42;cursor:default}
 
 /* Focus — single SOLAR periwinkle ring, accessible on the dark ground */
 .btn:focus-visible,.search:focus,input:focus,select:focus,textarea:focus,
@@ -819,18 +832,29 @@ table.ir-items .c-src{text-align:center}
   --glass-shadow:inset 0 1px 0 rgba(255,255,255,0.16),inset 0 -1px 0 rgba(0,0,0,0.30),0 3px 10px rgba(0,0,0,0.40);
   --btn-text:var(--text);
   --spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(205,214,255,0.5),rgba(142,162,255,0.16) 26%,transparent 54%);
+  --primary-fill:linear-gradient(180deg,rgba(142,162,255,0.28) 0%,rgba(179,157,255,0.10) 52%,rgba(0,0,0,0.08) 100%),rgba(30,32,44,0.55);
+  --primary-text:#eef1ff;
+  --primary-spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(210,198,255,0.5),rgba(179,157,255,0.16) 26%,transparent 56%);
+  --grain-blend:overlay; --grain-opacity:0.05;
 }
 html[data-theme="light"]{
+  --primary-fill:linear-gradient(180deg,rgba(74,91,214,0.9) 0%,rgba(59,73,172,0.85) 100%),rgba(251,248,239,0.6);
+  --primary-text:#fbfaf1;
+  --primary-spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(255,255,255,0.5),rgba(255,255,255,0.14) 26%,transparent 56%);
+  --grain-blend:multiply; --grain-opacity:0.04;
   --bg:#f2ecdd; --panel:#fbf8ef; --panel-2:#efe8d7; --panel-3:#e7dfcb;
   --line:#ddd5c3; --line-2:#cec5af;
   --ink:#211f18; --text:#211f18; --dim:#635d4e; --muted:#635d4e; --faint:#67624f;   /* was #8b8474 (~3.1:1); #67624f ≈5.2:1 on #f2ecdd */
-  --accent:#6b7a2f; --accent-dim:#55621f; --accent-soft:rgba(107,122,47,0.16); --focus:#6b7a2f;
+  /* light-theme accent RE-MAPS to periwinkle (#4a5bd6 ≈5.2:1 on cream); old olive retired. */
+  --accent:#4a5bd6; --accent-dim:#3b49ac; --accent-soft:rgba(74,91,214,0.14); --focus:#4a5bd6;
   --ok:#4d8a5a; --warn:#a9691c; --bad:#bb4f4c; --error:#bb4f4c;
   --mk-official:#4d8a5a; --mk-sensitive:#a9691c;
   --shadow-1:0 2px 10px rgba(60,52,30,0.14); --shadow-2:0 18px 50px rgba(60,52,30,0.20);
   --glass-fill:linear-gradient(180deg,rgba(255,255,255,0.75) 0%,rgba(255,255,255,0.30) 46%,rgba(0,0,0,0.03) 100%),rgba(251,248,239,0.55);
   --glass-border:rgba(80,74,58,0.24);
-  --spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(125,143,52,0.42),rgba(107,122,47,0.16) 26%,transparent 54%);
+  --glass-shadow:inset 0 1px 0 rgba(255,255,255,0.9),inset 0 -1px 0 rgba(0,0,0,0.08),0 2px 8px rgba(60,52,30,0.14);
+  --btn-text:#211f18;
+  --spec:radial-gradient(170px circle at var(--mx) var(--my),rgba(150,163,255,0.42),rgba(74,91,214,0.16) 26%,transparent 54%);
 }
 #cursor-torch{position:fixed;left:0;top:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483000;opacity:0;transition:opacity .35s ease;
   background:radial-gradient(34px circle at var(--tx,-600px) var(--ty,-600px), color-mix(in srgb, var(--accent) 6%, transparent), transparent 62%)}
