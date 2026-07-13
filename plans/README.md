@@ -73,7 +73,7 @@ UI/UX audit by `improve-ui` (dual-input: source `Solar/` + rendered `docs/ux-sho
 | 020 | button-press-feedback | Motion/Interaction | S | — | DONE |
 | 021 | menu-popover-glide | Motion | S | — | DONE (curve swap on .menu-pop; #ct-pop left static per escape hatch — it does not animate; added a reduced-motion guard as no blanket rule existed) |
 | 022 | tab-segment-pill-glide | Motion/Interaction | M | — | DONE (targeted the real surface: #bottom-nav mobile view switch — a horizontal single-select aria-pressed group; pill measures offsetLeft/Width, repositions on setView/enterMobile/resize; needs mobile visual review) |
-| 023 | grade-chip-tooltips | A11y/Content/Trust | S | — | TODO |
+| 023 | grade-chip-tooltips | A11y/Content/Trust | S | — | DONE (data-tip legend reused from explainGrade's real 3×5×2 copy; opacity-only reveal on hover + focus-visible; grade value never animated) |
 
 *Execute with `/improve-ui execute <plan>` or by hand. Re-run `/improve-ui reconcile` after a batch to verify and surface the next tier.*
 *Batch 013–023 stamped **Written against HEAD a75f64c**. All comply with the DESIGN.md Showcase motion contract (reduced-motion gate · single periwinkle accent · no blue→purple CTA glow · one effect per surface · trust surfaces never animate the confidence value).*

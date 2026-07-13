@@ -582,6 +582,10 @@
   var activeDetailIR = null;
   function closeIrDrawer(){ var d=document.getElementById('ir-drawer'); if(d) d.hidden=true; }
   function openIrDrawer(html){ var d=document.getElementById('ir-drawer'), b=document.getElementById('ir-drawer-body'); if(!d||!b) return; b.innerHTML=html; d.hidden=false; }
+  /* 023 — concise grade legend for the chip tooltip; wording reused from explainGrade's
+     dr-lede + dr-foot (the real, defensible definition). Full breakdown stays on click. */
+  var GRADE_TIP = 'Graded on the 3×5×2 system: source-evaluation number, intelligence-evaluation letter, handling code. Source 1 Reliable · 2 Untested · 3 Not reliable. Intelligence A–E, known-true to suspected-false. Handling P permitted · C permitted subject to conditions.';
+
   function explainGrade(grade, handling){
     var sc=String(grade||''), s=sc.charAt(0), i=sc.charAt(1).toUpperCase(), hc=String(handling||'P').toUpperCase();
     var se=G.SOURCE_EVAL[s], as=G.ASSESSMENT[i], ha=G.HANDLING[hc];
@@ -815,7 +819,7 @@
       var _rg = V.reportGrade(ir);
       var irGrade = _rg
         ? '<div class="ir-grade"><span class="ir-grade-k">Report grade</span>'
-          + '<button type="button" class="grade-chip" data-grade="'+esc(_rg.sourceEval)+esc(_rg.intelEval)+'" data-handling="'+esc(_rg.handling)+'" aria-label="Explain the report grade">'+esc(_rg.sourceEval)+esc(_rg.intelEval)+esc(_rg.handling)+'<span class="grade-q">?</span></button>'
+          + '<button type="button" class="grade-chip" data-grade="'+esc(_rg.sourceEval)+esc(_rg.intelEval)+'" data-handling="'+esc(_rg.handling)+'" data-tip="'+esc(GRADE_TIP)+'" aria-label="Explain the report grade">'+esc(_rg.sourceEval)+esc(_rg.intelEval)+esc(_rg.handling)+'<span class="grade-q">?</span></button>'
           + '</div>'
         : '';
       var _SM = (typeof window!=='undefined' && window.RegistrySourceMeta) ? window.RegistrySourceMeta : null;
