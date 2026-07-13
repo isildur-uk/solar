@@ -11,8 +11,11 @@ const mime=p=>T[(p.split(".").pop()||"").toLowerCase()]||"application/octet-stre
 http.createServer((req,res)=>{
   let p=decodeURIComponent((req.url.split("?")[0]||"/"));
   if(p==="/"||p==="") p="/hero.html";   // canonical front door - matches Vercel redirect + exe_build/server.js (keep in sync)
-  const f=path.join(ROOT,p.replace(/^\/+/,""));
+  if(p.endsWith("/")) p=p+"index.html";  // directory request -> its index.html (e.g. /registry/ -> /registry/index.html)
+  let f=path.join(ROOT,p.replace(/^\/+/,""));
   if(!f.startsWith(ROOT)){res.writeHead(403);return res.end("no");}
+  // if the path resolves to a directory (no trailing slash), serve its index.html
+  try { if(fs.statSync(f).isDirectory()) f=path.join(f,"index.html"); } catch(_){}
   fs.readFile(f,(e,buf)=>{ if(e){res.writeHead(404);return res.end("Not found: "+p);}
     res.writeHead(200,{"Content-Type":mime(f),"Cache-Control":"no-cache"}); res.end(buf); });
 }).listen(PORT,"0.0.0.0",()=>{
