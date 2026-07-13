@@ -42,6 +42,6 @@ UI/UX audit by `improve-ui` (dual-input: source `Solar/` + rendered `docs/ux-sho
 | 009 | widescreen-density | Responsive | S | — | DONE (op-grid: cap+centre chosen) |
 | 010 | mobile-mono-identifiers | Responsive/Type | M | — | DONE (inline Consolas removed; .id on inspector IDs; broad per-cell wrap deferred per escape hatch) |
 | 011 | perf-investigate-workbench | Perf | M | — | BLOCKED — needs live perf session (static facts confirmed; no cut) |
-| 012 | consolidate-glass-button-css | Cleanup | S | — | TODO |
+| 012 | consolidate-glass-button-css | Cleanup | S | — | DONE |
 
 *Execute with `/improve-ui execute <plan>` or by hand. Re-run `/improve-ui reconcile` after a batch to verify and surface the next tier.*
