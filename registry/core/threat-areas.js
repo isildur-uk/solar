@@ -41,10 +41,24 @@
     "Cross-Cutting - Border vulnerabilities": "#8d99ae",
     "Other": "#6b7280"
   };
+  /* Official NCA threat-area pictograms (glyph-only PNG, painted through --ta via CSS mask).
+     Only the nine mapped families have an icon; the rest fall back to the plain colour swatch. */
+  var THREAT_ICONS = {
+    "OIC - Organised Immigration Crime": "organised-immigration-crime",
+    "MODSL - Modern Slavery & Human Trafficking": "modern-slavery",
+    "Drugs - Drug Trafficking": "drug-trafficking",
+    "Firearms - Illegal Firearms": "illegal-firearms",
+    "EConC - Economic Crime / Money Laundering": "money-laundering",
+    "BC & Sanctions Evasion - Bribery, Corruption & Sanctions Evasion": "bribery-corruption-sanctions",
+    "Fraud": "fraud",
+    "Cyber - Cyber Crime": "cyber-crime",
+    "Cross-Cutting - Border vulnerabilities": "border-vulnerabilities"
+  };
   var api = {
     list: function () { return THREAT_AREAS.slice(); },
     isValid: function (v) { return THREAT_AREAS.indexOf(String(v)) !== -1; },
     colour: function (v) { return THREAT_COLOURS[String(v)] || "#8d99ae"; },
+    icon: function (v) { return THREAT_ICONS[String(v)] || ""; },
     short: function (v) { v = String(v); var i = v.indexOf(" - "); return i > 0 ? v.slice(0, i) : v; }
   };
 

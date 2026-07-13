@@ -1559,8 +1559,12 @@
     }).filter(function (g) { return g.ops.length; });
     var groupsHTML = _groups.map(function (g) {
       var repTotal = g.ops.reduce(function (s, nm) { return s + (counts[nm] || 0); }, 0);
+      var ic = T.icon(g.ta);
+      var sw = ic
+        ? '<span class="ta-swatch has-icon" style="--ta-icon:url(assets/threat/' + ic + '.png)" aria-hidden="true"></span>'
+        : '<span class="ta-swatch" aria-hidden="true"></span>';
       return '<details class="ta-group"' + (q ? ' open' : '') + ' data-ta="' + esc(g.ta) + '" style="--ta:' + esc(T.colour(g.ta)) + '">' +
-        '<summary class="ta-head"><span class="ta-swatch" aria-hidden="true"></span>' +
+        '<summary class="ta-head">' + sw +
           '<span class="ta-name">' + esc(g.ta) + '</span>' +
           '<span class="ta-meta">' + g.ops.length + ' op' + (g.ops.length === 1 ? '' : 's') + ' · ' + repTotal + ' report' + (repTotal === 1 ? '' : 's') + '</span></summary>' +
         '<div class="op-grid">' + g.ops.map(opCard).join('') + '</div></details>';

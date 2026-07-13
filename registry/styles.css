@@ -558,6 +558,9 @@ input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .ta-group[open]>summary::before{transform:rotate(90deg)}
 .ta-group>summary:hover{background:rgba(142,162,255,0.04)}
 .ta-group .ta-swatch{width:11px;height:11px;border-radius:2px;background:var(--ta,var(--line-2));flex:0 0 auto}
+/* official NCA threat-area pictogram: the glyph PNG masks the group colour (--ta) through
+   its shape, so it's colour-coded and theme-adaptive. Unmapped groups keep the plain square. */
+.ta-group .ta-swatch.has-icon{width:26px;height:26px;border-radius:0;background:var(--ta,var(--line-2));-webkit-mask:var(--ta-icon) center/contain no-repeat;mask:var(--ta-icon) center/contain no-repeat}
 .ta-group .ta-name{font-weight:600;color:var(--text);font-size:var(--fs-sm);line-height:1.2}
 .ta-group .ta-meta{margin-left:auto;font-family:var(--mono);font-size:var(--fs-2xs);color:var(--faint)}
 .ta-group .op-grid{padding:.15rem .85rem .85rem}
