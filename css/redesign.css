@@ -83,7 +83,7 @@ input[type="text"], input[type="search"], textarea,
 #brand .brand-line {
   font-family: var(--sans);
   font-weight: 600;
-  font-size: 16px;
+  font-size: var(--fs-lg);
   letter-spacing: -0.03em;                 /* mirror the hero title's tight tracking */
   background: linear-gradient(176deg, #ffffff 0%, #f4f3e8 50%, #c5c3b6 100%);
   -webkit-background-clip: text; background-clip: text;
@@ -265,3 +265,11 @@ details.menu[open]>summary{ color:var(--accent); border-color:var(--accent-dim);
 .btn:disabled{ opacity:0.42 }
 .menu-pop .btn::after, #ct-pop .btn::after{ display:none }
 .menu-pop .btn::before, #ct-pop .btn::before{ display:none }
+
+/* ---- inline SVG icon system (replaces emoji glyphs: close, download, caret) ---- */
+.ico{ width:1em; height:1em; display:inline-block; vertical-align:-0.125em; }
+.btn.x{ display:inline-flex; align-items:center; justify-content:center; padding:6px 8px; }
+.btn.x .ico{ width:14px; height:14px; }
+#timeline-head .tl-caret{ width:11px; height:11px; transition:transform .18s cubic-bezier(0.16,1,0.3,1); }
+#timeline-wrap:not(.collapsed) #timeline-head .tl-caret{ transform:rotate(90deg); }
+@media (prefers-reduced-motion: reduce){ #timeline-head .tl-caret{ transition:none; } }

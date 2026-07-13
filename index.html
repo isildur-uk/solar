@@ -22,7 +22,7 @@
 <body>
 <div id="drop-overlay" aria-hidden="true">
   <div class="drop-card">
-    <div class="drop-icon" aria-hidden="true">⤓</div>
+    <div class="drop-icon" aria-hidden="true"><svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M16 4v16m0 0l-6-6m6 6l6-6M6 26h20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div class="drop-title">Drop intelligence files to ingest</div>
     <div class="drop-sub">.txt · .docx · .pdf · .csv · .json · photos (EXIF + OCR) — multiple files combine into one review</div>
   </div>
@@ -128,7 +128,7 @@
 </main>
 
 <div id="timeline-wrap" class="collapsed">
-  <div id="timeline-head" role="button" tabindex="0" aria-label="toggle timeline">TIMELINE <span style="letter-spacing:0">▸</span></div>
+  <div id="timeline-head" role="button" tabindex="0" aria-label="toggle timeline">TIMELINE <svg class="tl-caret" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
   <div id="timeline"></div>
 </div>
 
@@ -145,7 +145,7 @@
 <div class="modal-veil" id="url-veil" role="dialog" aria-modal="true" aria-label="add from url">
   <div class="modal narrow">
     <div class="modal-head"><h2>Add from URL</h2>
-      <button class="btn x" id="url-cancel" aria-label="close">✕</button></div>
+      <button class="btn x" id="url-cancel" aria-label="close"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body">
       <p style="font:11px var(--mono);color:#a3a299;margin:0 0 8px">
         Paste a link to a news article or web report. The page is fetched and
@@ -167,7 +167,7 @@
 <div class="modal-veil" id="diag-veil" role="dialog" aria-modal="true" aria-label="diagnostics" style="z-index:1100">
   <div class="modal narrow">
     <div class="modal-head"><h2 id="diag-title">Diagnostics</h2>
-      <button class="btn x" id="diag-x" aria-label="close">✕</button></div>
+      <button class="btn x" id="diag-x" aria-label="close"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body">
       <p style="font:11px var(--mono);color:#a3a299;margin:0 0 8px">
         Plain-text summary of what was extracted / what is on the chart. Copy it and paste it back for diagnosis.</p>
@@ -185,7 +185,7 @@
 <div class="modal-veil" id="paste-veil" role="dialog" aria-modal="true" aria-label="paste text">
   <div class="modal narrow">
     <div class="modal-head"><h2>Paste intelligence text</h2>
-      <button class="btn x" id="paste-cancel" aria-label="close">✕</button></div>
+      <button class="btn x" id="paste-cancel" aria-label="close"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body">
       <p style="font:11px var(--mono);color:#a3a299;margin:0 0 8px">
         Names, phones, emails, dates, addresses, places and relationships will be
@@ -203,7 +203,7 @@
 <div class="modal-veil" id="review-veil" role="dialog" aria-modal="true" aria-label="extraction review">
   <div class="modal">
     <div class="modal-head"><h2>Extraction review — approve before charting</h2>
-      <button class="btn x" id="review-cancel" aria-label="close">✕</button></div>
+      <button class="btn x" id="review-cancel" aria-label="close"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body" id="review-body">
       <div id="review-src" aria-label="source text with highlighted extractions"></div>
       <div id="review-cards" aria-label="extracted items"></div>
@@ -225,7 +225,7 @@
 <div class="modal-veil" id="csv-veil" role="dialog" aria-modal="true" aria-label="CSV import">
   <div class="modal">
     <div class="modal-head"><h2>CSV import</h2>
-      <button class="btn x" id="csv-cancel" aria-label="close">✕</button></div>
+      <button class="btn x" id="csv-cancel" aria-label="close"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body">
       <div id="csv-stage-pick">
         <p style="font:12px var(--mono);color:#a3a299">Choose a CSV file. Column types
@@ -261,7 +261,7 @@
 <div class="modal-veil" id="dedup-veil" role="dialog" aria-modal="true" aria-label="deconfliction">
   <div class="modal narrow">
     <div class="modal-head"><h2>Deconfliction — potential duplicates</h2>
-      <button class="btn x" id="dedup-close" aria-label="close">✕</button></div>
+      <button class="btn x" id="dedup-close" aria-label="close"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body" id="dedup-body"></div>
     <div class="modal-foot"><span class="note">Suggestions only — nothing merges without your decision. Merges are audited and undoable.</span></div>
   </div>
@@ -271,7 +271,7 @@
 <div class="modal-veil" id="export-veil" role="dialog" aria-modal="true" aria-label="operational exports">
   <div class="modal narrow">
     <div class="modal-head"><h2>Operational exports</h2>
-      <button class="btn x" id="export-close" aria-label="close">✕</button></div>
+      <button class="btn x" id="export-close" aria-label="close"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body">
       <div class="sec" style="font:600 10px var(--mono);letter-spacing:.14em;color:#84837b;text-transform:uppercase;border-bottom:1px solid #2a2a27;padding-bottom:3px;margin-bottom:8px">Case metadata (used in every export)</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
@@ -310,7 +310,7 @@
 <div class="modal-veil" id="help-veil" role="dialog" aria-modal="true" aria-label="help">
   <div class="modal narrow">
     <div class="modal-head"><h2>Solar — how it works</h2>
-      <button class="btn x" id="help-close" aria-label="close">✕</button></div>
+      <button class="btn x" id="help-close" aria-label="close"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body" id="help-body">
       <h4>Smart matching (the point of the tool)</h4>
       <p>Entities arrive two ways: <b>Paste Text</b> (free-text intelligence passages) and

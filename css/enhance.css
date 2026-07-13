@@ -19,37 +19,37 @@
   border-radius: 8px; padding: 10px 12px;
 }
 .an-kpi-v {
-  font: 600 22px 'Geist Mono', Consolas, monospace; color: var(--sol-white, #fff);
+  font: 600 var(--fs-2xl) 'Geist Mono', Consolas, monospace; color: var(--sol-white, #fff);
   font-variant-numeric: tabular-nums; line-height: 1;
 }
 .an-kpi-l {
-  font: 500 10px 'Geist Mono', Consolas, monospace; letter-spacing: .1em;
+  font: 500 var(--fs-2xs) 'Geist Mono', Consolas, monospace; letter-spacing: .1em;
   text-transform: uppercase; color: var(--sol-ash, #84837b); margin-top: 5px;
 }
 
 .an-panel { margin: 0 0 26px; }
 .an-head {
-  font: 600 16px/1.25 'Inter', 'Segoe UI', sans-serif; color: var(--sol-bone, #dedcc9);
+  font: 600 var(--fs-lg)/1.25 'Inter', 'Segoe UI', sans-serif; color: var(--sol-bone, #dedcc9);
   margin: 0 0 2px; letter-spacing: -0.01em; max-width: 56ch;
 }
 .an-sub {
-  font: 400 12px/1.4 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #84837b);
+  font: 400 var(--fs-xs)/1.4 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #84837b);
   margin: 0 0 10px;
 }
 .an-svg { width: 100%; height: auto; display: block; overflow: visible; }
 .an-hit:hover { fill: rgba(142,162,255,0.06); }
 .an-source {
-  font: italic 400 10.5px 'Geist Mono', Consolas, monospace; color: #8b93a0;
+  font: italic 400 var(--fs-2xs) 'Geist Mono', Consolas, monospace; color: #8b93a0;
   margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--sol-graphite, #2a2a27);
 }
 .an-empty {
-  font: 12px 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #84837b);
+  font: var(--fs-xs) 'Geist Mono', Consolas, monospace; color: var(--sol-ash, #84837b);
   padding: 14px 0;
 }
 
 @media (max-width: 760px) {
   #an-body { padding: 12px 14px calc(20px + var(--safe-bottom, 0px)); }
-  .an-head { font-size: 15px; }
+  .an-head { font-size: var(--fs-md); }
 }
 
 /* ===================== 2. Vignelli UI discipline ===================== */
@@ -57,9 +57,9 @@
  * scale + weight + white space (not colour), flush-left, generous rhythm.
  * Conservative layer — refines typographic voice, never touches layout geometry. */
 :root {
-  --type-display: 18px;   /* modal / section titles */
-  --type-body: 13px;
-  --type-label: 10px;     /* mono caps kickers */
+  --type-display: var(--fs-xl);   /* modal / section titles */
+  --type-body: var(--fs-sm);
+  --type-label: var(--fs-2xs);     /* mono caps kickers */
 }
 /* one display size for every modal title, flush-left grotesque */
 .modal-head h2 {
@@ -90,7 +90,7 @@
   max-width: 80vw; z-index: 400; pointer-events: none; white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
   background: rgba(12,12,11,.94); border: 1px solid var(--sol-graphite,#2a2a27);
-  color: var(--sol-bone,#dedcc9); font: 12px/1.4 Inter, system-ui, sans-serif;
+  color: var(--sol-bone,#dedcc9); font: var(--fs-xs)/1.4 var(--sans);
   padding: 8px 14px; border-radius: 999px; box-shadow: 0 10px 34px rgba(0,0,0,.5);
   opacity: 1; transition: opacity .35s ease;
 }
@@ -112,7 +112,7 @@
 
 /* review: collapsed geographic-containment group (declutter) */
 .geo-group { margin-top: 10px; border-top: 1px dashed var(--sol-graphite,#2a2a27); padding-top: 8px; }
-.geo-group summary { cursor: pointer; font: 600 10px 'Geist Mono', Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--sol-ash,#84837b); }
+.geo-group summary { cursor: pointer; font: 600 var(--fs-2xs) 'Geist Mono', Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--sol-ash,#84837b); }
 .geo-group[open] summary { margin-bottom: 6px; }
-.geo-row { display: flex; align-items: center; gap: 6px; font: 11px 'Geist Mono', Consolas, monospace; color: var(--sol-bone,#dedcc9); padding: 3px 0 3px 8px; }
+.geo-row { display: flex; align-items: center; gap: 6px; font: var(--fs-2xs) 'Geist Mono', Consolas, monospace; color: var(--sol-bone,#dedcc9); padding: 3px 0 3px 8px; }
 .geo-row .geo-rel { color: var(--sol-ash,#84837b); }

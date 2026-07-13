@@ -128,7 +128,7 @@
   position: relative; z-index: 2;
   margin-top: 28px;
   font-family: var(--sol-font-mono);
-  font-size: 11px; font-weight: 400;
+  font-size: var(--fs-2xs); font-weight: 400;
   letter-spacing: var(--sol-tracking-mono);
   text-indent: var(--sol-tracking-mono);
   color: rgba(var(--sol-glow), 0.0);

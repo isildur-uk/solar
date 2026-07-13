@@ -117,9 +117,9 @@
   #bottom-nav button {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 2px; background: none; border: 0; color: var(--muted, #84837b);
-    font: 500 10px var(--mono, Consolas, monospace); cursor: pointer;
+    font: 500 var(--fs-2xs) var(--mono, Consolas, monospace); cursor: pointer;
   }
-  #bottom-nav button .bn-ico { font-size: 18px; line-height: 1; }
+  #bottom-nav button .bn-ico { font-size: var(--fs-xl); line-height: 1; }
   #bottom-nav button[aria-pressed="true"] { color: var(--accent, #8ea2ff); }
   /* 022 — Tab Pill Glide indicator; var(--accent), 4px radius */
   #bottom-nav button { position: relative; z-index: 1; }
@@ -165,7 +165,7 @@
 #ocr-overlay .ocr-card {
   background: var(--panel, #0c0c0b); border: 1px solid var(--line, #2a2a27);
   border-radius: 14px; padding: 22px 26px; text-align: center;
-  color: var(--ink, #f4f3e8); font: 13px var(--mono, Consolas, monospace);
+  color: var(--ink, #f4f3e8); font: var(--fs-sm) var(--mono, Consolas, monospace);
   min-width: 220px;
 }
 /* 014 — Korona comet ring, recoloured to the periwinkle accent (--ink = var(--accent)) */
@@ -190,24 +190,24 @@
   position: absolute; top: 8px; right: 8px; z-index: 600;
   display: flex; gap: 6px;
 }
-#map-tools .btn { font-size: 11px; padding: 5px 9px; }
+#map-tools .btn { font-size: var(--fs-2xs); padding: 5px 9px; }
 .btn.active {
   border-color: var(--accent, #8ea2ff) !important;
   color: var(--accent, #8ea2ff) !important;
   box-shadow: 0 0 0 1px var(--accent, #8ea2ff) inset;
 }
-.kp-note { font: 11px var(--mono, Consolas, monospace); color: var(--muted, #84837b); margin: 0 0 12px; }
+.kp-note { font: var(--fs-2xs) var(--mono, Consolas, monospace); color: var(--muted, #84837b); margin: 0 0 12px; }
 .kp-grid { display: flex; gap: 18px; flex-wrap: wrap; }
 .kp-col { flex: 1; min-width: 220px; }
 .kp-h {
-  font: 600 10px var(--mono, Consolas, monospace); letter-spacing: .12em; text-transform: uppercase;
+  font: 600 var(--fs-2xs) var(--mono, Consolas, monospace); letter-spacing: .12em; text-transform: uppercase;
   color: var(--muted, #84837b); border-bottom: 1px solid var(--line, #2a2a27);
   padding-bottom: 4px; margin-bottom: 6px;
 }
 .kp-row {
   display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
   background: none; border: 0; border-radius: 6px; padding: 6px 8px; cursor: pointer;
-  color: var(--ink, #f4f3e8); font: 12px var(--mono, Consolas, monospace);
+  color: var(--ink, #f4f3e8); font: var(--fs-xs) var(--mono, Consolas, monospace);
 }
 .kp-row:hover { background: rgba(142,162,255,0.08); }
 .kp-rank { color: var(--muted, #84837b); width: 18px; }
@@ -234,16 +234,16 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   #more-drawer, #more-drawer .btn, select.btn,
   #bottom-nav, #map-tools .btn, #legend-panel, #legend-panel *,
   #chart-empty, #statusbar, #statusbar *, #inspector, #inspector * {
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif !important;
+    font-family: var(--sans) !important;
     letter-spacing: normal !important;
   }
   /* monospace where it's tabular data or a flagged identifier (.id/.mono opt back in) */
   .num, .an-kpi-v, .kp-score, #status-counts, .id, .mono { font-family: var(--mono) !important; }
 
   /* consistent control sizing */
-  #topbar .btn, #more-drawer .btn, select.btn { font-size: 13px !important; }
-  #case-name, #search { font-size: 13px !important; }
-  #statusbar, #statusbar * { font-size: 11px !important; }
+  #topbar .btn, #more-drawer .btn, select.btn { font-size: var(--fs-sm) !important; }
+  #case-name, #search { font-size: var(--fs-sm) !important; }
+  #statusbar, #statusbar * { font-size: var(--fs-2xs) !important; }
 
   /* chart-tools row is now empty (folded into More) — hide its chrome */
   #chart-tools:empty { display: none; }
@@ -275,11 +275,11 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body.mobile-mode #more-drawer { max-height: 68vh; overflow: auto; grid-template-columns: 1fr 1fr; }
 
   /* empty-chart guidance: calmer, smaller, centred */
-  #chart-empty .big { font-size: 16px; }
-  #chart-empty .hint { font-size: 12px; line-height: 1.4; opacity: .75; max-width: 32ch; margin: 6px auto 0; }
+  #chart-empty .big { font-size: var(--fs-lg); }
+  #chart-empty .hint { font-size: var(--fs-xs); line-height: 1.4; opacity: .75; max-width: 32ch; margin: 6px auto 0; }
 
   /* legend/filters: cap height + scroll so it never blankets the chart */
-  #legend-panel { max-height: 50vh; overflow: auto; font-size: 12px; }
+  #legend-panel { max-height: 50vh; overflow: auto; font-size: var(--fs-xs); }
 
   /* status bar: keep only the essentials visible, hide the chattier bits */
   #statusbar #status-fmt, #statusbar span[title] { display: none; }
@@ -310,7 +310,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     border: 1px solid var(--accent, #8ea2ff);
     background: var(--panel, #0c0c0b);
     color: var(--accent, #8ea2ff);
-    font: 600 28px/1 Inter, system-ui, sans-serif;
+    font: 600 var(--fs-2xl)/1 var(--sans);
     box-shadow: 0 8px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(142,162,255,.18) inset;
     cursor: pointer;
   }
@@ -333,5 +333,5 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 /* context menu: enlarge tap targets on touch so menu items meet WCAG 2.5.5 */
 @media (max-width: 760px) {
   .ctx-menu { min-width: 220px; }
-  .ctx-item { padding: 12px 14px; font-size: 14px; }
+  .ctx-item { padding: 12px 14px; font-size: var(--fs-sm); }
 }

@@ -62,7 +62,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 #solar-preloader .pl-sub {
-  font: 500 10px var(--mono);
+  font: 500 var(--fs-2xs) var(--mono);
   letter-spacing: 0.34em;
   color: rgba(255, 255, 255, 0.4);
   opacity: 0;
@@ -72,7 +72,7 @@
   position: fixed;
   right: 28px;
   bottom: 22px;
-  font: 600 13px var(--mono);
+  font: 600 var(--fs-sm) var(--mono);
   color: var(--accent);
   letter-spacing: 0.1em;
 }
@@ -113,7 +113,7 @@
               border-color 200ms ease;
 }
 #solar-cursor-ring .lbl {
-  font: 600 8px var(--mono);
+  font: 600 var(--fs-2xs) var(--mono);
   letter-spacing: 0.18em;
   color: #fff;
   opacity: 0;
@@ -188,7 +188,7 @@ body.solar-cursor-on #hero-cover * { cursor: none !important; }
   flex-direction: column;
   align-items: center;
   gap: 7px;
-  font: 600 9px var(--mono);
+  font: 600 var(--fs-2xs) var(--mono);
   letter-spacing: 0.3em;
   color: rgba(255, 255, 255, 0.45);
   cursor: pointer;
@@ -207,7 +207,7 @@ body.solar-cursor-on #hero-cover * { cursor: none !important; }
 
 /* eyebrow labels + ghost type */
 .eyebrow {
-  font: 600 10px var(--mono);
+  font: 600 var(--fs-2xs) var(--mono);
   letter-spacing: 0.32em;
   color: var(--accent);
 }
@@ -285,7 +285,7 @@ body.solar-cursor-on #hero-cover * { cursor: none !important; }
   justify-content: space-between;
 }
 .solar-card .cnum {
-  font: 700 12px var(--mono);
+  font: 700 var(--fs-xs) var(--mono);
   letter-spacing: 0.18em;
   color: rgba(255, 255, 255, 0.35);
 }
@@ -327,7 +327,7 @@ body.solar-cursor-on #hero-cover * { cursor: none !important; }
   font-variant-numeric: tabular-nums;
 }
 #solar-outro .stat-lbl {
-  font: 500 10px var(--mono);
+  font: 500 var(--fs-2xs) var(--mono);
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.45);
@@ -361,7 +361,7 @@ body.solar-cursor-on #hero-cover * { cursor: none !important; }
 }
 #solar-enter-big:focus-visible { outline: 2px solid var(--accent); outline-offset: 8px; }
 #solar-outro .outro-note {
-  font: 500 9.5px var(--mono);
+  font: 500 var(--fs-2xs) var(--mono);
   letter-spacing: 0.26em;
   color: rgba(255, 255, 255, 0.35);
 }

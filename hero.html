@@ -26,8 +26,17 @@
   --bg:   #000000;
   --text: #f4f3e8;
   --accent: #8ea2ff;
-  --sans: "Inter Var", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "Geist Mono Var", "Geist Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: "Inter Var", ui-sans-serif, sans-serif;
+  --mono: "Geist Mono Var", ui-monospace, monospace;
+
+  --fs-2xs: 11px;
+  --fs-xs:  12px;
+  --fs-sm:  13px;
+  --fs-md:  15px;
+  --fs-lg:  17px;
+  --fs-xl:  20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 32px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -89,9 +98,9 @@ body.warping #orrery { opacity: 0; }
 }
 body.warping #report { opacity: 0; transition: opacity 0.5s ease; }
 @media (max-width: 900px) { #report { display: none; } }
-#report .r-line { font-size: 12px; line-height: 1.7; letter-spacing: 0.01em; min-height: 1.7em; }
-#report .r-h { font-size: 11px; letter-spacing: 0.22em; color: var(--accent); }
-#report .r-meta { font-size: 10px; letter-spacing: 0.12em; color: rgba(244,243,232,0.38); margin-bottom: 14px; }
+#report .r-line { font-size: var(--fs-xs); line-height: 1.7; letter-spacing: 0.01em; min-height: 1.7em; }
+#report .r-h { font-size: var(--fs-2xs); letter-spacing: 0.22em; color: var(--accent); }
+#report .r-meta { font-size: var(--fs-2xs); letter-spacing: 0.12em; color: rgba(244,243,232,0.38); margin-bottom: 14px; }
 #report .ent { color: #ccd6ff; font-weight: 500; }        /* extracted entities glow a touch brighter */
 #report .caret { border-right: 2px solid var(--accent); margin-left: 1px; animation: rblink 1s step-end infinite; }
 @keyframes rblink { 50% { border-color: transparent; } }
@@ -154,7 +163,7 @@ body.warping .content {
   pointer-events: auto;
   margin-top: 54px;
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: var(--fs-sm);
   line-height: 1;
   font-weight: 400;
   letter-spacing: 0.24em;
@@ -241,7 +250,7 @@ body.warping .content {
   display: inline-block;
   font-family: var(--mono);
   /* matches .enter exactly — one type size, one height, one radius (label sets the width) */
-  font-size: 14px;
+  font-size: var(--fs-sm);
   line-height: 1;
   font-weight: 400;
   letter-spacing: 0.24em;
@@ -298,7 +307,7 @@ body.warping .content {
   .enter {
     min-height: 56px;
     padding: 16px 40px;
-    font-size: 15px;
+    font-size: var(--fs-md);
   }
   .launch-nav {
     flex-wrap: wrap;
@@ -313,7 +322,7 @@ body.warping .content {
     align-items: center;
     justify-content: center;
     padding: 14px 30px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     flex: 0 1 auto;
   }
 }

@@ -201,7 +201,7 @@
 .solar-card .face h3 {
   margin: 0 0 10px;
   color: #fff;
-  font: 500 20px var(--sans);
+  font: 500 var(--fs-xl) var(--sans);
   letter-spacing: -0.01em;
 }
 .solar-card .face p {
@@ -215,7 +215,7 @@
   grid-column: 1 / -1;
   text-align: center;
   color: rgba(255, 255, 255, 0.55);
-  font: 400 15px var(--sans);
+  font: 400 var(--fs-md) var(--sans);
   letter-spacing: 0.04em;
   padding: 56px 0 22px;
 }
@@ -387,7 +387,7 @@
 
 /* toolbar: quiet uppercase mono identity + live accent underline on hover */
 #topbar .btn {
-  font: 600 10.5px var(--mono);
+  font: 600 var(--fs-2xs) var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   background: color-mix(in srgb, #17171a 80%, transparent);

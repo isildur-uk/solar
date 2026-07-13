@@ -34,8 +34,8 @@
   --sol-glow:        142, 162, 255;
 
   /* ---- type ---- */
-  --sol-font-display: "Inter Var", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --sol-font-mono:    "Geist Mono Var", "Geist Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --sol-font-display: "Inter Var", ui-sans-serif, sans-serif;
+  --sol-font-mono:    "Geist Mono Var", ui-monospace, monospace;
   --sol-weight-thin:    300;    /* the wordmark — light, luminous */
   --sol-weight-regular: 400;
   --sol-tracking-display: -0.03em;   /* tight: letters become one luminous mass */
