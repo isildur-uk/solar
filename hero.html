@@ -91,23 +91,23 @@ body.warping .content {
   transform: scale(1.07);
 }
 
+/* SOLAR wordmark — Ben's fx-smoke (#61), cosmic-recoloured.
+   Per-letter <b> elements each curl UPWARD and dissipate like smoke, then
+   re-form, staggered by --i * .16s. The silver→cream signature paint is
+   preserved as the base (the same near-vertical clip-gradient, applied per
+   letter so it reads as one continuous sweep). The colour-flash is recoloured
+   from Ben's magenta/cyan to cosmic periwinkle/violet.
+   --ink-2 primary accent · --ink-3 secondary accent (cosmic, on-brand). */
 .wordmark {
   --hx: 50%; --hy: 50%; --glow: 0;            /* driven by the shooting star */
+  --ink-2: #8ea2ff;                            /* periwinkle (was #FF4FD8) */
+  --ink-3: #b39dff;                            /* violet     (was #4FF8FF) */
   font-weight: 500;
   font-size: clamp(96px, 19vw, 300px);
   line-height: 0.9;
   letter-spacing: -0.04em;
   user-select: none;
-  /* refined silver→cream fill, with a cool light-spot that tracks the star */
-  background:
-    radial-gradient(circle 30vw at var(--hx) var(--hy),
-        rgba(255,255,255,0.92) 0%, rgba(206,222,255,0.55) 15%, rgba(255,255,255,0) 38%),
-    linear-gradient(176deg, #ffffff 0%, #f4f3e8 46%, #c5c3b6 100%);
-  -webkit-background-clip: text;
-          background-clip: text;
-  -webkit-text-fill-color: transparent;
-          color: transparent;
-  /* the halo swells as the star passes over the word */
+  /* the star-glow halo stays on the container so it spans the whole word */
   filter:
     drop-shadow(0 1px 30px rgba(0,0,0,0.45))
     drop-shadow(0 0 calc(22px + var(--glow) * 48px) rgba(198,212,255, calc(0.12 + var(--glow) * 0.55)));
@@ -115,15 +115,35 @@ body.warping .content {
   animation: fade 1.2s ease 0.1s forwards;
   transition: filter 0.28s ease;
 }
-/* smoke-settle one-shot: while .smoking, the paint is displaced by the
-   #smoke-settle turbulence (driven by JS from dispersed → identity). The
-   drop-shadow halo is preserved; only the displacement/blur is added, so the
-   letters resolve INTO the untouched silver→cream paint. Removed after ~1.5s. */
-.wordmark.smoking {
-  filter:
-    drop-shadow(0 1px 30px rgba(0,0,0,0.45))
-    url(#smoke-settle);
-  animation: none;          /* JS owns opacity during the settle */
+.wordmark b {
+  display: inline-block;
+  font-weight: inherit;
+  /* signature paint — the silver→cream fill, clipped per letter. The gradient
+     is near-vertical (176deg) so per-letter clipping reads as one continuous
+     sweep across S·O·L·A·R. */
+  background: linear-gradient(176deg, #ffffff 0%, #f4f3e8 46%, #c5c3b6 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+          color: transparent;
+  /* Ben's fx-smoke, looping but calm (3.4s). Curl up + dissipate, then re-form.
+     will-change keeps the transform/opacity/filter animation smooth. */
+  will-change: transform, opacity, filter;
+  animation: fx-smoke 3.4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.16s);
+}
+@keyframes fx-smoke {
+  0%, 46%   { transform: none; opacity: 1; filter: blur(0);
+              -webkit-text-fill-color: transparent; color: transparent; }
+  /* brief cosmic colour-flash as the letter begins to lift */
+  60%       { -webkit-text-fill-color: var(--ink-3); color: var(--ink-3); }
+  76%       { transform: translate(5px, -20px) rotate(12deg) scale(1.4);
+              opacity: 0; filter: blur(7px);
+              -webkit-text-fill-color: var(--ink-2); color: var(--ink-2); }
+  77%       { transform: translateY(9px) scale(0.82); opacity: 0; filter: blur(4px); }
+  /* re-form back into the signature paint */
+  90%, 100% { transform: none; opacity: 1; filter: blur(0);
+              -webkit-text-fill-color: transparent; color: transparent; }
 }
 
 
@@ -301,6 +321,8 @@ body.warping .content {
 
 @media (prefers-reduced-motion: reduce) {
   .wordmark, .enter, .launch-nav { animation: none; opacity: 1; }
+  /* no smoke: letters rest in the static full signature paint */
+  .wordmark b { animation: none; transform: none; opacity: 1; filter: none; }
   #cosmos { display: none; }
 }
 </style>
@@ -313,7 +335,7 @@ body.warping .content {
 
 
   <div class="content">
-    <h1 class="wordmark" id="wordmark">SOLAR</h1>
+    <h1 class="wordmark" id="wordmark" role="img" aria-label="SOLAR"><b aria-hidden="true" style="--i:0">S</b><b aria-hidden="true" style="--i:1">O</b><b aria-hidden="true" style="--i:2">L</b><b aria-hidden="true" style="--i:3">A</b><b aria-hidden="true" style="--i:4">R</b></h1>
     <!-- Database is the primary product (top); Charting is the second, in tandem -->
     <nav class="launch-nav" aria-label="SOLAR functions">
       <a class="pill pill-primary" id="go-database" href="registry/">
@@ -328,61 +350,6 @@ body.warping .content {
     </button>
   </div>
 
-  <!-- smoke-signal one-shot: added inline (before the wordmark's CSS fade can
-       start) so the letters form from smoke and settle INTO the signature paint.
-       Reduced-motion → the wordmark simply appears in full paint (no smoke). -->
-  <script>
-  (function () {
-    "use strict";
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;  /* static full paint */
-    var wm = document.getElementById("wordmark");
-    if (!wm) return;
-
-    /* Pre-empt the CSS fade synchronously (this script sits right after the
-       wordmark, so .smoking lands before the 0.1s fade delay elapses). The
-       filter itself is applied via the .smoking class; the rAF driver starts
-       once the SVG <defs> has parsed (DOMContentLoaded). */
-    wm.classList.add("smoking");
-    wm.style.opacity = "0";
-
-    function run() {
-      var turb = document.getElementById("smoke-turb");
-      var disp = document.getElementById("smoke-disp");
-      var blur = document.getElementById("smoke-blur");
-      if (!turb || !disp || !blur) {   /* filter unsupported → resolve to plain paint */
-        wm.classList.remove("smoking");
-        wm.style.opacity = "1";
-        return;
-      }
-      var DUR = 1500, t0 = 0;
-      var SCALE0 = 130, BASE0 = 0.022, BLUR0 = 7;   /* dispersed smoke */
-      function ease(k) { return 1 - Math.pow(1 - k, 3); }   /* easeOutCubic — settles softly */
-      function frame(now) {
-        if (!t0) t0 = now;
-        var k = Math.min((now - t0) / DUR, 1), e = ease(k);
-        disp.setAttribute("scale", (SCALE0 * (1 - e)).toFixed(2));
-        var bf = (BASE0 * (1 - e) + 0.001).toFixed(4);
-        turb.setAttribute("baseFrequency", bf + " " + bf);
-        blur.setAttribute("stdDeviation", (BLUR0 * (1 - e)).toFixed(2));
-        wm.style.opacity = Math.min(1, e * 1.15).toFixed(3);   /* fades in as it condenses */
-        if (k < 1) { requestAnimationFrame(frame); }
-        else {
-          /* settled — strip the filter entirely so the paint is pristine */
-          wm.classList.remove("smoking");
-          wm.style.opacity = "1";
-        }
-      }
-      requestAnimationFrame(frame);
-    }
-
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", run, { once: true });
-    } else {
-      run();
-    }
-  })();
-  </script>
-
   <canvas id="burst" aria-hidden="true"></canvas>
 
   <!-- liquid-glass refraction filter (ported from the React LiquidButton) -->
@@ -393,15 +360,6 @@ body.warping .content {
         <feGaussianBlur in="turb" stdDeviation="2" result="blurNoise"/>
         <feDisplacementMap in="SourceGraphic" in2="blurNoise" scale="55" xChannelSelector="R" yChannelSelector="B" result="disp"/>
         <feGaussianBlur in="disp" stdDeviation="0.6"/>
-      </filter>
-      <!-- smoke-settle: a ONE-SHOT entrance filter for the wordmark. JS drives
-           its turbulence + displacement + blur from smoky (dispersed) down to
-           identity, then removes the filter entirely so the resting wordmark is
-           the pristine signature paint (never altered). -->
-      <filter id="smoke-settle" x="-30%" y="-40%" width="160%" height="180%" color-interpolation-filters="sRGB">
-        <feTurbulence id="smoke-turb" type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="7" result="turb"/>
-        <feDisplacementMap id="smoke-disp" in="SourceGraphic" in2="turb" scale="120" xChannelSelector="R" yChannelSelector="G" result="disp"/>
-        <feGaussianBlur id="smoke-blur" in="disp" stdDeviation="6"/>
       </filter>
     </defs>
   </svg>
