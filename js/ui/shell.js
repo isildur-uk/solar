@@ -432,6 +432,15 @@
        shell's own modal. Logout returns to the cover on both surfaces. */
     var right = el("div", { class: "sh-right" });
 
+    // ⌘K palette hint — a small monochrome affordance at the right edge (macOS
+    // menu-extra feel). Shows the platform key (⌘ on Mac, Ctrl elsewhere) and
+    // opens the same command palette as the shortcut.
+    var isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+    var kbdHint = el("button", { class: "sh-kbd-hint", type: "button", title: "Command palette", "aria-label": "Open command palette" },
+      '<span class="sh-kbd-key">' + (isMac ? "⌘" : "Ctrl") + '</span><span class="sh-kbd-key">K</span>');
+    kbdHint.addEventListener("click", function () { openPalette(); });
+    right.appendChild(kbdHint);
+
     var oplog = el("button", { class: "sh-oplog", type: "button", title: "Operation log" }, "Operation log");
     oplog.addEventListener("click", function () {
       if (IS_REGISTRY) { var b = byId("reg-logs"); if (b) { b.click(); } }

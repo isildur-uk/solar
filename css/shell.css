@@ -44,18 +44,33 @@ html[data-theme="light"] .sh-wordmark { background: none; -webkit-text-fill-colo
   font-family: var(--mono); font-size: var(--fs-2xs); color: var(--dim); font-variant-numeric: tabular-nums; }
 .sh-user .sh-grade { color: var(--accent); font-weight: 700; }
 
-/* ---- Row 2: glass menu bar ---- */
+/* ---- Row 2: glass menu bar (macOS "vibrancy" feel, cosmic — not grey) ----
+   A translucent vibrancy-backed strip: a faint periwinkle wash over a
+   translucent base, stronger blur+saturate so the content behind tints the bar
+   (the "vibrancy" read) rather than a flat opaque fill. A hairline top rule
+   echoes the macOS menu-bar separation. */
 .sh-menubar {
   display: flex; align-items: center; gap: 2px;
-  background: rgba(14,14,12,0.72);
-  -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1);
+  background:
+    linear-gradient(180deg, rgba(142,162,255,0.05), rgba(142,162,255,0.02)),
+    rgba(14,14,12,0.58);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6);
+  border-top: 1px solid rgba(255,255,255,0.04);
   border-bottom: 1px solid var(--line);
   /* z-index lifts the whole Row-2 layer (and its absolute mega dropdown) above
      the Row-3 context bar, which follows in the DOM — so an open mega-menu is
      never underlapped by the breadcrumb/search row. */
   padding: 4px 10px; position: relative; z-index: 130;
 }
-html[data-theme="light"] .sh-menubar { background: rgba(251,248,239,0.82); }
+html[data-theme="light"] .sh-menubar {
+  background:
+    linear-gradient(180deg, rgba(74,91,214,0.05), rgba(74,91,214,0.02)),
+    rgba(251,248,239,0.62);
+  border-top: 1px solid rgba(255,255,255,0.5);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sh-tab > summary, .sh-icobtn, .sh-kbd-hint { transition: background .16s ease, color .16s ease, box-shadow .16s ease; }
+}
 .sh-home { display: inline-flex; align-items: center; justify-content: center;
   width: 30px; height: 28px; border: 0; background: transparent; color: var(--dim);
   cursor: pointer; border-radius: var(--radius); margin-right: 4px; }
@@ -75,12 +90,40 @@ html[data-theme="light"] .sh-menubar { background: rgba(251,248,239,0.82); }
   text-transform: uppercase; letter-spacing: .02em;
 }
 .sh-tab > summary::-webkit-details-marker { display: none; }
-.sh-tab > summary:hover { color: var(--accent); background: rgba(142,162,255,0.06); }
-.sh-tab[open] > summary { color: var(--accent); background: rgba(142,162,255,0.10); }
+/* macOS-style HOVER PILL: a pale rounded highlight behind the label on hover. */
+.sh-tab > summary:hover { color: var(--accent); background: rgba(142,162,255,0.10); border-radius: 7px; }
+/* OPEN PILL: while the mega is open the label keeps a stronger periwinkle pill
+   with a faint inner ring, so the active menu reads as "held down" (image1). */
+.sh-tab[open] > summary {
+  color: var(--accent); background: rgba(142,162,255,0.16); border-radius: 7px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+html[data-theme="light"] .sh-tab > summary:hover { background: rgba(74,91,214,0.09); }
+html[data-theme="light"] .sh-tab[open] > summary {
+  background: rgba(74,91,214,0.14);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
 .sh-tab > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-/* right cluster on the menu bar */
-.sh-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+/* right cluster on the menu bar (macOS "menu extras" — monochrome, template
+   style; the icon buttons already paint with currentColor so they recolour per
+   theme). A hairline separator sets the status cluster off from the tabs. */
+.sh-right { margin-left: auto; display: flex; align-items: center; gap: 6px;
+  padding-left: 10px; border-left: 1px solid var(--line); }
+/* ⌘K palette hint chip — small monochrome key-caps, macOS menu-extra feel */
+.sh-kbd-hint {
+  display: inline-flex; align-items: center; gap: 2px;
+  background: transparent; border: 0; cursor: pointer;
+  padding: 3px 6px; border-radius: 6px; margin-right: 2px;
+}
+.sh-kbd-hint:hover { background: rgba(142,162,255,0.10); }
+html[data-theme="light"] .sh-kbd-hint:hover { background: rgba(74,91,214,0.09); }
+.sh-kbd-key {
+  font: 600 var(--fs-2xs) var(--mono); color: var(--faint);
+  border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; line-height: 1.5;
+  min-width: 15px; text-align: center;
+}
+.sh-kbd-hint:hover .sh-kbd-key { color: var(--accent); border-color: var(--accent-dim); }
 .sh-oplog {
   font-size: var(--fs-2xs); font-family: var(--mono); letter-spacing: .04em;
   color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-dim);
