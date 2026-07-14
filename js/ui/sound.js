@@ -77,18 +77,36 @@
     });
   }
 
+  var lastCueAt = 0;    // timestamp of the last SEMANTIC cue (for click dedupe)
+
   // Play a cue by semantic name. No-op if muted, not yet unlocked, or unknown.
-  function play(name) {
+  // `vol` optionally overrides the volume (used by the soft generic click).
+  function play(name, vol) {
     if (muted || !unlocked) return;
     var src = pool[name];
     if (!src) return;
     try {
       // Clone so rapid repeats don't cut each other off, and volume stays fixed.
       var node = src.cloneNode(true);
-      node.volume = VOLUME;
+      node.volume = (typeof vol === "number") ? vol : VOLUME;
       var p = node.play();
       if (p && p.catch) p.catch(function () { /* play refused -> silent */ });
     } catch (e) { /* noop */ }
+  }
+
+  // A semantic cue was requested — stamp it so the generic click cue for the
+  // SAME interaction is suppressed (one cue per interaction, no double-fire).
+  function playCue(name) { lastCueAt = Date.now(); play(name); }
+
+  // Soft generic click. Fires on genuine user clicks EXCEPT when a semantic cue
+  // just fired for the same interaction (within CLICK_DEDUPE ms). Quieter than
+  // the semantic cues so it stays a subtle tick, never competing.
+  var CLICK_DEDUPE = 120;      // a semantic cue within this window wins
+  var CLICK_VOL = 0.12;        // softer than the 0.25 semantic cues
+  function playClick() {
+    if (muted || !unlocked) return;
+    if (Date.now() - lastCueAt < CLICK_DEDUPE) return;   // a semantic cue owns this interaction
+    play("select", CLICK_VOL);
   }
 
   function setMuted(m) {
@@ -117,14 +135,28 @@
     muted = readPref();
     preload();
     armUnlock();
+    // Soft generic click on real user clicks (capture phase, after the app's own
+    // handlers may have queued a semantic cue in the same tick). Deduped so it
+    // never doubles with a semantic cue. Left-clicks on interactive targets only
+    // — not on plain text/whitespace, never on hover/keydown/scroll.
+    document.addEventListener("click", function (e) {
+      if (e.button !== 0) return;
+      var t = e.target;
+      if (t && t.closest && t.closest("button, a, summary, [role='button'], .btn, input[type='checkbox'], input[type='radio'], .op-card, .report-item, .sh-item, .sh-tab, [data-urn], [data-op]")) {
+        // let any semantic cue from the same click land first, then decide
+        setTimeout(playClick, 0);
+      }
+    }, true);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 
-  // Public API — mirrors the SolarShell/CRGraph provider style.
+  // Public API — mirrors the SolarShell/CRGraph provider style. `play` routes
+  // through playCue so every semantic cue stamps the dedupe lock (suppressing
+  // the generic click for the same interaction).
   window.SolarSound = {
-    play: play,
+    play: playCue,
     setMuted: setMuted,
     toggleMuted: toggleMuted,
     isMuted: isMuted,
