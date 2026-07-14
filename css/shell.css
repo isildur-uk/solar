@@ -245,6 +245,36 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
   .fx-marker.is-marking { animation: none; background-size: 0% 44%; }
 }
 
+/* ---- in-app wordmark mode transition (Charting <-> Database switch) --------
+   The 'SOLAR — Charting/Database' wordmark animates ONLY on the mode switch:
+   the OUTGOING mode word dissolves (fx-smoke, Ben's #61 recoloured, one-shot as
+   the page leaves) and the INCOMING mode word gets the fx-marker Hi-Liter sweep
+   on load. Neither loops — an always-running effect on the top-left wordmark is
+   too much. This is scoped to the in-app .sh-mode word; the HERO page's own
+   looping wordmark smoke is untouched. Both gated by reduced-motion. */
+.sh-mode { display: inline-block; }
+/* MARKER-IN: reuse .fx-marker on the mode word, tuned to its small scale. The
+   marker span is injected around the mode text and .is-marking fired on load. */
+.sh-mode .fx-marker { padding: 0.02em 0.18em; }
+/* SMOKE-OUT: a single upward dissolve as the analyst switches tools. --sm-2/-3
+   are the cosmic tints (periwinkle/violet), recoloured from Ben's magenta/cyan. */
+.sh-mode.fx-smoke-out {
+  --sm-2: var(--accent, #8ea2ff);
+  --sm-3: #b39dff;
+  animation: sh-mode-smoke 0.5s ease-in forwards;
+  will-change: transform, opacity, filter;
+}
+@keyframes sh-mode-smoke {
+  0%   { transform: none; opacity: 1; filter: blur(0); }
+  40%  { transform: translateY(-3px) scale(1.03); opacity: 0.7; filter: blur(1.4px); color: var(--sm-3); }
+  100% { transform: translate(2px, -14px) scale(1.08); opacity: 0; filter: blur(9px); color: var(--sm-2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* no dissolve, no sweep — the switch is instant, the mode word just changes. */
+  .sh-mode.fx-smoke-out { animation: none; opacity: 1; }
+  .sh-mode .fx-marker.is-marking { animation: none; background-size: 0% 44%; }
+}
+
 /* ---- theme switch (Switch component) ---------------------------------
    Track lights periwinkle in the "on" (light) position; thumb glides and
    swaps sun/moon. Full form (Settings) shows a text label; compact form

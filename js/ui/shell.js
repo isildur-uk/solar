@@ -377,13 +377,44 @@
     // mode so the top-left reads "SOLAR — Charting" (workbench) / "SOLAR —
     // Database" (registry). One product, two tools.
     var wm = el("a", { class: "sh-wordmark", href: HERO, title: "SOLAR home" },
-      'SOL<span class="accent">AR</span><span class="sh-mode"> — ' + (IS_REGISTRY ? "Database" : "Charting") + '</span>');
+      'SOL<span class="accent">AR</span><span class="sh-mode"> — <span class="sh-mode-word">' + (IS_REGISTRY ? "Database" : "Charting") + '</span></span>');
+    var modeSpan = wm.querySelector(".sh-mode");
+    // MARKER-IN (A2): sweep the fx-marker Hi-Liter across the mode word once on
+    // load, so switching tools lands with the new mode word highlighting in.
+    // The wordmark is always at the top (never scrolled), so — unlike a
+    // scroll-triggered heading — we fire the one-shot directly rather than via
+    // IntersectionObserver. Reduced-motion is handled in CSS (no paint).
+    (function () {
+      var word = wm.querySelector(".sh-mode-word");
+      if (!word) { return; }
+      var span = document.createElement("span");
+      span.className = "fx-marker";
+      span.textContent = word.textContent;   // plain text — no HTML injection
+      word.textContent = "";
+      word.appendChild(span);
+      // next frame so the resting (0%) state is committed before the sweep runs
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { span.classList.add("is-marking"); });
+      });
+    })();
+    // SMOKE-OUT (A2): switching tools dissolves the OUTGOING mode word (fx-smoke,
+    // one-shot) before the page navigates. Reduced-motion -> navigate at once.
+    function switchTo(url) {
+      var reduce = false;
+      try { reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { /* noop */ }
+      if (reduce || !modeSpan) { location.href = url; return; }
+      modeSpan.classList.add("fx-smoke-out");
+      var went = false;
+      var go = function () { if (!went) { went = true; location.href = url; } };
+      modeSpan.addEventListener("animationend", go, { once: true });
+      setTimeout(go, 620);   // fallback so navigation never hangs on the effect
+    }
     var surf = el("div", { class: "sh-surface" });
     surf.appendChild(el("a", IS_REGISTRY ? { href: "#" } : { href: "#", "aria-current": "true" }, "Charting"));
     surf.appendChild(el("a", IS_REGISTRY ? { href: "#", "aria-current": "true" } : { href: "#" }, "Database"));
-    // route the surface links to the corresponding surface
-    surf.children[0].addEventListener("click", function (e) { e.preventDefault(); if (IS_REGISTRY) { location.href = OTHER; } });
-    surf.children[1].addEventListener("click", function (e) { e.preventDefault(); if (!IS_REGISTRY) { location.href = OTHER; } });
+    // route the surface links to the corresponding surface (via the transition)
+    surf.children[0].addEventListener("click", function (e) { e.preventDefault(); if (IS_REGISTRY) { switchTo(OTHER); } });
+    surf.children[1].addEventListener("click", function (e) { e.preventDefault(); if (!IS_REGISTRY) { switchTo(OTHER); } });
     var user = el("div", { class: "sh-user" }, '<span class="sh-grade">G5</span><span>Benedict WILSON</span>');
     idRow.appendChild(wm); idRow.appendChild(surf);
     // Shared "Case: <name>" context — the SAME case reads on BOTH tools (one
