@@ -6,7 +6,13 @@
    Built ALONGSIDE the existing toolbars; non-destructive.
    ============================================================ */
 
-#solar-shell { position: relative; z-index: 120; font-family: var(--sans); }
+/* Top chrome is FROZEN (sticky) so it stays put on scroll in both tools.
+   On the workbench the body doesn't scroll (chart is fixed-height) so this is a
+   no-op there; on the registry .main scrolls beneath it. */
+#solar-shell {
+  position: sticky; top: 0; z-index: 120; font-family: var(--sans);
+  background: var(--bg);
+}
 
 /* ---- Row 1: identity strip (dark ground) ---- */
 .sh-identity {
@@ -24,6 +30,9 @@
 }
 html[data-theme="light"] .sh-wordmark { background: none; -webkit-text-fill-color: var(--text); color: var(--text); }
 .sh-wordmark .accent { -webkit-text-fill-color: var(--accent); color: var(--accent); }
+/* mode suffix ("— Charting" / "— Database") — lighter weight so SOLAR still
+   leads; the em-dash + mode reads as the active tool within the one product. */
+.sh-wordmark .sh-mode { font-weight: 400; -webkit-text-fill-color: var(--dim); color: var(--dim); }
 .sh-surface { display: flex; gap: 4px; }
 .sh-surface a {
   font-size: var(--fs-xs); color: var(--dim); text-decoration: none;
@@ -146,6 +155,11 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
 .sh-case-input:focus {
   outline: none; background: var(--glass-fill);
   border-color: var(--accent); box-shadow: 0 0 0 2px rgba(142,162,255,0.28);
+}
+/* registry read-only case name — same type as the workbench input, no edit affordance */
+.sh-case-name {
+  font-size: var(--fs-xs); font-family: var(--mono); color: var(--text);
+  padding: 3px 7px; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* Chunk 5 — retire the old toolbars (kept in DOM as the control substrate) */

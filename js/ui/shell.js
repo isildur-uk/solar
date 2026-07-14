@@ -85,6 +85,20 @@
   // route to the other surface
   function routeOther() { location.href = OTHER; }
 
+  // Read the shared charting-case name from the one source of truth (the case
+  // store's localStorage), so both tools show "Case: <name>" consistently.
+  function sharedCaseName() {
+    try {
+      var raw = localStorage.getItem("chart_room_case_v1");
+      if (raw) {
+        var j = JSON.parse(raw);
+        var n = j && j.meta && j.meta.name;
+        if (n) { return String(n); }
+      }
+    } catch (e) { /* noop */ }
+    return "Untitled case";
+  }
+
   var ico = {
     plus: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
     doc: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h5l3 3V13.5H4z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9 2.5v3h3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
@@ -219,7 +233,7 @@
           { label: "Timeline", icon: ico.clock, run: toggleEl("#timeline-head") },
           { label: "Legend & filters", icon: ico.filter, run: api("CRLegend.toggle", [], "btn-legend") },
           { label: "Search the chart", icon: ico.search, run: focusSearch() },
-          { label: "Open in Entity Management", icon: ico.net, run: routeOther, route: true }
+          { label: "Open in Database", icon: ico.net, run: routeOther, route: true }
         ] }
       ]
     };
@@ -317,7 +331,7 @@
   var crumbRootRun = null;   // surface sets how its root navigates (e.g. registry showHome)
   function setBreadcrumbRoot(fn) { crumbRootRun = fn; }
   function setBreadcrumb(trail) {
-    var root = { label: IS_REGISTRY ? "Entity Management" : "Case Management" };
+    var root = { label: IS_REGISTRY ? "Database" : "Charting" };
     if (typeof crumbRootRun === "function") { root.run = crumbRootRun; }
     renderCrumbs([root].concat(trail || []));
   }
@@ -356,22 +370,34 @@
 
     /* ---- Row 1: identity ---- */
     var idRow = el("div", { class: "sh-identity" });
-    var wm = el("a", { class: "sh-wordmark", href: HERO, title: "SOLAR home" }, 'SOL<span class="accent">AR</span>');
+    // Mode-aware identity: keep the SOLAR wordmark styling, append the active
+    // mode so the top-left reads "SOLAR — Charting" (workbench) / "SOLAR —
+    // Database" (registry). One product, two tools.
+    var wm = el("a", { class: "sh-wordmark", href: HERO, title: "SOLAR home" },
+      'SOL<span class="accent">AR</span><span class="sh-mode"> — ' + (IS_REGISTRY ? "Database" : "Charting") + '</span>');
     var surf = el("div", { class: "sh-surface" });
-    surf.appendChild(el("a", IS_REGISTRY ? { href: "#" } : { href: "#", "aria-current": "true" }, "Case Management"));
-    surf.appendChild(el("a", IS_REGISTRY ? { href: "#", "aria-current": "true" } : { href: "#" }, "Entity Management"));
+    surf.appendChild(el("a", IS_REGISTRY ? { href: "#" } : { href: "#", "aria-current": "true" }, "Charting"));
+    surf.appendChild(el("a", IS_REGISTRY ? { href: "#", "aria-current": "true" } : { href: "#" }, "Database"));
     // route the surface links to the corresponding surface
     surf.children[0].addEventListener("click", function (e) { e.preventDefault(); if (IS_REGISTRY) { location.href = OTHER; } });
     surf.children[1].addEventListener("click", function (e) { e.preventDefault(); if (!IS_REGISTRY) { location.href = OTHER; } });
     var user = el("div", { class: "sh-user" }, '<span class="sh-grade">G5</span><span>Benedict WILSON</span>');
     idRow.appendChild(wm); idRow.appendChild(surf);
-    // Workbench only: a slot that will receive the real #case-name input
-    // (re-parented after mount) so the active case reads/edits in Row 1.
-    if (!IS_REGISTRY) {
-      var caseSlot = el("div", { class: "sh-case" });
-      caseSlot.appendChild(el("span", { class: "sh-case-label" }, "Case"));
-      idRow.appendChild(caseSlot);
+    // Shared "Case: <name>" context — the SAME case reads on BOTH tools (one
+    // product). The workbench re-parents its editable #case-name input into this
+    // slot (editable there); the registry shows the same name read-only from the
+    // shared store so the analyst always sees which case they're working.
+    var caseSlot = el("div", { class: "sh-case" });
+    caseSlot.appendChild(el("span", { class: "sh-case-label" }, "Case"));
+    if (IS_REGISTRY) {
+      var roName = el("span", { class: "sh-case-name", title: "Active charting case (shared)" }, escHtml(sharedCaseName()));
+      caseSlot.appendChild(roName);
+      // keep it fresh if the workbench edits the case in another tab
+      window.addEventListener("storage", function (e) {
+        if (e.key === "chart_room_case_v1") { roName.textContent = sharedCaseName(); }
+      });
     }
+    idRow.appendChild(caseSlot);
     idRow.appendChild(user);
 
     /* ---- Row 2: menu bar ---- */
@@ -438,7 +464,7 @@
     var crumbs = el("nav", { class: "sh-crumbs", "aria-label": "Breadcrumb" });
     ctx.appendChild(crumbs);
     crumbEl = crumbs;
-    renderCrumbs([{ label: IS_REGISTRY ? "Entity Management" : "Case Management" }]);
+    renderCrumbs([{ label: IS_REGISTRY ? "Database" : "Charting" }]);
     // Search slot — receives the real #search input (re-parented after mount).
     var searchSlot = el("div", { class: "sh-search" });
     ctx.appendChild(searchSlot);
@@ -696,8 +722,8 @@
       });
     }
     out.push({
-      label: IS_REGISTRY ? "Go to Case Management (workbench)" : "Go to Entity Management (database)",
-      hint: "Switch surface", group: "Navigate", run: function () { location.href = OTHER; }
+      label: IS_REGISTRY ? "Open Charting (workbench)" : "Open Database (registry)",
+      hint: "Switch tool", group: "Navigate", run: function () { location.href = OTHER; }
     });
     out.push({ label: "Settings", hint: "Theme, identity, about", group: "Navigate", run: function () { openSettings("settings"); } });
     return out;
