@@ -33,13 +33,44 @@ html[data-theme="light"] .sh-wordmark { background: none; -webkit-text-fill-colo
 /* mode suffix ("— Charting" / "— Database") — lighter weight so SOLAR still
    leads; the em-dash + mode reads as the active tool within the one product. */
 .sh-wordmark .sh-mode { font-weight: 400; -webkit-text-fill-color: var(--dim); color: var(--dim); }
-.sh-surface { display: flex; gap: 4px; }
-.sh-surface a {
-  font-size: var(--fs-xs); color: var(--dim); text-decoration: none;
-  padding: 3px 8px; border-radius: var(--radius); letter-spacing: .01em;
+.sh-surface { display: flex; gap: 6px; }
+/* fx-6 "Fill Y" (Ben's) — recoloured to cosmic: a periwinkle fill scales up
+   from the centre on hover, the label flips to dark ink. Sized to Row 1 (kept
+   tight — his 13px/24px would break the identity strip). --bink is the outline/
+   fill (periwinkle), --bsurf the label colour once filled (near-black). */
+.sh-surf-btn {
+  --bink: var(--accent);
+  --bsurf: #0f1116;
+  position: relative; isolation: isolate; overflow: hidden;
+  display: inline-flex; align-items: center;
+  font-size: var(--fs-xs); font-weight: 600; letter-spacing: .04em;
+  color: var(--dim); text-decoration: none;
+  padding: 3px 10px; border-radius: 6px;
+  border: 1px solid transparent;
 }
-.sh-surface a:hover { color: var(--text); }
-.sh-surface a[aria-current="true"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+.sh-surf-label { position: relative; z-index: 2; display: inline-block; }
+.sh-surf-btn::before {
+  content: ""; position: absolute; z-index: 1; inset: 0;
+  background: var(--bink); border-radius: inherit;
+  transform: scaleY(0); transform-origin: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sh-surf-btn, .sh-surf-label { transition: color .32s cubic-bezier(.22,1,.36,1), border-color .32s ease; }
+  .sh-surf-btn::before { transition: transform .32s cubic-bezier(.22,1,.36,1); }
+}
+/* hover on a NON-current button: the fill sweeps up, label goes dark-ink */
+.sh-surf-btn:not([aria-current="true"]):hover { border-color: var(--bink); color: var(--bsurf); }
+.sh-surf-btn:not([aria-current="true"]):hover::before { transform: scaleY(1); }
+.sh-surf-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* the CURRENT mode stays visually distinct from the hover fill: a persistent
+   outline-only periwinkle pill (not the solid fill), so it reads as "you are
+   here" rather than "hovered". */
+.sh-surf-btn[aria-current="true"] {
+  color: var(--accent); border-color: var(--accent-dim);
+  background: rgba(142,162,255,0.10); cursor: default;
+}
+html[data-theme="light"] .sh-surf-btn { --bsurf: #f7f3eb; }
+html[data-theme="light"] .sh-surf-btn[aria-current="true"] { background: rgba(74,91,214,0.10); }
 .sh-user { margin-left: auto; display: flex; align-items: center; gap: 8px;
   font-family: var(--mono); font-size: var(--fs-2xs); color: var(--dim); font-variant-numeric: tabular-nums; }
 .sh-user .sh-grade { color: var(--accent); font-weight: 700; }

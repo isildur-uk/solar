@@ -409,9 +409,18 @@
       modeSpan.addEventListener("animationend", go, { once: true });
       setTimeout(go, 620);   // fallback so navigation never hangs on the effect
     }
+    // Surface switch — Ben's fx-6 "Fill Y" hover: a periwinkle fill scales up
+    // vertically on hover with the label flipping to dark ink. The CURRENT mode
+    // carries aria-current and a persistent distinct state (so it never reads as
+    // just an un-hovered button). The label is wrapped so it layers above the fill.
     var surf = el("div", { class: "sh-surface" });
-    surf.appendChild(el("a", IS_REGISTRY ? { href: "#" } : { href: "#", "aria-current": "true" }, "Charting"));
-    surf.appendChild(el("a", IS_REGISTRY ? { href: "#", "aria-current": "true" } : { href: "#" }, "Database"));
+    function surfLink(label, isCurrent) {
+      var a = el("a", isCurrent ? { class: "sh-surf-btn fx-6", href: "#", "aria-current": "true" } : { class: "sh-surf-btn fx-6", href: "#" },
+        '<span class="sh-surf-label">' + label + '</span>');
+      return a;
+    }
+    surf.appendChild(surfLink("Charting", !IS_REGISTRY));
+    surf.appendChild(surfLink("Database", IS_REGISTRY));
     // route the surface links to the corresponding surface (via the transition)
     surf.children[0].addEventListener("click", function (e) { e.preventDefault(); if (IS_REGISTRY) { switchTo(OTHER); } });
     surf.children[1].addEventListener("click", function (e) { e.preventDefault(); if (!IS_REGISTRY) { switchTo(OTHER); } });
