@@ -23,7 +23,8 @@
     logout: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M9.5 3.5H12A1.5 1.5 0 0 1 13.5 5v6A1.5 1.5 0 0 1 12 12.5H9.5M6.5 8h5m0 0L9 5.5M11.5 8L9 10.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     gear: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="2.1" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>',
     chevL: '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M7.5 2.5L4 6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    chevR: '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M4.5 2.5L8 6l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    chevR: '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M4.5 2.5L8 6l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    inbox: '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   };
 
   // The 5 tab labels (menu contents are filled per-tab by SHELL_SPEC below).
@@ -441,6 +442,25 @@
       var wn = el("button", { class: "sh-whatsnew", type: "button", title: "What’s New" }, "What’s New");
       wn.addEventListener("click", function () { var b = byId("reg-whatsnew"); if (b) { b.click(); } });
       right.appendChild(wn);
+    }
+
+    // Secure inbox (deconfliction + messaging) — registry surface only. Shows an
+    // unread-count badge; opens the SolarInbox drawer. Registered as a shell
+    // action so ⌘K / the Deconfliction menu items reach the same panel.
+    if (IS_REGISTRY) {
+      var inboxBtn = el("button", { class: "sh-icobtn sh-inbox", type: "button", title: "Secure inbox", "aria-label": "Secure inbox" }, svg.inbox);
+      var inboxBadge = el("span", { class: "sh-inbox-badge", "aria-hidden": "true" });
+      inboxBadge.hidden = true; inboxBtn.appendChild(inboxBadge);
+      function reflectInbox() {
+        var n = (window.SolarInbox && window.SolarInbox.unreadCount) ? window.SolarInbox.unreadCount() : 0;
+        inboxBadge.textContent = n > 9 ? "9+" : String(n);
+        inboxBadge.hidden = !n;
+        inboxBtn.setAttribute("aria-label", n ? ("Secure inbox — " + n + " unread") : "Secure inbox");
+      }
+      inboxBtn.addEventListener("click", function () { if (window.SolarInbox) { window.SolarInbox.open("list"); } });
+      window.addEventListener("solar-inbox", reflectInbox);
+      reflectInbox();
+      right.appendChild(inboxBtn);
     }
 
     var help = el("button", { class: "sh-icobtn", type: "button", title: "Help & about", "aria-label": "Help and about" }, svg.help);
