@@ -1112,3 +1112,78 @@ html[data-theme="light"] .rh-toggle-count { color: #fff; }
   color: var(--text); font: var(--fs-xs) var(--sans); padding: 6px 8px; line-height: 1.4;
 }
 .rh-note-ta:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(142,162,255,0.24); }
+
+/* ============================================================
+   Report hover-preview LIGHTBOX (registry/core/preview.js)
+   Native <dialog> centre-stage over a dark ::backdrop scrim, reversible
+   fade/scale. Dwell-hover (~1.2s) opens it; Esc / backdrop-click / × close it.
+   Cosmic-glass, both themes, reduced-motion (no scale + longer dwell). All
+   report text is set via textContent (XSS-safe).
+   ============================================================ */
+.rp-lightbox {
+  border: 0; padding: 0; background: transparent; overflow: visible;
+  max-width: min(560px, 94vw); width: 100%;
+  color: var(--text);
+}
+.rp-lightbox::backdrop {
+  background: rgba(6,6,5,0.62);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  opacity: 0; transition: opacity .2s ease;
+}
+.rp-lightbox.is-open::backdrop { opacity: 1; }
+
+.rp-card {
+  border-radius: 12px; padding: 20px 22px;
+  background: linear-gradient(180deg, rgba(142,162,255,0.07), rgba(0,0,0,0)), var(--panel);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  box-shadow: 0 26px 70px rgba(0,0,0,0.6);
+}
+html[data-theme="light"] .rp-card { background: linear-gradient(180deg, rgba(74,91,214,0.06), rgba(0,0,0,0)), var(--panel); }
+/* reversible fade + scale on the card; the dialog toggles .is-open */
+.rp-lightbox .rp-card { opacity: 0; transform: scale(0.96); transition: opacity .2s ease, transform .2s cubic-bezier(.22,1,.36,1); }
+.rp-lightbox.is-open .rp-card { opacity: 1; transform: none; }
+/* reduced-motion: opacity only, no scale, no backdrop blur transition */
+.rp-lightbox.rp-reduced .rp-card { transform: none; transition: opacity .12s ease; }
+.rp-lightbox.rp-reduced::backdrop { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .rp-lightbox .rp-card { transform: none; transition: opacity .12s ease; }
+  .rp-lightbox::backdrop { transition: none; }
+}
+
+.rp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.rp-kicker { font: 700 var(--fs-2xs) var(--mono); letter-spacing: .14em; color: var(--accent); }
+.rp-x { background: transparent; border: 0; color: var(--dim); font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px; border-radius: 4px; }
+.rp-x:hover { color: var(--accent); background: rgba(142,162,255,0.08); }
+.rp-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.rp-title { margin: 0 0 8px; font-size: var(--fs-md); line-height: 1.3; color: var(--text); }
+.rp-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font: var(--fs-xs) var(--mono); color: var(--dim); margin-bottom: 10px; }
+.rp-urn { color: var(--accent); font-weight: 700; }
+.rp-badges { display: flex; gap: 8px; margin-bottom: 14px; }
+.rp-grade, .rp-mark {
+  font: 700 var(--fs-2xs) var(--mono); letter-spacing: .06em; padding: 2px 8px; border-radius: 4px;
+}
+.rp-grade { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent); }
+.rp-mark { color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); }
+
+.rp-summary {
+  border-top: 1px solid var(--line); padding-top: 12px;
+  font: 500 var(--fs-sm)/1.55 var(--sans); color: var(--ink);
+  max-height: 34vh; overflow-y: auto;
+}
+.rp-sum-line { margin: 0 0 8px; white-space: pre-wrap; }
+.rp-sum-line:last-child { margin-bottom: 0; }
+.rp-sum-empty { margin: 0; color: var(--faint); font-style: italic; }
+
+.rp-foot { display: flex; justify-content: flex-end; margin-top: 16px; }
+.rp-open {
+  font: 600 var(--fs-sm) var(--sans); color: var(--text);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 46%, transparent);
+  border-radius: 6px; padding: 7px 14px; cursor: pointer;
+}
+.rp-open:hover { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+.rp-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* the dwell-armed row gets a subtle hint that a preview is coming */
+.report-item:hover, .op-table tr[data-urn]:hover { cursor: pointer; }

@@ -1895,6 +1895,34 @@
     var wn=document.getElementById("reg-whatsnew"); if(wn) wn.addEventListener("click", showWhatsNew);
     var lk=document.getElementById("reg-lock"); if(lk) lk.addEventListener("click", lockWorkspace);
   })();
+  /* Report hover-preview lightbox (Ben B2): dwell-hover a report row (~1.2s) ->
+     a modal <dialog> lightbox with a short preview. Self-contained module
+     (window.RegistryPreview); we supply a data provider + the open-full action.
+     Clicking a row still navigates normally (we never touch the click). */
+  (function () {
+    if (!window.RegistryPreview || !window.RegistryPreview.attach) { return; }
+    function firstLine(s) { s = String(s == null ? "" : s).trim(); return s; }
+    function provider(urn) {
+      return repo.get(urn).then(function (ir) {
+        if (!ir) { return null; }
+        var items = (ir.items || []).filter(function (i) { return !i.isProvenance; });
+        var summary = items.slice(0, 2).map(function (it) { return firstLine(it.text); }).filter(Boolean);
+        var g = null; try { g = V.reportGrade(ir); } catch (e) { g = null; }
+        var fmtISOtoDMY = function (iso) { if (!iso) return ''; var d = new Date(iso); if (isNaN(d.getTime())) return ''; function p(n){return (n<10?'0':'')+n;} return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(); };
+        return {
+          title: ir.title || "(untitled)",
+          urn: ir.urn,
+          operation: ir.operation || "",
+          date: ir.dateOfCollection || ir.dateOfIntelligence || fmtISOtoDMY(ir.createdAt) || "",
+          marking: ir.protectiveMarking || "",
+          grade: g ? (String(g.sourceEval || "") + String(g.intelEval || "") + String(g.handling || "")) : "",
+          summary: summary
+        };
+      });
+    }
+    window.RegistryPreview.attach(provider, function (urn) { showDetail(urn); });
+  })();
+
   var _searchT;
   els.search.addEventListener("input", function () {
     clearTimeout(_searchT);
