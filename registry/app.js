@@ -891,13 +891,13 @@
         ? '<table class="ir-items"><thead><tr><th class="c-no">Item</th><th>Report</th><th class="c-src">Source</th><th class="c-si">S</th><th class="c-si">I</th></tr></thead><tbody>'
           + items.map(function(it,i){ var col=_SM?_SM.colour(it.sourceType):'#8d99ae'; var gr=esc(it.sourceEval)+esc(it.intelEval), hd=esc(h.code||'P');
               return '<tr><td class="c-no">'+(i+1)+'</td>'
-                + '<td class="c-report"><pre class="item-text">'+highlightExtract(it.text, siHighlightOn)+'</pre></td>'
+                + '<td class="c-report"><pre class="item-text" data-hl-item="'+i+'">'+highlightExtract(it.text, siHighlightOn)+'</pre></td>'
                 + '<td class="c-src"><button type="button" class="src-chip" data-src="'+esc(it.sourceType)+'" style="--src:'+esc(col)+'" title="What is '+esc(it.sourceType)+'? Show its other checks in this operation">'+esc(it.sourceType)+'</button></td>'
                 + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-rel="'+esc(it.sourceEval)+'" data-tip="Source evaluation '+esc(it.sourceEval)+' — grade '+esc(gr)+', handling '+esc(hd)+'. Click to explain.">'+esc(it.sourceEval)+'</button></td>'
                 + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-assess="'+esc(it.intelEval)+'" data-tip="Intelligence evaluation '+esc(it.intelEval)+' — grade '+esc(gr)+', handling '+esc(hd)+'. Click to explain.">'+esc(it.intelEval)+'</button></td></tr>'; }).join('')
           + '</tbody></table>'
         : '<p class="empty">No items.</p>';
-      var irProvTable = '<table class="ir-items ir-prov"><tbody><tr><td class="c-no">P</td><td class="c-report"><pre class="item-text">'+highlightExtract(pvd.text || '—', true)+'</pre></td><td class="c-src">Assessment</td><td class="c-si" data-rel="'+esc(pvd.sourceEval||'')+'">'+esc(pvd.sourceEval||'-')+'</td><td class="c-si" data-assess="'+esc(pvd.intelEval||'')+'">'+esc(pvd.intelEval||'-')+'</td></tr></tbody></table>';
+      var irProvTable = '<table class="ir-items ir-prov"><tbody><tr><td class="c-no">P</td><td class="c-report"><pre class="item-text" data-hl-item="P">'+highlightExtract(pvd.text || '—', true)+'</pre></td><td class="c-src">Assessment</td><td class="c-si" data-rel="'+esc(pvd.sourceEval||'')+'">'+esc(pvd.sourceEval||'-')+'</td><td class="c-si" data-assess="'+esc(pvd.intelEval||'')+'">'+esc(pvd.intelEval||'-')+'</td></tr></tbody></table>';
       var backLabel = cameFromResults ? (activeOp ? esc(activeOp) : "All reports") : "Overview";
       els.main.innerHTML =
         '<div class="detail page">' +
@@ -962,6 +962,13 @@
       if (_hm) _hm.addEventListener("click", function () { showHome(); });
       lastDetailUrn = ir.urn;
       markActiveReport();
+      // Analyst highlighter: select text in a report body -> marker highlight +
+      // saved note. Attaches to this report's item-text blocks and restores any
+      // saved highlights for this URN. Self-contained (window.RegistryHighlighter);
+      // no-op if the module isn't present.
+      if (window.RegistryHighlighter && window.RegistryHighlighter.attach) {
+        try { window.RegistryHighlighter.attach(els.main, ir.urn); } catch (e) { /* never break the report view */ }
+      }
       [].forEach.call(els.main.querySelectorAll('.src-chip'), function(c){ c.addEventListener('click', function(){ openSourceDrawer(c.getAttribute('data-src')); }); });
       [].forEach.call(els.main.querySelectorAll('[data-grade]'), function(g){ g.addEventListener('click', function(){ openIrDrawer(explainGrade(g.getAttribute('data-grade'), g.getAttribute('data-handling'))); }); });
       var _dx=document.getElementById('ir-drawer-x'); if(_dx) _dx.addEventListener('click', closeIrDrawer);
