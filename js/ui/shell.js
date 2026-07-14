@@ -152,23 +152,19 @@
     };
   }
 
+  /* CHARTING surface — Solar's own analysis menu (NOT the real DB menu):
+     Case · Analysis · Exports, plus a "← Database" bridge. Entities/Intelligence
+     are Database activities, reached via ← Database or ⌘K (not duplicated here). */
   function specWorkbench() {
     return {
       CASE: [
         { h: "Case file", items: [
           { label: "Rename case", icon: ico.doc, run: function () { var c = byId("case-name"); if (c) { c.focus(); c.select && c.select(); } } },
           { label: "Save case", icon: ico.save, run: clickId("btn-save") },
-          { label: "Open case", icon: ico.doc, run: clickId("btn-open") }
-        ] },
-        { h: "History", items: [
+          { label: "Open case", icon: ico.doc, run: clickId("btn-open") },
           { label: "Undo last change", icon: ico.undo, run: clickId("btn-undo") },
           { label: "Clear the chart", icon: ico.trash, run: clickId("btn-clear") }
         ] },
-        { h: "Cross-reference", items: [
-          { label: "Open the database", icon: ico.grid, run: routeOther, route: true }
-        ] }
-      ],
-      INTELLIGENCE: [
         { h: "Add intelligence", items: [
           { label: "Paste text", icon: ico.doc, run: clickId("btn-paste") },
           { label: "Add from URL", icon: ico.globe, run: clickId("btn-url") },
@@ -182,29 +178,9 @@
           { label: "3 · Financial enquiries", icon: ico.doc, run: clickId("btn-demo-3") },
           { label: "4 · Travel / border", icon: ico.doc, run: clickId("btn-demo-4") },
           { label: "5 · Arrests", icon: ico.doc, run: clickId("btn-demo-5") }
-        ] }
-      ],
-      ENTITIES: [
-        { h: "Find & focus", items: [
-          { label: "Search entities", icon: ico.search, run: focusSearch() },
-          { label: "Legend & filters", icon: ico.filter, run: api("CRLegend.toggle", [], "btn-legend") },
-          { label: "Deconflict duplicates", icon: ico.merge, run: clickId("btn-dedup") }
-        ] },
-        { h: "Layout", items: [
-          { label: "Group by type", icon: ico.grid, run: layout("grouped") },
-          { label: "Fit to view", icon: ico.fit, run: api("CRGraph.fit", [], "btn-fit") }
         ] },
         { h: "Cross-reference", items: [
-          { label: "Manage in the database", icon: ico.grid, run: routeOther, route: true }
-        ] }
-      ],
-      EXPORTS: [
-        { h: "Chart", items: [
-          { label: "Export chart PNG", icon: ico.png, run: api("CRGraph.exportPNG", [], "btn-png") }
-        ] },
-        { h: "Operational", items: [
-          { label: "Operational exports…", icon: ico.doc, run: clickId("btn-anx") },
-          { label: "Diagnostics", icon: ico.diag, run: clickId("btn-diag") }
+          { label: "← Database", icon: ico.grid, run: routeOther, route: true }
         ] }
       ],
       ANALYSIS: [
@@ -233,69 +209,160 @@
           { label: "Timeline", icon: ico.clock, run: toggleEl("#timeline-head") },
           { label: "Legend & filters", icon: ico.filter, run: api("CRLegend.toggle", [], "btn-legend") },
           { label: "Search the chart", icon: ico.search, run: focusSearch() },
-          { label: "Open in Database", icon: ico.net, run: routeOther, route: true }
+          { label: "← Database", icon: ico.net, run: routeOther, route: true }
+        ] }
+      ],
+      EXPORTS: [
+        { h: "Chart", items: [
+          { label: "Export chart PNG", icon: ico.png, run: api("CRGraph.exportPNG", [], "btn-png") }
+        ] },
+        { h: "Operational", items: [
+          { label: "Operational exports…", icon: ico.doc, run: clickId("btn-anx") },
+          { label: "Diagnostics", icon: ico.diag, run: clickId("btn-diag") }
         ] }
       ]
     };
   }
 
+  /* DATABASE surface — replicates the real NCA system menu (COMMON · DISCLOSURE
+     · EXHIBITS · INTELLIGENCE · OPERATIONS), item labels verbatim. [E] items
+     wire to Solar's real handlers via the CR-proxy / home-proxy registry; [F]
+     items are rendered visible-but-dimmed ("coming soon") via soon:true — never
+     a dead click. INTELLIGENCE is Solar's core, so it is mostly live. */
+  function soonItem(label, icon) { return { label: label, icon: icon || ico.doc, soon: true }; }
+
   function specRegistry() {
     return {
-      CASE: [
-        { h: "Reports", items: [
-          { label: "New report", icon: ico.plus, run: clickId("btn-new") },
-          { label: "View all reports", icon: ico.grid, run: registryHomeAction("home-all") },
-          { label: "Reload demo", icon: ico.undo, run: registryHomeAction("home-reload") }
+      COMMON: [
+        { h: "Documents", items: [
+          { label: "Add Document", icon: ico.doc, run: clickId("btn-new") },
+          { label: "Find Documents", icon: ico.search, run: focusSearch() }
         ] },
-        { h: "Identity", items: [
-          { label: "Set your identity", icon: ico.doc, run: clickId("reg-user") },
-          { label: "Lock workspace", icon: ico.doc, run: clickId("reg-lock") }
+        { h: "Organisations", items: [
+          soonItem("External Organisations", ico.grid)
         ] },
-        { h: "Cross-reference", items: [
-          { label: "Open the link chart", icon: ico.net, run: clickId("reg-chart"), route: true }
+        { h: "Person Management", items: [
+          soonItem("Operational Police Workers"),
+          { label: "View Person", icon: ico.net, run: registryHomeAction("home-entities") },
+          { label: "Aliases", icon: ico.doc, run: registryHomeAction("home-entities") },
+          soonItem("PNC Details"),
+          { label: "Contact Details", icon: ico.doc, run: registryHomeAction("home-entities") },
+          soonItem("Update Person")
+        ] }
+      ],
+      DISCLOSURE: [
+        { h: "Material", items: [
+          soonItem("Log Material"), soonItem("Unclassified Material"), soonItem("Classified Material")
+        ] },
+        { h: "Schedules", items: [ soonItem("Schedules") ] },
+        { h: "Search", items: [
+          soonItem("Find Material"),
+          { label: "Find Documents", icon: ico.search, run: focusSearch() },
+          soonItem("Find Statements")
+        ] },
+        { h: "Case Files", items: [
+          soonItem("Add Case File"),
+          { label: "Select Case File", icon: ico.grid, run: registryHomeAction("home-all") },
+          soonItem("Clone Case File"), soonItem("Update Case Details"),
+          soonItem("Remove Current Case File"), soonItem("Add Subjects"), soonItem("Remove Subjects")
+        ] },
+        { h: "Person Management", items: [
+          soonItem("Detainees"), soonItem("Subjects"), soonItem("Witnesses"),
+          soonItem("Witness Non-Availability"), soonItem("Persons: Victims Management")
+        ] },
+        { h: "File Management", items: [
+          soonItem("MG Forms"), soonItem("Record Viewing"), soonItem("Continuity Matrix"),
+          soonItem("Chronology of Contact"), soonItem("Case Diary"), soonItem("Print Material")
+        ] },
+        { h: "Prosecution Bundle", items: [
+          soonItem("Create Prosecution Bundle"), soonItem("View Submitted Bundles")
+        ] }
+      ],
+      EXHIBITS: [
+        { h: "Sources", items: [
+          soonItem("Add/Update Authority"), soonItem("Add/Update Scene"),
+          soonItem("Add/Update Search Register"), soonItem("Update Location")
+        ] },
+        { h: "Conveyances", items: [
+          soonItem("Create Motor Vehicle"), soonItem("Create Vessel"),
+          soonItem("Create Aircraft"), soonItem("Update Conveyance")
+        ] },
+        { h: "Exhibits", items: [
+          soonItem("Add Drugs"), soonItem("Add Media"), soonItem("Add Bladed Instrument"),
+          soonItem("Add Firearm"), soonItem("Add Other Weapon"), soonItem("Add Motor Vehicle"),
+          soonItem("Add Vessel"), soonItem("Add Aircraft"), soonItem("Add Cash"),
+          soonItem("Add Comms Device"), soonItem("Add Data or IT"), soonItem("Add Other"),
+          soonItem("Bulk Load"), soonItem("View Uploaded Scene Searches")
+        ] },
+        { h: "Exhibit Management", items: [
+          soonItem("Find Exhibits"), soonItem("Move Exhibit")
+        ] },
+        { h: "Search", items: [
+          soonItem("Create Search Query"), soonItem("View Search Results"),
+          soonItem("Run Favourite Search Query"), soonItem("Re-Run Search Query")
+        ] },
+        { h: "Templates", items: [
+          soonItem("Find Exhibit Receipts"), soonItem("Release Notification")
+        ] },
+        { h: "Branch Exhibit Management", items: [
+          soonItem("Find Exhibits"), soonItem("Move Exhibit")
         ] }
       ],
       INTELLIGENCE: [
-        { h: "Capture", items: [
-          { label: "New report", icon: ico.plus, run: clickId("btn-new") },
-          { label: "Intelligence logs", icon: ico.doc, run: clickId("reg-logs") }
+        { h: "Reports", items: [
+          { label: "Create Report", icon: ico.plus, run: clickId("btn-new") },
+          { label: "Find Authorised Reports", icon: ico.grid, run: registryHomeAction("home-all") },
+          { label: "Find Unauthorised Reports", icon: ico.grid, run: registryHomeAction("home-all") },
+          soonItem("View Risk Assessment Summary"),
+          { label: "View Suppressed Reports", icon: ico.doc, run: registryHomeAction("home-all") }
         ] },
-        { h: "Browse", items: [
-          { label: "Search reports", icon: ico.search, run: focusSearch() },
-          { label: "View all reports", icon: ico.grid, run: registryHomeAction("home-all") }
+        { h: "ISR", items: [
+          { label: "Find Sources", icon: ico.search, run: focusSearch() },
+          soonItem("Find SREs")
+        ] },
+        { h: "Dissemination", items: [
+          soonItem("Create Package"), soonItem("Find Packages"), soonItem("View Suppressed Packages")
+        ] },
+        { h: "Search", items: [
+          { label: "Create Search Query", icon: ico.search, run: focusSearch() },
+          soonItem("View Search Results"), soonItem("Run Favourite Search Query"), soonItem("Re-Run Search Query")
+        ] },
+        { h: "Entities", items: [
+          { label: "View Structured Intelligence", icon: ico.net, run: registryHomeAction("home-entities") },
+          { label: "View Silent Hit List", icon: ico.filter, run: registryHomeAction("home-hits") },
+          { label: "View Imported Entity Comparison Matches", icon: ico.merge, run: registryHomeAction("home-entities") }
+        ] },
+        { h: "Deconfliction", items: [
+          // NEW feature — inbox/deconfliction is the NEXT staged sub-project.
+          soonItem("My Deconfliction Requests", ico.doc),
+          soonItem("Incoming Requests", ico.doc),
+          soonItem("Contact Operation Team / Report Author", ico.net)
         ] }
       ],
-      ENTITIES: [
-        { h: "Nominals", items: [
-          { label: "Entity search", icon: ico.net, run: registryHomeAction("home-entities") },
-          { label: "Silent hit list", icon: ico.filter, run: registryHomeAction("home-hits") },
-          { label: "Access log", icon: ico.doc, run: registryHomeAction("home-access") }
+      OPERATIONS: [
+        { h: "Operations", items: [
+          soonItem("Create Operation"), soonItem("Operation Profile")
+        ] },
+        { h: "Actions", items: [
+          soonItem("Create Action"), soonItem("Find Actions")
+        ] },
+        { h: "Operation Log", items: [
+          { label: "View Log", icon: ico.doc, run: clickId("reg-logs") }
+        ] },
+        { h: "Decisions", items: [
+          soonItem("Add Decision"), soonItem("Update Decision"), soonItem("Find Decisions"),
+          soonItem("Print Decision"), soonItem("View Decision")
+        ] },
+        { h: "Policy Logs", items: [
+          soonItem("Publish Policy Log"), soonItem("Print Policy Log")
+        ] },
+        { h: "Risk Assessments", items: [
+          soonItem("Create RA"), soonItem("Update RA"), soonItem("View RA"), soonItem("Find RA"),
+          soonItem("Print RA Details"), soonItem("Print RA Summary"), soonItem("Print Operational RA Summary"),
+          soonItem("Manage Overdue RAs"), soonItem("Create Standard RA"), soonItem("Update Standard RA")
         ] },
         { h: "Cross-reference", items: [
-          { label: "See on the link chart", icon: ico.net, run: clickId("reg-chart"), route: true }
-        ] }
-      ],
-      EXPORTS: [
-        { h: "To SOLAR", items: [
-          { label: "Export authorised → SOLAR", icon: ico.png, run: registryHomeAction("home-export") },
-          { label: "Open the link chart", icon: ico.net, run: clickId("reg-chart"), route: true }
-        ] }
-      ],
-      ANALYSIS: [
-        { h: "Nominals", items: [
-          // registry home-view buttons — rendered by the SPA after the shell
-          // builds, so resolve at click time via registryHomeAction (navigate
-          // home, then poll for the button) rather than a build-time snapshot.
-          { label: "Entity search", icon: ico.net, run: registryHomeAction("home-entities") },
-          { label: "Silent hit list", icon: ico.filter, run: registryHomeAction("home-hits") },
-          { label: "Access log", icon: ico.doc, run: registryHomeAction("home-access") }
-        ] },
-        { h: "Explore", items: [
-          { label: "Search reports", icon: ico.search, run: focusSearch() },
-          { label: "Compare records", icon: ico.merge, run: focusSearch() }
-        ] },
-        { h: "Cross-reference", items: [
-          { label: "Open the link chart", icon: ico.net, run: clickId("reg-chart"), route: true }
+          { label: "Open in Charting", icon: ico.net, run: clickId("reg-chart"), route: true }
         ] }
       ]
     };
@@ -345,7 +412,11 @@
         var live = !it.soon && typeof it.run === "function";
         var cls = "sh-item" + (live ? "" : " sh-soon") + (it.route ? " has-route" : "");
         var btn = el("button", { class: cls, type: "button" });
-        if (!live) { btn.setAttribute("tabindex", "-1"); }
+        if (!live) {
+          btn.setAttribute("tabindex", "-1");
+          btn.setAttribute("aria-disabled", "true");
+          btn.setAttribute("title", "Coming soon");   // credible stub, never a dead click
+        }
         var inner = (it.icon || "") + "<span>" + it.label + "</span>";
         if (it.route && live) { inner += '<span class="sh-route">↗</span>'; }
         btn.innerHTML = inner;
@@ -406,16 +477,18 @@
     home.addEventListener("click", function () { location.href = HERO; });
     bar.appendChild(home);
 
-    TABS.forEach(function (label) {
+    // Per-surface tab set: the Database replicates the real NCA 5-tab bar; the
+    // Charting keeps its own analysis tabs. Order = SPEC insertion order.
+    var tabLabels = (SPEC && Object.keys(SPEC).length) ? Object.keys(SPEC) : TABS;
+    tabLabels.forEach(function (label) {
       var tab = el("details", { class: "sh-tab" });
       var sum = el("summary", { "aria-label": label }, label);
       tab.appendChild(sum);
-      var mega = el("div", { class: "sh-mega", role: "menu", "data-tab": label });
+      var mega = el("div", { class: "sh-mega sh-mega-wide", role: "menu", "data-tab": label });
       var cols = (SPEC && SPEC[label]) || null;
       if (cols) { renderMega(mega, cols); }
       else {
-        // tabs not yet wired this chunk — honest placeholder
-        mega.appendChild(el("div", { class: "sh-col" }, '<p class="sh-col-h">' + label + '</p><button class="sh-item sh-soon" type="button" tabindex="-1">Wired in a later chunk</button>'));
+        mega.appendChild(el("div", { class: "sh-col" }, '<p class="sh-col-h">' + label + '</p><button class="sh-item sh-soon" type="button" tabindex="-1">Coming soon</button>'));
       }
       tab.appendChild(mega);
       bar.appendChild(tab);

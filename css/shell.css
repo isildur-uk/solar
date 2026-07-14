@@ -50,7 +50,10 @@ html[data-theme="light"] .sh-wordmark { background: none; -webkit-text-fill-colo
   background: rgba(14,14,12,0.72);
   -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1);
   border-bottom: 1px solid var(--line);
-  padding: 4px 10px; position: relative;
+  /* z-index lifts the whole Row-2 layer (and its absolute mega dropdown) above
+     the Row-3 context bar, which follows in the DOM — so an open mega-menu is
+     never underlapped by the breadcrumb/search row. */
+  padding: 4px 10px; position: relative; z-index: 130;
 }
 html[data-theme="light"] .sh-menubar { background: rgba(251,248,239,0.82); }
 .sh-home { display: inline-flex; align-items: center; justify-content: center;
@@ -256,11 +259,19 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
   -webkit-backdrop-filter: blur(20px) saturate(1.1); backdrop-filter: blur(20px) saturate(1.1);
   border-bottom: 1px solid var(--line);
   box-shadow: var(--shadow-2);
-  padding: 18px 22px 22px; z-index: 130;
+  padding: 18px 22px 22px; z-index: 200;   /* above Row 3 context bar */
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 26px;
   animation: sh-mega-in 120ms ease;
 }
 html[data-theme="light"] .sh-mega { background: rgba(246,241,230,0.96); }
+/* wide replica panels (the real NCA menu has 5–7 categories per tab) — auto-fit
+   columns across the full width, with a thin periwinkle top rule to echo the
+   real menu's indigo header band, cosmic-glass not flat grey. */
+.sh-mega-wide {
+  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  gap: 20px 30px; padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
 @keyframes sh-mega-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .sh-mega { animation: none; } }
 
