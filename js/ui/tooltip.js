@@ -18,11 +18,14 @@
   "use strict";
 
   var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var OPEN_DELAY = 450;   // ms — native "considered" feel; tips don't flash on a quick pass-over
   var card = null;
   var arrow = null;
   var body = null;
   var activeHost = null;
   var hideTimer = null;
+  var openTimer = null;
+  var pendingHost = null;
 
   function ensureCard() {
     if (card) { return card; }
@@ -100,7 +103,30 @@
     c.setAttribute("aria-hidden", "false");
   }
 
+  function cancelOpen() {
+    if (openTimer) { clearTimeout(openTimer); openTimer = null; }
+    pendingHost = null;
+  }
+
+  // requestShow gates HOVER opens behind a ~450ms delay (the native "considered"
+  // feel — a tip never flashes on a quick pass-over). Keyboard focus passes
+  // immediate=true so it appears at once for accessibility.
+  function requestShow(host, immediate) {
+    if (!host || host === activeHost) { return; }
+    if (immediate || reduce) { cancelOpen(); show(host); return; }
+    if (host === pendingHost) { return; }
+    cancelOpen();
+    pendingHost = host;
+    openTimer = setTimeout(function () {
+      openTimer = null;
+      // only show if the pointer is still on this host (not moved away meanwhile)
+      if (pendingHost === host && host.matches(":hover")) { show(host); }
+      pendingHost = null;
+    }, OPEN_DELAY);
+  }
+
   function hide() {
+    cancelOpen();
     if (!card) { return; }
     activeHost = null;
     card.classList.remove("is-on");
@@ -114,13 +140,21 @@
 
   document.addEventListener("pointerover", function (e) {
     var host = hostFrom(e.target);
-    if (host && host !== activeHost) { show(host); }
+    if (host && host !== activeHost) { requestShow(host, false); }
   });
   document.addEventListener("pointerout", function (e) {
     var host = hostFrom(e.target);
     if (host && (!e.relatedTarget || !host.contains(e.relatedTarget))) { hide(); }
   });
-  document.addEventListener("focusin", function (e) { var h = hostFrom(e.target); if (h) { show(h); } });
+  // keyboard focus shows the tip immediately (accessibility) — but only for
+  // genuine keyboard focus, not a mouse click that also focuses the button.
+  document.addEventListener("focusin", function (e) {
+    var h = hostFrom(e.target);
+    if (!h) { return; }
+    var kb = false;
+    try { kb = h.matches(":focus-visible"); } catch (x) { kb = true; }
+    requestShow(h, kb);
+  });
   document.addEventListener("focusout", function (e) { if (hostFrom(e.target)) { hide(); } });
   window.addEventListener("scroll", function () { if (activeHost) { hide(); } }, true);
   window.addEventListener("resize", function () { if (activeHost) { hide(); } });

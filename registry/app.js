@@ -273,6 +273,9 @@
       var li = document.createElement("li");
       var nItems = (ir.items || []).filter(function (i) { return !i.isProvenance; }).length;
       li.className = "report-item"; li.tabIndex = 0; li.setAttribute("role", "button"); li.setAttribute("data-urn", ir.urn);
+      // hover-card: an action gloss (what opening the row does) — never repeats
+      // the URN/title/counts already shown. Plain text (textContent) so safe.
+      li.setAttribute("data-tip", "Open this report — full detail, items and grading");
       if (ir.urn === lastDetailUrn) li.setAttribute("aria-current", "true");
       li.innerHTML =
         '<div class="ri-top"><span class="ri-urn">' + esc(ir.urn) + '</span>' +
@@ -1615,7 +1618,10 @@
     var shown = q ? names.filter(function (nm) { return nm.toLowerCase().indexOf(q) !== -1 || String(O.threatOf(nm)).toLowerCase().indexOf(q) !== -1; }) : names;
     function opCard(nm) {
       var c = counts[nm] || 0;
-      return '<button type="button" class="op-card" data-op="' + esc(nm) + '">' +
+      // hover-card adds an ACTION gloss (what a click does) rather than repeating
+      // the visible name / threat / count. data-tip is rendered as plain text.
+      var tip = 'Open ' + nm + ' — list its reports and entities';
+      return '<button type="button" class="op-card" data-op="' + esc(nm) + '" data-tip="' + esc(tip) + '">' +
         '<span class="oc-name">' + esc(nm) + '</span>' +
         '<span class="oc-threat">' + esc(O.threatOf(nm)) + '</span>' +
         '<span class="oc-count">' + c + ' report' + (c === 1 ? "" : "s") + '</span></button>';

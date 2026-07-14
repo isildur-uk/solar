@@ -45,6 +45,16 @@
   // run() that clicks a control by id, resolved at CLICK time (so it works even
   // if the control lives inside a closed <details> or is rendered after us).
   function clickId(id) { return function () { var n = byId(id); if (n) { n.click(); } }; }
+  /* tip(el, text) — attach the portal hover-card (SolarTip) to a control and
+     REMOVE any native title so the browser's own tooltip doesn't double up. The
+     aria-label (if present) stays for screen readers. Content earns its place:
+     say what the control does + its shortcut, never just repeat a visible label. */
+  function tip(el, text) {
+    if (!el) { return el; }
+    el.setAttribute("data-tip", text);
+    el.removeAttribute("title");
+    return el;
+  }
   /* Registry home-view actions (Entity search / Silent hits / Access log) live
      only on the registry home view, which the SPA renders ASYNCHRONOUSLY when
      the brand is clicked. So: click the brand to go home, then poll briefly for
@@ -181,45 +191,45 @@
           { label: "5 · Arrests", icon: ico.doc, run: clickId("btn-demo-5") }
         ] },
         { h: "Cross-reference", items: [
-          { label: "← Database", icon: ico.grid, run: routeOther, route: true }
+          { label: "← Database", icon: ico.grid, run: routeOther, route: true, tip: "Switch to the intelligence registry (reports & entities)" }
         ] }
       ],
       ANALYSIS: [
         { h: "Network", items: [
-          { label: "Case analytics", icon: ico.diag, run: api("CRAnalyticsUI.open", [], "btn-analytics") },
-          { label: "Key players (centrality)", icon: ico.net, run: api("CRNetPanel.openPlayers", [], "btn-players") },
-          { label: "Shortest path", icon: ico.merge, run: api("CRNetPanel.startPath", [], "btn-path") },
-          { label: "Deconflict duplicates", icon: ico.merge, run: clickId("btn-dedup") }
+          { label: "Case analytics", icon: ico.diag, run: api("CRAnalyticsUI.open", [], "btn-analytics"), tip: "Summary metrics for the whole chart — counts, densities, key nodes" },
+          { label: "Key players (centrality)", icon: ico.net, run: api("CRNetPanel.openPlayers", [], "btn-players"), tip: "Rank the most-connected / most-central entities in the network" },
+          { label: "Shortest path", icon: ico.merge, run: api("CRNetPanel.startPath", [], "btn-path"), tip: "Find the fewest links between two entities" },
+          { label: "Deconflict duplicates", icon: ico.merge, run: clickId("btn-dedup"), tip: "Find and merge entities that are likely the same person or thing" }
         ] },
         { h: "Geospatial", items: [
-          { label: "Fit map pins", icon: ico.map, run: api("CRMapPane.fitToData", [], "btn-mapfit") },
-          { label: "Measure distance", icon: ico.globe, run: api("CRNetPanel.startMeasure", [], "btn-measure") },
-          { label: "Radius search", icon: ico.globe, run: api("CRNetPanel.startRadius", [], "btn-radius") },
-          { label: "Geo links on / off", icon: ico.globe, run: geoToggle() }
+          { label: "Fit map pins", icon: ico.map, run: api("CRMapPane.fitToData", [], "btn-mapfit"), tip: "Zoom the map to show every plotted location" },
+          { label: "Measure distance", icon: ico.globe, run: api("CRNetPanel.startMeasure", [], "btn-measure"), tip: "Measure the distance between two points on the map" },
+          { label: "Radius search", icon: ico.globe, run: api("CRNetPanel.startRadius", [], "btn-radius"), tip: "Find entities within a set radius of a point" },
+          { label: "Geo links on / off", icon: ico.globe, run: geoToggle(), tip: "Toggle drawing links between geographically-plotted entities" }
         ] },
         { h: "Chart layout", items: [
-          { label: "Fit to view", icon: ico.fit, run: api("CRGraph.fit", [], "btn-fit") },
-          { label: "Force layout (physics)", icon: ico.net, run: api("CRGraph.togglePhysics", [], "btn-physics") },
-          { label: "Snap to grid (on / off)", icon: ico.grid, run: function () { if (window.CRGraph && window.CRGraph.setSnap) { window.CRGraph.setSnap(); } } },
-          { label: "Organic", icon: ico.layout, run: layout("organic") },
-          { label: "Grouped by type", icon: ico.grid, run: layout("grouped") },
-          { label: "Circle", icon: ico.layout, run: layout("circle") },
-          { label: "Hierarchy", icon: ico.layout, run: layout("hierarchy") }
+          { label: "Fit to view", icon: ico.fit, run: api("CRGraph.fit", [], "btn-fit"), tip: "Zoom the chart so every node is visible" },
+          { label: "Force layout (physics)", icon: ico.net, run: api("CRGraph.togglePhysics", [], "btn-physics"), tip: "Let nodes self-arrange by simulated attraction / repulsion" },
+          { label: "Snap to grid (on / off)", icon: ico.grid, run: function () { if (window.CRGraph && window.CRGraph.setSnap) { window.CRGraph.setSnap(); } }, tip: "Align dragged nodes to an invisible grid" },
+          { label: "Organic", icon: ico.layout, run: layout("organic"), tip: "Auto-arrange nodes in a natural, spread-out shape" },
+          { label: "Grouped by type", icon: ico.grid, run: layout("grouped"), tip: "Cluster nodes by entity type (people, vehicles, …)" },
+          { label: "Circle", icon: ico.layout, run: layout("circle"), tip: "Arrange all nodes evenly around a circle" },
+          { label: "Hierarchy", icon: ico.layout, run: layout("hierarchy"), tip: "Arrange nodes in tiers, top-down" }
         ] },
         { h: "Filter & focus", items: [
-          { label: "Timeline", icon: ico.clock, run: toggleEl("#timeline-head") },
-          { label: "Legend & filters", icon: ico.filter, run: api("CRLegend.toggle", [], "btn-legend") },
-          { label: "Search the chart", icon: ico.search, run: focusSearch() },
-          { label: "← Database", icon: ico.net, run: routeOther, route: true }
+          { label: "Timeline", icon: ico.clock, run: toggleEl("#timeline-head"), tip: "Show the events timeline and scrub through time" },
+          { label: "Legend & filters", icon: ico.filter, run: api("CRLegend.toggle", [], "btn-legend"), tip: "Show the legend and filter which entity types are visible" },
+          { label: "Search the chart", icon: ico.search, run: focusSearch(), tip: "Jump the focus to the chart search box" },
+          { label: "← Database", icon: ico.net, run: routeOther, route: true, tip: "Switch to the intelligence registry (reports & entities)" }
         ] }
       ],
       EXPORTS: [
         { h: "Chart", items: [
-          { label: "Export chart PNG", icon: ico.png, run: api("CRGraph.exportPNG", [], "btn-png") }
+          { label: "Export chart PNG", icon: ico.png, run: api("CRGraph.exportPNG", [], "btn-png"), tip: "Save the current chart as a PNG image" }
         ] },
         { h: "Operational", items: [
-          { label: "Operational exports…", icon: ico.doc, run: clickId("btn-anx") },
-          { label: "Diagnostics", icon: ico.diag, run: clickId("btn-diag") }
+          { label: "Operational exports…", icon: ico.doc, run: clickId("btn-anx"), tip: "Export to operational formats (i2 ANX, briefing packs)" },
+          { label: "Diagnostics", icon: ico.diag, run: clickId("btn-diag"), tip: "Run a self-check and show data-quality warnings" }
         ] }
       ]
     };
@@ -232,16 +242,16 @@
      verbatim. [E] items wire to Solar's real handlers via the home-proxy /
      clickId registry; [F] items are visible-but-dimmed ("coming soon") via
      soon:true — never a dead click. */
-  function soonItem(label, icon) { return { label: label, icon: icon || ico.doc, soon: true }; }
+  function soonItem(label, icon, tipText) { return { label: label, icon: icon || ico.doc, soon: true, tip: tipText }; }
   // Deconfliction inbox entry points — wired in the inbox commit via SolarInbox;
   // until then they resolve to nothing (soon). Resolving at click time keeps this
   // spec independent of load order.
   function inbox(view) {
     return function () { if (window.SolarInbox && window.SolarInbox.open) { window.SolarInbox.open(view); } };
   }
-  function inboxItem(label, view, icon) {
+  function inboxItem(label, view, icon, tipText) {
     // live only once SolarInbox exists (after the inbox commit); else a soft stub
-    return { label: label, icon: icon || ico.doc, run: inbox(view), soon: !(window.SolarInbox && window.SolarInbox.open) };
+    return { label: label, icon: icon || ico.doc, run: inbox(view), soon: !(window.SolarInbox && window.SolarInbox.open), tip: tipText };
   }
 
   function specRegistry() {
@@ -260,28 +270,30 @@
       ],
       INTELLIGENCE: [
         { h: "Reports", items: [
-          { label: "Create Report", icon: ico.plus, run: clickId("btn-new") },
-          { label: "Find Authorised Reports", icon: ico.grid, run: registryHomeAction("home-all") },
-          { label: "Find Unauthorised Reports", icon: ico.grid, run: registryHomeAction("home-all") },
-          { label: "View Suppressed Reports", icon: ico.doc, run: registryHomeAction("home-all") }
+          { label: "Create Report", icon: ico.plus, run: clickId("btn-new"), tip: "Start a new intelligence report" },
+          { label: "Find Authorised Reports", icon: ico.grid, run: registryHomeAction("home-all"), tip: "Reports cleared for use — signed off by a supervisor" },
+          { label: "Find Unauthorised Reports", icon: ico.grid, run: registryHomeAction("home-all"), tip: "Reports still awaiting authorisation" },
+          { label: "View Suppressed Reports", icon: ico.doc, run: registryHomeAction("home-all"), tip: "Reports withheld from general view (need-to-know)" }
         ] },
         { h: "Entities", items: [
-          { label: "View Structured Intelligence", icon: ico.net, run: registryHomeAction("home-entities") },
-          { label: "View Silent Hit List", icon: ico.filter, run: registryHomeAction("home-hits") }
+          { label: "View Structured Intelligence", icon: ico.net, run: registryHomeAction("home-entities"), tip: "Browse entities — people, vehicles, premises, accounts — and their links" },
+          { label: "View Silent Hit List", icon: ico.filter, run: registryHomeAction("home-hits"), tip: "Watchlist matches raised without alerting the subject" }
         ] },
         { h: "Deconfliction", items: [
           // Wired to the inbox in the deconfliction commit (SolarInbox); [F] until then.
-          inboxItem("My Deconfliction Requests", "mine", ico.doc),
-          inboxItem("Incoming Requests", "incoming", ico.doc),
-          inboxItem("Contact Operation Team / Report Author", "compose", ico.net)
+          inboxItem("My Deconfliction Requests", "mine", ico.doc, "Deconfliction threads you have started"),
+          inboxItem("Incoming Requests", "incoming", ico.doc, "Deconfliction requests from other operations"),
+          inboxItem("Contact Operation Team / Report Author", "compose", ico.net, "Open a secure enquiry to another team or a report's author")
         ] },
         { h: "Dissemination", items: [
-          soonItem("Create Package"), soonItem("Find Packages"), soonItem("View Suppressed Packages")
+          soonItem("Create Package", null, "Bundle intelligence for sharing with a partner"),
+          soonItem("Find Packages", null, "Browse existing dissemination packages"),
+          soonItem("View Suppressed Packages", null, "Packages withheld from general view")
         ] }
       ],
       OPERATIONS: [
         { h: "Operation Log", items: [
-          { label: "View Log", icon: ico.doc, run: clickId("reg-logs") }
+          { label: "View Log", icon: ico.doc, run: clickId("reg-logs"), tip: "Audit trail — every lookup and access, with reason and analyst" }
         ] },
         { h: "Operations", items: [
           soonItem("Create Operation"), soonItem("Operation Profile")
@@ -294,7 +306,7 @@
           soonItem("Print Decision"), soonItem("View Decision")
         ] },
         { h: "Cross-reference", items: [
-          { label: "Open in Charting", icon: ico.net, run: clickId("reg-chart"), route: true }
+          { label: "Open in Charting", icon: ico.net, run: clickId("reg-chart"), route: true, tip: "Send these entities to the charting workbench to map their links" }
         ] }
       ]
     };
@@ -347,11 +359,15 @@
         if (!live) {
           btn.setAttribute("tabindex", "-1");
           btn.setAttribute("aria-disabled", "true");
-          btn.setAttribute("title", "Coming soon");   // credible stub, never a dead click
         }
         var inner = (it.icon || "") + "<span>" + it.label + "</span>";
         if (it.route && live) { inner += '<span class="sh-route">↗</span>'; }
         btn.innerHTML = inner;
+        // hover-card gloss: an explicit one-line plain-English gloss for jargon/
+        // abbreviations (it.tip), else "Coming soon" for stubs. Never a tip that
+        // merely repeats the visible label. data-tip is textContent-rendered.
+        if (it.tip) { tip(btn, it.tip); }
+        else if (!live) { tip(btn, "Coming soon"); }
         if (live) {
           btn.addEventListener("click", function () {
             // close the menu, then run — so panels/modals open over a clean chrome
@@ -417,6 +433,10 @@
     function surfLink(label, isCurrent) {
       var a = el("a", isCurrent ? { class: "sh-surf-btn fx-6", href: "#", "aria-current": "true" } : { class: "sh-surf-btn fx-6", href: "#" },
         '<span class="sh-surf-label">' + label + '</span>');
+      var gloss = label === "Charting"
+        ? "Charting — the link-analysis workbench (entities, links, timeline)"
+        : "Database — the structured-intelligence registry (reports & entities)";
+      tip(a, isCurrent ? gloss + " · current" : gloss + " · switch");
       return a;
     }
     surf.appendChild(surfLink("Charting", !IS_REGISTRY));
@@ -445,7 +465,8 @@
 
     /* ---- Row 2: menu bar ---- */
     var bar = el("div", { class: "sh-menubar" });
-    var home = el("button", { class: "sh-home", type: "button", title: "Home (cover)", "aria-label": "Home" }, svg.home);
+    var home = el("button", { class: "sh-home", type: "button", "aria-label": "Home" }, svg.home);
+    tip(home, "Return to the SOLAR cover page");
     home.addEventListener("click", function () { location.href = HERO; });
     bar.appendChild(home);
 
@@ -476,12 +497,16 @@
     // menu-extra feel). Shows the platform key (⌘ on Mac, Ctrl elsewhere) and
     // opens the same command palette as the shortcut.
     var isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
-    var kbdHint = el("button", { class: "sh-kbd-hint", type: "button", title: "Command palette", "aria-label": "Open command palette" },
+    var kbdHint = el("button", { class: "sh-kbd-hint", type: "button", "aria-label": "Open command palette" },
       '<span class="sh-kbd-key">' + (isMac ? "⌘" : "Ctrl") + '</span><span class="sh-kbd-key">K</span>');
+    tip(kbdHint, "Command palette — jump to any action, report or entity · " + (isMac ? "⌘K" : "Ctrl-K"));
     kbdHint.addEventListener("click", function () { openPalette(); });
     right.appendChild(kbdHint);
 
-    var oplog = el("button", { class: "sh-oplog", type: "button", title: "Operation log" }, "Operation log");
+    var oplog = el("button", { class: "sh-oplog", type: "button" }, "Operation log");
+    tip(oplog, IS_REGISTRY
+      ? "Audit trail — every lookup and access recorded with reason and analyst"
+      : "Operation log — the chart's change history and activity trail");
     oplog.addEventListener("click", function () {
       if (IS_REGISTRY) { var b = byId("reg-logs"); if (b) { b.click(); } }
       else if (window.CRLogPanel && window.CRLogPanel.open) { window.CRLogPanel.open(); }
@@ -489,7 +514,8 @@
     right.appendChild(oplog);
 
     if (IS_REGISTRY) {
-      var wn = el("button", { class: "sh-whatsnew", type: "button", title: "What’s New" }, "What’s New");
+      var wn = el("button", { class: "sh-whatsnew", type: "button" }, "What’s New");
+      tip(wn, "Recent changes and additions to this release");
       wn.addEventListener("click", function () { var b = byId("reg-whatsnew"); if (b) { b.click(); } });
       right.appendChild(wn);
     }
@@ -498,14 +524,17 @@
     // unread-count badge; opens the SolarInbox drawer. Registered as a shell
     // action so ⌘K / the Deconfliction menu items reach the same panel.
     if (IS_REGISTRY) {
-      var inboxBtn = el("button", { class: "sh-icobtn sh-inbox", type: "button", title: "Secure inbox", "aria-label": "Secure inbox" }, svg.inbox);
+      var inboxBtn = el("button", { class: "sh-icobtn sh-inbox", type: "button", "aria-label": "Secure inbox" }, svg.inbox);
       var inboxBadge = el("span", { class: "sh-inbox-badge", "aria-hidden": "true" });
       inboxBadge.hidden = true; inboxBtn.appendChild(inboxBadge);
       function reflectInbox() {
         var n = (window.SolarInbox && window.SolarInbox.unreadCount) ? window.SolarInbox.unreadCount() : 0;
         inboxBadge.textContent = n > 9 ? "9+" : String(n);
         inboxBadge.hidden = !n;
-        inboxBtn.setAttribute("aria-label", n ? ("Secure inbox — " + n + " unread") : "Secure inbox");
+        var label = n ? ("Secure inbox — " + n + " unread") : "Secure inbox";
+        inboxBtn.setAttribute("aria-label", label);
+        // tip carries the live unread count + what it is (deconfliction + messaging)
+        tip(inboxBtn, "Secure inbox — deconfliction requests & messages" + (n ? " · " + n + " unread" : " · no unread"));
       }
       inboxBtn.addEventListener("click", function () { if (window.SolarInbox) { window.SolarInbox.open("list"); } });
       window.addEventListener("solar-inbox", reflectInbox);
@@ -513,23 +542,27 @@
       right.appendChild(inboxBtn);
     }
 
-    var help = el("button", { class: "sh-icobtn", type: "button", title: "Help & about", "aria-label": "Help and about" }, svg.help);
+    var help = el("button", { class: "sh-icobtn", type: "button", "aria-label": "Help and about" }, svg.help);
+    tip(help, "Help & about — keyboard shortcuts and version");
     help.addEventListener("click", function () { openSettings("about"); });
     right.appendChild(help);
 
     if (IS_REGISTRY) {
-      var lock = el("button", { class: "sh-icobtn", type: "button", title: "Lock workspace", "aria-label": "Lock workspace" }, svg.lock);
+      var lock = el("button", { class: "sh-icobtn", type: "button", "aria-label": "Lock workspace" }, svg.lock);
+      tip(lock, "Lock the workspace — blur the screen and require re-entry");
       lock.addEventListener("click", function () { var b = byId("reg-lock"); if (b) { b.click(); } });
       right.appendChild(lock);
     }
 
-    var logout = el("button", { class: "sh-icobtn", type: "button", title: "Return to cover", "aria-label": "Return to cover" }, svg.logout);
+    var logout = el("button", { class: "sh-icobtn", type: "button", "aria-label": "Return to cover" }, svg.logout);
+    tip(logout, "Sign out to the SOLAR cover page");
     logout.addEventListener("click", function () { location.href = HERO; });
     right.appendChild(logout);
     bar.appendChild(right);
 
     /* ---- Row 3: context selector ---- */
-    var ctxToggle = el("button", { class: "sh-ctx-toggle", type: "button", title: "Collapse context row", "aria-label": "Toggle context row" }, svg.chevL);
+    var ctxToggle = el("button", { class: "sh-ctx-toggle", type: "button", "aria-label": "Toggle context row" }, svg.chevL);
+    tip(ctxToggle, "Hide the breadcrumb & search row");
     var ctx = el("div", { class: "sh-context" });
     // Live breadcrumb trail (the context indicator). Each surface pushes its
     // trail via SolarShell.setBreadcrumb(); ancestors are clickable to navigate
@@ -541,7 +574,8 @@
     // Search slot — receives the real #search input (re-parented after mount).
     var searchSlot = el("div", { class: "sh-search" });
     ctx.appendChild(searchSlot);
-    var gear = el("button", { class: "sh-icobtn sh-ctx-gear", type: "button", title: "Settings", "aria-label": "Settings" }, svg.gear);
+    var gear = el("button", { class: "sh-icobtn sh-ctx-gear", type: "button", "aria-label": "Settings" }, svg.gear);
+    tip(gear, "Settings — theme, sound and identity");
     gear.addEventListener("click", function () { openSettings("settings"); });
     ctx.appendChild(gear);
     // compact sound toggle (beside theme) + theme switch — far right of Row 3
@@ -552,7 +586,7 @@
     ctxToggle.addEventListener("click", function () {
       var collapsed = shell.classList.toggle("sh-ctx-collapsed");
       ctxToggle.innerHTML = collapsed ? svg.chevR : svg.chevL;
-      ctxToggle.title = collapsed ? "Expand context row" : "Collapse context row";
+      tip(ctxToggle, collapsed ? "Show the breadcrumb & search row" : "Hide the breadcrumb & search row");
     });
     // the toggle sits at the left edge of the menu bar's row for reachability
     bar.insertBefore(ctxToggle, bar.firstChild);
@@ -636,7 +670,7 @@
       sw.setAttribute("aria-checked", light ? "true" : "false");
       var lbl = sw.querySelector(".sh-switch-label");
       if (lbl) { lbl.textContent = light ? "Light" : "Dark"; }
-      sw.title = light ? "Switch to dark theme" : "Switch to light theme";
+      tip(sw, light ? "Switch to dark theme (currently light)" : "Switch to light theme (currently dark)");
     }
     sw.addEventListener("click", function () {
       setTheme(currentTheme() === "light" ? "dark" : "light");
@@ -668,7 +702,7 @@
       if (!compact) { btn.innerHTML += '<span class="sh-sound-label">' + (muted ? "Sound off" : "Sound on") + '</span>'; }
       btn.setAttribute("aria-pressed", muted ? "false" : "true");
       btn.classList.toggle("is-muted", muted);
-      btn.title = muted ? "Turn UI sound on" : "Turn UI sound off";
+      tip(btn, muted ? "Turn on UI sound (currently muted)" : "Mute UI sound (currently on)");
     }
     btn.addEventListener("click", function () {
       if (window.SolarSound) {
