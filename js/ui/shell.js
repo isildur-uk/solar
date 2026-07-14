@@ -445,7 +445,8 @@
     var gear = el("button", { class: "sh-icobtn sh-ctx-gear", type: "button", title: "Settings", "aria-label": "Settings" }, svg.gear);
     gear.addEventListener("click", function () { openSettings("settings"); });
     ctx.appendChild(gear);
-    // compact theme switch — one-click theme, far right of Row 3
+    // compact sound toggle (beside theme) + theme switch — far right of Row 3
+    ctx.appendChild(buildSoundToggle(true));
     ctx.appendChild(buildThemeSwitch(true));
 
     // collapse/expand row 3
@@ -546,6 +547,43 @@
     reflect();
     return sw;
   }
+
+  /* ---- sound / mute toggle ------------------------------------------------
+     A speaker button that mutes/unmutes the UI-sound layer. SolarSound owns the
+     preference + persistence (localStorage solar_muted) and dispatches a
+     "solar-sound" event; every instance (Row 3 + Settings, both surfaces) stays
+     in sync via that event. Default-on at low volume; reduced-motion defaults to
+     muted (SolarSound handles the default). Sound is always supplementary. */
+  var SPKR_ON = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8.5 2.2 4.7 5H2.4A.9.9 0 0 0 1.5 6v4a.9.9 0 0 0 .9.9h2.3l3.8 2.8a.6.6 0 0 0 1-.5V2.7a.6.6 0 0 0-1-.5z" fill="currentColor"/><path d="M11 5.5a3.2 3.2 0 0 1 0 5M12.8 3.8a5.6 5.6 0 0 1 0 8.4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
+  var SPKR_OFF = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8.5 2.2 4.7 5H2.4A.9.9 0 0 0 1.5 6v4a.9.9 0 0 0 .9.9h2.3l3.8 2.8a.6.6 0 0 0 1-.5V2.7a.6.6 0 0 0-1-.5z" fill="currentColor"/><path d="M11 6l3 4M14 6l-3 4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
+  var soundToggles = [];
+
+  function buildSoundToggle(compact) {
+    var btn = el("button", {
+      type: "button", class: "sh-icobtn sh-sound" + (compact ? " sh-sound-c" : ""),
+      "aria-label": "Toggle UI sound"
+    });
+    function reflect() {
+      var muted = !!(window.SolarSound && window.SolarSound.isMuted());
+      btn.innerHTML = muted ? SPKR_OFF : SPKR_ON;
+      if (!compact) { btn.innerHTML += '<span class="sh-sound-label">' + (muted ? "Sound off" : "Sound on") + '</span>'; }
+      btn.setAttribute("aria-pressed", muted ? "false" : "true");
+      btn.classList.toggle("is-muted", muted);
+      btn.title = muted ? "Turn UI sound on" : "Turn UI sound off";
+    }
+    btn.addEventListener("click", function () {
+      if (window.SolarSound) {
+        var nowMuted = window.SolarSound.toggleMuted();
+        if (!nowMuted) { window.SolarSound.play("toggle"); }   // audible confirm only when turning ON
+      }
+      reflect();
+    });
+    soundToggles.push(reflect);
+    reflect();
+    return btn;
+  }
+  // keep every sound-toggle instance in sync when the preference changes anywhere
+  window.addEventListener("solar-sound", function () { soundToggles.forEach(function (r) { try { r(); } catch (e) { /* noop */ } }); });
   // keep all switch instances in sync whenever the theme actually changes
   window.addEventListener("cr-theme", function () { themeSwitches.forEach(function (r) { try { r(); } catch (e) { /* noop */ } }); });
 
@@ -557,6 +595,7 @@
       '<h2>Settings</h2>' +
       '<div class="sh-modal-sec" id="sh-set-appearance"><h3>Appearance</h3>' +
         '<div class="sh-set-row"><span class="sh-set-row-label">Theme</span><span id="sh-set-theme-slot"></span></div>' +
+        '<div class="sh-set-row"><span class="sh-set-row-label">UI sound</span><span id="sh-set-sound-slot"></span></div>' +
       '</div>' +
       '<div class="sh-modal-sec"><h3>Identity</h3>' +
         '<label>Signed in as<span style="font-family:var(--mono);color:var(--dim)">G5 · Benedict WILSON</span></label>' +
@@ -574,6 +613,7 @@
 
     var themeSwitch = buildThemeSwitch(false);
     byId("sh-set-theme-slot").appendChild(themeSwitch);
+    byId("sh-set-sound-slot").appendChild(buildSoundToggle(false));
     byId("sh-set-close").addEventListener("click", closeSettings);
     veil.addEventListener("click", function (e) { if (e.target === veil) { closeSettings(); } });
     document.addEventListener("keydown", settingsEsc);

@@ -218,6 +218,15 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
 .sh-switch:focus-visible .sh-switch-track { box-shadow: 0 0 0 2px rgba(142,162,255,0.4); }
 .sh-switch-c { margin-left: 10px; }
 
+/* sound / mute toggle — reuses .sh-icobtn sizing/hover. Lit periwinkle when ON,
+   dimmed when muted. The non-compact (Settings) variant shows a text label. */
+.sh-sound { gap: 7px; }
+.sh-sound:not(.is-muted) { color: var(--accent); }
+.sh-sound.is-muted { color: var(--faint); }
+.sh-sound-c { margin-left: 2px; }
+.sh-sound-label { font: 600 var(--fs-2xs) var(--mono); letter-spacing: 0.04em; color: var(--dim); }
+.sh-sound:not(.is-muted) .sh-sound-label { color: var(--accent); }
+
 @media (prefers-reduced-motion: reduce) {
   .sh-switch-track, .sh-switch-thumb, .sh-switch-ico { transition: none; }
 }
