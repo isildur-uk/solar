@@ -269,6 +269,7 @@
     U.el("btn-save").addEventListener("click", function () {
       U.download(safeName(store.meta.name) + ".chartroom.json",
         JSON.stringify(store.toJSON(), null, 1), "application/json");
+      if (window.SolarSound) { window.SolarSound.play("success"); }   // case saved
     });
     U.el("btn-open").addEventListener("click", function () { U.el("case-file").click(); });
     U.el("case-file").addEventListener("change", function (e) {

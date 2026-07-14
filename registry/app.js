@@ -220,6 +220,13 @@
     els.status.hidden = false;
     els.status.textContent = msg;
     els.status.className = "statusline" + (kind ? " " + kind : "");
+    // UI-sound: a status is a real outcome — success on "ok", error on "err".
+    // Central so every save / submit / authorise / reject / access outcome maps
+    // to exactly one cue (one-cue-per-interaction; supplementary to the text).
+    if (window.SolarSound) {
+      if (kind === "ok") { window.SolarSound.play("success"); }
+      else if (kind === "err") { window.SolarSound.play("error"); }
+    }
   }
   function setBanner(mk) {
     var m = (M.PROTECTIVE_MARKING.indexOf(mk) !== -1) ? mk : "OFFICIAL";
@@ -734,6 +741,10 @@
             action: { id: 'sh-empty-browse', label: 'Browse operations' }
           });
       els.main.innerHTML='<div class="detail page"><div class="crumbs"><button type="button" class="linklike" id="sh-back">\u2190 Back</button></div><h1 tabindex="-1">Silent Hit List</h1><p class="hint">Nominals of interest, matched against every report by the same engine as Master/Lower.</p>'+body+'</div>';
+      // notify cue when silent hits are actually present (a new-match signal),
+      // supplementary to the visible list. One cue per surfacing.
+      var _totalHits = results.reduce(function(s,r){ return s + (r.hitCount||0); }, 0);
+      if (_totalHits > 0 && window.SolarSound) { window.SolarSound.play("notify"); }
       document.getElementById('sh-back').addEventListener('click', showHome);
       var shBrowse = document.getElementById('sh-empty-browse'); if (shBrowse) shBrowse.addEventListener('click', showHome);
       [].forEach.call(els.main.querySelectorAll('.sh-hit'), function(li){ li.addEventListener('click', function(){ showDetail(li.getAttribute('data-urn')); }); });
@@ -820,6 +831,7 @@
 
   function showDetail(urn) {
     view = "detail";
+    if (window.SolarSound) { window.SolarSound.play("select"); }   // open report (soft)
     repo.get(urn).then(function (ir) {
       if (!ir) { showWelcome(); return; }
       activeDetailIR = ir;

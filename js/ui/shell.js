@@ -540,6 +540,7 @@
     }
     sw.addEventListener("click", function () {
       setTheme(currentTheme() === "light" ? "dark" : "light");
+      if (window.SolarSound) { window.SolarSound.play("toggle"); }   // theme toggle cue (user action only)
     });
     themeSwitches.push(reflect);
     reflect();
@@ -591,7 +592,10 @@
     var tabs = shell.querySelectorAll("details.sh-tab");
     tabs.forEach(function (t) {
       t.addEventListener("toggle", function () {
-        if (t.open) { tabs.forEach(function (o) { if (o !== t) { o.open = false; } }); }
+        if (t.open) {
+          tabs.forEach(function (o) { if (o !== t) { o.open = false; } });
+          if (window.SolarSound) { window.SolarSound.play("open"); }   // mega-menu open cue
+        }
       });
     });
     document.addEventListener("click", function (e) {
@@ -671,6 +675,7 @@
 
   function openPalette() {
     if (pal) { return; }
+    if (window.SolarSound) { window.SolarSound.play("open"); }   // ⌘K palette open cue
     var prevFocus = document.activeElement;
     var veil = el("div", { class: "sh-pal-veil", role: "dialog", "aria-modal": "true", "aria-label": "Command palette" });
     var box = el("div", { class: "sh-pal" });
