@@ -209,7 +209,8 @@
         ] },
         { h: "Chart layout", items: [
           { label: "Fit to view", icon: ico.fit, run: api("CRGraph.fit", [], "btn-fit"), tip: "Zoom the chart so every node is visible" },
-          { label: "Force layout (physics)", icon: ico.net, run: api("CRGraph.togglePhysics", [], "btn-physics"), tip: "Let nodes self-arrange by simulated attraction / repulsion" },
+          { label: "Force layout (physics)", icon: ico.net, run: function () { var g = window.CRGraph; if (g && g.exitGrid) { g.exitGrid(); } if (g && g.togglePhysics) { g.togglePhysics(); } else { var b = byId("btn-physics"); if (b) { b.click(); } } }, tip: "Let nodes self-arrange by simulated attraction / repulsion" },
+          { label: "Grid", icon: ico.grid, run: layout("grid"), tip: "Arrange nodes on a regular grid; dragged nodes snap to it" },
           { label: "Snap to grid (on / off)", icon: ico.grid, run: function () { if (window.CRGraph && window.CRGraph.setSnap) { window.CRGraph.setSnap(); } }, tip: "Align dragged nodes to an invisible grid" },
           { label: "Organic", icon: ico.layout, run: layout("organic"), tip: "Auto-arrange nodes in a natural, spread-out shape" },
           { label: "Grouped by type", icon: ico.grid, run: layout("grouped"), tip: "Cluster nodes by entity type (people, vehicles, …)" },

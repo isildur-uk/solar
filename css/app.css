@@ -155,15 +155,18 @@ body {
 #main { flex: 1; display: flex; min-height: 0; }
 #chart-wrap { flex: 1; position: relative; min-width: 0; background: var(--bg); }
 #chart { position: absolute; inset: 0; }
-/* Grid-snap mode indicator — a quiet pill; the snapping itself is the feedback.
-   (We deliberately don't paint canvas grid lines: they'd desync from vis-network
-   pan/zoom and read as a visual lie.) */
-#chart.snap-on::after {
+/* Grid-mode indicator — a quiet pill. The lattice backdrop itself is drawn in
+   graph space on the canvas (see graph.js beforeDrawing) so it tracks pan/zoom
+   exactly; a static CSS grid would desync and read as a visual lie. The pill is
+   the mode label; snapping / alignment is the real feedback. */
+#chart.snap-on::after,
+#chart.grid-on::after {
   content: "Grid snap"; position: absolute; left: 12px; bottom: 12px; z-index: 6;
   font: 600 var(--fs-2xs) var(--mono); letter-spacing: .08em; text-transform: uppercase;
   color: var(--accent); background: var(--glass-fill); border: 1px solid var(--accent-dim);
   border-radius: 999px; padding: 3px 10px; pointer-events: none;
 }
+#chart.grid-on::after { content: "Grid layout"; }
 #chart-tools {
   position: absolute;
   top: 10px; left: 10px;

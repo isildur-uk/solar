@@ -27,7 +27,9 @@
   var physicsOn = true;
   var container = null;
   var snapOn = false;          // snap-to-grid on manual drag-release
+  var gridMode = false;        // "Grid" layout active: nodes on a lattice, snap on, backdrop drawn
   var SNAP_GRID = 40;          // canvas units between grid lines
+  var GRID_STEP = 160;         // spacing between grid nodes (4 SNAP_GRID cells) so they don't overlap
   function snapVal(v) { return Math.round(v / SNAP_GRID) * SNAP_GRID; }
 
   var TYPE_SIZE = { person: 22, organisation: 20, location: 18, address: 16 };
@@ -477,10 +479,52 @@
     return store.entities.filter(function (e) { return !entityHidden(e); });
   }
 
+  // Grid mode: the "Grid" layout is active. Nodes sit on a regular lattice,
+  // manual drags snap to it (reusing the existing snapOn path), and a faint
+  // backdrop is drawn IN GRAPH SPACE (via beforeDrawing) so it tracks pan/zoom
+  // exactly — a static CSS grid would desync from vis-network and read as a lie.
+  function setGridMode(on) {
+    gridMode = !!on;
+    snapOn = gridMode;                                   // grid mode => snap-on-drag
+    if (container) {
+      container.classList.toggle("grid-on", gridMode);
+      container.classList.toggle("snap-on", snapOn);
+    }
+    if (network) { try { network.redraw(); } catch (e) { /* noop */ } }
+  }
+
   function applyLayout(kind) {
     var ents = visibleEntities();
     if (!ents.length) return;
+    if (kind !== "grid") { setGridMode(false); }         // any other preset leaves grid mode
     var pos = {};
+
+    if (kind === "grid") {
+      // Deterministic order: most-connected first (centrality), then by label —
+      // so the same chart always lands the same way. Lay onto a square-ish grid.
+      var deg = {};
+      store.links.forEach(function (l) {
+        deg[l.from] = (deg[l.from] || 0) + 1;
+        deg[l.to] = (deg[l.to] || 0) + 1;
+      });
+      var ordered = ents.slice().sort(function (a, b) {
+        var d = (deg[b.id] || 0) - (deg[a.id] || 0);
+        return d !== 0 ? d : (a.type + a.label).localeCompare(b.type + b.label);
+      });
+      var cols = Math.ceil(Math.sqrt(ordered.length));
+      var rowsN = Math.ceil(ordered.length / cols);
+      // Centre the lattice on the origin, on SNAP_GRID multiples, so every node
+      // lands exactly on a grid intersection (and stays there under snap-on-drag).
+      var offX = snapVal((cols - 1) / 2 * GRID_STEP);
+      var offY = snapVal((rowsN - 1) / 2 * GRID_STEP);
+      ordered.forEach(function (e, i) {
+        var col = i % cols, row = Math.floor(i / cols);
+        pos[e.id] = { x: snapVal(col * GRID_STEP - offX), y: snapVal(row * GRID_STEP - offY) };
+      });
+      pinAll(pos);
+      setGridMode(true);                                 // turn on after pinAll (which fits)
+      return;
+    }
 
     if (kind === "organic") {
       ents.forEach(function (e) { delete e.chart; });
@@ -597,6 +641,40 @@
       if (p.nodes.length && !isBendNode(p.nodes[0])) {
         network.focus(p.nodes[0], { scale: 1.2, animation: true });
       }
+    });
+
+    /* Grid-mode backdrop. Drawn in GRAPH space (the ctx vis hands us is already
+       transformed for pan/zoom), so the lattice tracks the chart exactly and can
+       never desync — the honest way to show a grid over vis-network. Faint/cosmic,
+       theme-aware, and only while grid mode is active. Behind nodes/edges. */
+    network.on("beforeDrawing", function (ctx) {
+      if (!gridMode) { return; }
+      var view;
+      try {
+        var tl = network.DOMtoCanvas({ x: 0, y: 0 });
+        var br = network.DOMtoCanvas({ x: container.clientWidth, y: container.clientHeight });
+        view = { x1: tl.x, y1: tl.y, x2: br.x, y2: br.y };
+      } catch (e) { return; }
+      var light = document.documentElement.getAttribute("data-theme") === "light";
+      var startX = Math.floor(view.x1 / SNAP_GRID) * SNAP_GRID;
+      var startY = Math.floor(view.y1 / SNAP_GRID) * SNAP_GRID;
+      ctx.save();
+      ctx.lineWidth = 1;
+      for (var gx = startX; gx <= view.x2; gx += SNAP_GRID) {
+        var major = Math.round(gx / GRID_STEP) * GRID_STEP === gx;
+        ctx.strokeStyle = light
+          ? (major ? "rgba(74,91,214,0.14)" : "rgba(74,91,214,0.06)")
+          : (major ? "rgba(142,162,255,0.16)" : "rgba(142,162,255,0.06)");
+        ctx.beginPath(); ctx.moveTo(gx, view.y1); ctx.lineTo(gx, view.y2); ctx.stroke();
+      }
+      for (var gy = startY; gy <= view.y2; gy += SNAP_GRID) {
+        var majorY = Math.round(gy / GRID_STEP) * GRID_STEP === gy;
+        ctx.strokeStyle = light
+          ? (majorY ? "rgba(74,91,214,0.14)" : "rgba(74,91,214,0.06)")
+          : (majorY ? "rgba(142,162,255,0.16)" : "rgba(142,162,255,0.06)");
+        ctx.beginPath(); ctx.moveTo(view.x1, gy); ctx.lineTo(view.x2, gy); ctx.stroke();
+      }
+      ctx.restore();
     });
 
     /* Dragging a node must NOT drag the rest of the chart. With physics ON,
@@ -875,10 +953,13 @@
     geoHidden: function () { return geoHidden; },
     setSnap: function (b) {
       snapOn = (b == null) ? !snapOn : !!b;   // toggle when called with no arg
+      if (!snapOn && gridMode) { setGridMode(false); return snapOn; }  // turning snap off exits grid mode
       if (container) { container.classList.toggle("snap-on", snapOn); }
       return snapOn;
     },
     snapEnabled: function () { return snapOn; },
+    gridEnabled: function () { return gridMode; },
+    exitGrid: function () { setGridMode(false); },
     applyLayout: applyLayout, addBendAt: addBendAt, removeBend: removeBend,
     straighten: straighten, setPinned: setPinned, isPinned: isPinned,
     nodeAtDOM: nodeAtDOM, edgeAtDOM: edgeAtDOM, bendAtDOM: bendAtDOM, canvasPos: canvasPos
