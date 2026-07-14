@@ -226,7 +226,8 @@
   }
 
   /* DATABASE surface — a TRIMMED replication of the real NCA system menu, scoped
-     to Solar's identity (intel DB + charting): COMMON · INTELLIGENCE · OPERATIONS.
+     to Solar's identity (intel DB + charting): Records · INTELLIGENCE · OPERATIONS.
+     (Records = Documents + People; renamed from the real system's "COMMON".)
      Disclosure/Exhibits suites were dropped (off-identity). Item labels stay
      verbatim. [E] items wire to Solar's real handlers via the home-proxy /
      clickId registry; [F] items are visible-but-dimmed ("coming soon") via
@@ -245,7 +246,7 @@
 
   function specRegistry() {
     return {
-      COMMON: [
+      Records: [
         { h: "Documents", items: [
           { label: "Add Document", icon: ico.doc, run: clickId("btn-new") },
           { label: "Find Documents", icon: ico.search, run: focusSearch() }

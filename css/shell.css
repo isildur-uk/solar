@@ -69,6 +69,10 @@ html[data-theme="light"] .sh-menubar { background: rgba(251,248,239,0.82); }
   font-size: var(--fs-sm); color: var(--text); font-weight: 500;
   padding: 5px 12px; border-radius: var(--radius);
   display: inline-flex; align-items: center; gap: 6px;
+  /* the tab bar reads uniformly uppercase even when a SPEC key is mixed-case
+     (e.g. "Records"), so it stays consistent with INTELLIGENCE · OPERATIONS
+     while the key keeps its nicely-cased form for ⌘K / breadcrumbs. */
+  text-transform: uppercase; letter-spacing: .02em;
 }
 .sh-tab > summary::-webkit-details-marker { display: none; }
 .sh-tab > summary:hover { color: var(--accent); background: rgba(142,162,255,0.06); }
