@@ -224,12 +224,23 @@
     };
   }
 
-  /* DATABASE surface — replicates the real NCA system menu (COMMON · DISCLOSURE
-     · EXHIBITS · INTELLIGENCE · OPERATIONS), item labels verbatim. [E] items
-     wire to Solar's real handlers via the CR-proxy / home-proxy registry; [F]
-     items are rendered visible-but-dimmed ("coming soon") via soon:true — never
-     a dead click. INTELLIGENCE is Solar's core, so it is mostly live. */
+  /* DATABASE surface — a TRIMMED replication of the real NCA system menu, scoped
+     to Solar's identity (intel DB + charting): COMMON · INTELLIGENCE · OPERATIONS.
+     Disclosure/Exhibits suites were dropped (off-identity). Item labels stay
+     verbatim. [E] items wire to Solar's real handlers via the home-proxy /
+     clickId registry; [F] items are visible-but-dimmed ("coming soon") via
+     soon:true — never a dead click. */
   function soonItem(label, icon) { return { label: label, icon: icon || ico.doc, soon: true }; }
+  // Deconfliction inbox entry points — wired in the inbox commit via SolarInbox;
+  // until then they resolve to nothing (soon). Resolving at click time keeps this
+  // spec independent of load order.
+  function inbox(view) {
+    return function () { if (window.SolarInbox && window.SolarInbox.open) { window.SolarInbox.open(view); } };
+  }
+  function inboxItem(label, view, icon) {
+    // live only once SolarInbox exists (after the inbox commit); else a soft stub
+    return { label: label, icon: icon || ico.doc, run: inbox(view), soon: !(window.SolarInbox && window.SolarInbox.open) };
+  }
 
   function specRegistry() {
     return {
@@ -238,74 +249,11 @@
           { label: "Add Document", icon: ico.doc, run: clickId("btn-new") },
           { label: "Find Documents", icon: ico.search, run: focusSearch() }
         ] },
-        { h: "Organisations", items: [
-          soonItem("External Organisations", ico.grid)
-        ] },
-        { h: "Person Management", items: [
-          soonItem("Operational Police Workers"),
+        { h: "People", items: [
+          // View Person opens the dossier; aliases / contact details / PNC are
+          // SECTIONS inside that dossier (handlers preserved), not top-level rows.
           { label: "View Person", icon: ico.net, run: registryHomeAction("home-entities") },
-          { label: "Aliases", icon: ico.doc, run: registryHomeAction("home-entities") },
-          soonItem("PNC Details"),
-          { label: "Contact Details", icon: ico.doc, run: registryHomeAction("home-entities") },
           soonItem("Update Person")
-        ] }
-      ],
-      DISCLOSURE: [
-        { h: "Material", items: [
-          soonItem("Log Material"), soonItem("Unclassified Material"), soonItem("Classified Material")
-        ] },
-        { h: "Schedules", items: [ soonItem("Schedules") ] },
-        { h: "Search", items: [
-          soonItem("Find Material"),
-          { label: "Find Documents", icon: ico.search, run: focusSearch() },
-          soonItem("Find Statements")
-        ] },
-        { h: "Case Files", items: [
-          soonItem("Add Case File"),
-          { label: "Select Case File", icon: ico.grid, run: registryHomeAction("home-all") },
-          soonItem("Clone Case File"), soonItem("Update Case Details"),
-          soonItem("Remove Current Case File"), soonItem("Add Subjects"), soonItem("Remove Subjects")
-        ] },
-        { h: "Person Management", items: [
-          soonItem("Detainees"), soonItem("Subjects"), soonItem("Witnesses"),
-          soonItem("Witness Non-Availability"), soonItem("Persons: Victims Management")
-        ] },
-        { h: "File Management", items: [
-          soonItem("MG Forms"), soonItem("Record Viewing"), soonItem("Continuity Matrix"),
-          soonItem("Chronology of Contact"), soonItem("Case Diary"), soonItem("Print Material")
-        ] },
-        { h: "Prosecution Bundle", items: [
-          soonItem("Create Prosecution Bundle"), soonItem("View Submitted Bundles")
-        ] }
-      ],
-      EXHIBITS: [
-        { h: "Sources", items: [
-          soonItem("Add/Update Authority"), soonItem("Add/Update Scene"),
-          soonItem("Add/Update Search Register"), soonItem("Update Location")
-        ] },
-        { h: "Conveyances", items: [
-          soonItem("Create Motor Vehicle"), soonItem("Create Vessel"),
-          soonItem("Create Aircraft"), soonItem("Update Conveyance")
-        ] },
-        { h: "Exhibits", items: [
-          soonItem("Add Drugs"), soonItem("Add Media"), soonItem("Add Bladed Instrument"),
-          soonItem("Add Firearm"), soonItem("Add Other Weapon"), soonItem("Add Motor Vehicle"),
-          soonItem("Add Vessel"), soonItem("Add Aircraft"), soonItem("Add Cash"),
-          soonItem("Add Comms Device"), soonItem("Add Data or IT"), soonItem("Add Other"),
-          soonItem("Bulk Load"), soonItem("View Uploaded Scene Searches")
-        ] },
-        { h: "Exhibit Management", items: [
-          soonItem("Find Exhibits"), soonItem("Move Exhibit")
-        ] },
-        { h: "Search", items: [
-          soonItem("Create Search Query"), soonItem("View Search Results"),
-          soonItem("Run Favourite Search Query"), soonItem("Re-Run Search Query")
-        ] },
-        { h: "Templates", items: [
-          soonItem("Find Exhibit Receipts"), soonItem("Release Notification")
-        ] },
-        { h: "Branch Exhibit Management", items: [
-          soonItem("Find Exhibits"), soonItem("Move Exhibit")
         ] }
       ],
       INTELLIGENCE: [
@@ -313,53 +261,35 @@
           { label: "Create Report", icon: ico.plus, run: clickId("btn-new") },
           { label: "Find Authorised Reports", icon: ico.grid, run: registryHomeAction("home-all") },
           { label: "Find Unauthorised Reports", icon: ico.grid, run: registryHomeAction("home-all") },
-          soonItem("View Risk Assessment Summary"),
           { label: "View Suppressed Reports", icon: ico.doc, run: registryHomeAction("home-all") }
-        ] },
-        { h: "ISR", items: [
-          { label: "Find Sources", icon: ico.search, run: focusSearch() },
-          soonItem("Find SREs")
-        ] },
-        { h: "Dissemination", items: [
-          soonItem("Create Package"), soonItem("Find Packages"), soonItem("View Suppressed Packages")
-        ] },
-        { h: "Search", items: [
-          { label: "Create Search Query", icon: ico.search, run: focusSearch() },
-          soonItem("View Search Results"), soonItem("Run Favourite Search Query"), soonItem("Re-Run Search Query")
         ] },
         { h: "Entities", items: [
           { label: "View Structured Intelligence", icon: ico.net, run: registryHomeAction("home-entities") },
-          { label: "View Silent Hit List", icon: ico.filter, run: registryHomeAction("home-hits") },
-          { label: "View Imported Entity Comparison Matches", icon: ico.merge, run: registryHomeAction("home-entities") }
+          { label: "View Silent Hit List", icon: ico.filter, run: registryHomeAction("home-hits") }
         ] },
         { h: "Deconfliction", items: [
-          // NEW feature — inbox/deconfliction is the NEXT staged sub-project.
-          soonItem("My Deconfliction Requests", ico.doc),
-          soonItem("Incoming Requests", ico.doc),
-          soonItem("Contact Operation Team / Report Author", ico.net)
+          // Wired to the inbox in the deconfliction commit (SolarInbox); [F] until then.
+          inboxItem("My Deconfliction Requests", "mine", ico.doc),
+          inboxItem("Incoming Requests", "incoming", ico.doc),
+          inboxItem("Contact Operation Team / Report Author", "compose", ico.net)
+        ] },
+        { h: "Dissemination", items: [
+          soonItem("Create Package"), soonItem("Find Packages"), soonItem("View Suppressed Packages")
         ] }
       ],
       OPERATIONS: [
+        { h: "Operation Log", items: [
+          { label: "View Log", icon: ico.doc, run: clickId("reg-logs") }
+        ] },
         { h: "Operations", items: [
           soonItem("Create Operation"), soonItem("Operation Profile")
         ] },
         { h: "Actions", items: [
           soonItem("Create Action"), soonItem("Find Actions")
         ] },
-        { h: "Operation Log", items: [
-          { label: "View Log", icon: ico.doc, run: clickId("reg-logs") }
-        ] },
         { h: "Decisions", items: [
           soonItem("Add Decision"), soonItem("Update Decision"), soonItem("Find Decisions"),
           soonItem("Print Decision"), soonItem("View Decision")
-        ] },
-        { h: "Policy Logs", items: [
-          soonItem("Publish Policy Log"), soonItem("Print Policy Log")
-        ] },
-        { h: "Risk Assessments", items: [
-          soonItem("Create RA"), soonItem("Update RA"), soonItem("View RA"), soonItem("Find RA"),
-          soonItem("Print RA Details"), soonItem("Print RA Summary"), soonItem("Print Operational RA Summary"),
-          soonItem("Manage Overdue RAs"), soonItem("Create Standard RA"), soonItem("Update Standard RA")
         ] },
         { h: "Cross-reference", items: [
           { label: "Open in Charting", icon: ico.net, run: clickId("reg-chart"), route: true }

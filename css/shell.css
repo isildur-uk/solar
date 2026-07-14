@@ -255,15 +255,22 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
 /* ---- the mega-menu panel (full-width, drops from the tab bar) ---- */
 .sh-mega {
   position: absolute; left: 0; right: 0; top: 100%;
-  background: rgba(16,16,14,0.94);
-  -webkit-backdrop-filter: blur(20px) saturate(1.1); backdrop-filter: blur(20px) saturate(1.1);
+  /* solid cosmic glass — near-opaque so chart/operations content behind the
+     panel does not bleed through (Ben: was too translucent). Layered fill over a
+     deep base + stronger blur keeps it on-theme without going flat. */
+  background:
+    linear-gradient(180deg, rgba(142,162,255,0.06), rgba(0,0,0,0)),
+    #0d0d0b;
+  -webkit-backdrop-filter: blur(26px) saturate(1.2); backdrop-filter: blur(26px) saturate(1.2);
   border-bottom: 1px solid var(--line);
   box-shadow: var(--shadow-2);
   padding: 18px 22px 22px; z-index: 200;   /* above Row 3 context bar */
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 26px;
   animation: sh-mega-in 120ms ease;
 }
-html[data-theme="light"] .sh-mega { background: rgba(246,241,230,0.96); }
+html[data-theme="light"] .sh-mega {
+  background: linear-gradient(180deg, rgba(74,91,214,0.06), rgba(0,0,0,0)), #f7f3eb;
+}
 /* wide replica panels (the real NCA menu has 5–7 categories per tab) — auto-fit
    columns across the full width, with a thin periwinkle top rule to echo the
    real menu's indigo header band, cosmic-glass not flat grey. */
