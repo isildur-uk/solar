@@ -599,9 +599,67 @@
       }
     });
 
+    /* Dragging a node must NOT drag the rest of the chart. With physics ON,
+       vis re-solves the layout whenever a node moves, so every OTHER un-pinned
+       node (in particular the central/most-connected hub, which sits unpinned at
+       the centre) is pushed by the spring forces and drifts — the "central
+       entity moves when I move a peripheral one" bug Ben reported. The drift
+       happens BOTH during the drag (continuous simulation) AND after release
+       (the graph re-equilibrates around the node's new position).
+
+       Root-cause fix: a manual drag makes the layout MANUAL. On dragStart we
+       fix every not-being-dragged node in place; on dragEnd we KEEP them fixed
+       and persist that (e.chart.fixed) and stop the simulation, so physics can
+       never re-solve the placed layout — the core stays put to the pixel. The
+       dragged node itself pins where dropped (the existing behaviour). Physics
+       is NOT lost: "Force layout" and the Organic preset re-enable it and
+       re-flow the whole chart explicitly (they clear e.chart first). A fixed
+       node is not integrated by the solver, which is why this is exact, not
+       approximate.
+
+       We fix the LIVE physics-body nodes (network.body.nodes[id]) — what the
+       solver reads — because a nodes-DataSet update does not reliably propagate
+       a transient `fixed` flag to the body in time for the drag. Gated on
+       physicsOn: with physics off nothing re-solves, so there is nothing to do. */
+    var _dragFrozen = null;   // { id: priorFixedBool } captured at dragStart
+    function bodyNode(id) { return network.body && network.body.nodes ? network.body.nodes[id] : null; }
+    function isBodyFixed(bn) { var f = bn && bn.options && bn.options.fixed; return f === true || !!(f && (f.x || f.y)); }
+    network.on("dragStart", function (p) {
+      _dragFrozen = null;
+      if (!physicsOn || !p.nodes || !p.nodes.length) { return; }
+      var dragging = {};
+      p.nodes.forEach(function (id) { dragging[id] = true; });
+      var frozen = {};
+      (network.body.nodeIndices || []).forEach(function (id) {
+        if (dragging[id]) { return; }               // never freeze the grabbed node
+        var bn = bodyNode(id);
+        if (!bn) { return; }
+        frozen[id] = isBodyFixed(bn);               // remember which were already pinned
+        bn.options.fixed = { x: true, y: true };    // hold every other node for the drag
+      });
+      _dragFrozen = frozen;
+    });
+
+    /* Keep the not-being-dragged nodes fixed where they are, and persist the pin
+       for the ones that were previously free so the manual layout survives a
+       save/reload (and a later re-render doesn't unpin them). Called on dragEnd. */
+    function settleDragFrozen() {
+      if (!_dragFrozen) { return; }
+      Object.keys(_dragFrozen).forEach(function (id) {
+        var bn = bodyNode(id);
+        if (!bn) { return; }
+        bn.options.fixed = { x: true, y: true };    // stays put — no physics re-solve
+        if (_dragFrozen[id] === false) {            // was free before the drag → persist the new pin
+          var ent = store.getEntity(id);
+          if (ent) { ent.chart = { x: Math.round(bn.x), y: Math.round(bn.y), fixed: true }; }
+        }
+      });
+      _dragFrozen = null;
+    }
+
     // dragging pins entities where they're dropped; corners update their link
     network.on("dragEnd", function (p) {
-      if (!p.nodes || !p.nodes.length) return;
+      if (!p.nodes || !p.nodes.length) { settleDragFrozen(); return; }
       var positions = network.getPositions(p.nodes);
       var touched = false;
       p.nodes.forEach(function (id) {
@@ -628,6 +686,13 @@
           }
         }
       });
+      // keep the other nodes fixed where they are (persisting the pin), then HALT
+      // the simulation so the placed layout holds — without this, physics would
+      // re-solve around the dropped node and drift the core again. Physics stays
+      // available on demand: Force layout / Organic both re-enable it and re-flow
+      // the whole chart explicitly. A plain manual drag no longer re-flows.
+      settleDragFrozen();
+      try { network.stopSimulation(); } catch (e) { /* noop */ }
       if (touched) store._emit("layout");
     });
 
