@@ -341,6 +341,48 @@ html[data-theme="light"] .sh-modal { background: var(--panel); }
 /* tooltips near the top edge flip below the host */
 .has-tip.tip-below::after { top: calc(100% + 8px); bottom: auto; }
 .has-tip.tip-below::before { top: 100%; bottom: auto; border-top-color: transparent; border-bottom-color: var(--panel); }
+
+/* ---- portal hover-card (.sol-tip, driven by js/ui/tooltip.js) --------------
+   Body-appended, JS-positioned card that escapes clipped hosts. An ELEVATED
+   cosmic-glass card — distinctly lighter than the near-black page, with a
+   periwinkle hairline + drop shadow so it reads as a floating card. ~120ms
+   fade; content set via textContent (XSS-safe). Shown on hover AND focus. */
+.sol-tip {
+  position: fixed; z-index: 2147483200; display: none; left: 0; top: 0;
+  max-width: 300px; padding: 8px 11px; border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(142,162,255,0.12), rgba(142,162,255,0.03)),
+    var(--panel-3, #23232a);
+  border: 1px solid color-mix(in srgb, var(--accent, #8ea2ff) 48%, transparent);
+  box-shadow: 0 12px 34px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.4), 0 0 24px -10px var(--accent, #8ea2ff);
+  color: var(--text); font: 500 var(--fs-sm)/1.4 var(--sans); letter-spacing: 0.01em;
+  white-space: normal; text-align: left; pointer-events: none;
+  /* opacity flips instantly (not transitioned) so the card is robust where the
+     compositor throttles transitions; the subtle rise is the only animated part. */
+  opacity: 0; transform: translateY(3px);
+  transition: transform 0.12s ease;
+}
+html[data-theme="light"] .sol-tip {
+  background: linear-gradient(180deg, rgba(74,91,214,0.08), rgba(74,91,214,0.02)), #ffffff;
+}
+.sol-tip.is-on { opacity: 1; transform: translateY(0); }
+.sol-tip-body { display: block; }
+.sol-tip-arrow {
+  position: absolute; width: 9px; height: 9px;
+  background: var(--panel-3, #23232a);
+  border: 1px solid color-mix(in srgb, var(--accent, #8ea2ff) 48%, transparent);
+  transform: rotate(45deg);
+}
+html[data-theme="light"] .sol-tip-arrow { background: #ffffff; }
+.sol-tip[data-placement="top"] .sol-tip-arrow    { bottom: -5px; border-top: none; border-left: none; }
+.sol-tip[data-placement="bottom"] .sol-tip-arrow { top: -5px; border-bottom: none; border-right: none; }
+.sol-tip[data-placement="left"] .sol-tip-arrow   { right: -5px; border-bottom: none; border-left: none; }
+.sol-tip[data-placement="right"] .sol-tip-arrow  { left: -5px; border-top: none; border-right: none; }
+@media (prefers-reduced-motion: reduce) {
+  .sol-tip { transition: none; transform: none; }
+  .sol-tip.is-on { transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .has-tip::after, .has-tip::before { transition-duration: .01s; }
 }

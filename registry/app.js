@@ -733,7 +733,7 @@
       var W=window.RegistryWatchlist; var results=W?W.scan(all):[];
       function rulesOf(a){ return a.map(function(s){return String(s).split('::')[0];}).filter(function(v,i,arr){return arr.indexOf(v)===i;}).join(', '); }
       var body = results.length ? results.map(function(res){ var w=res.watch;
-        var hits = res.hits.length ? '<ul class="sh-hits">'+res.hits.map(function(h){ return '<li class="sh-hit" data-urn="'+esc(h.urn)+'"><span class="sh-urn">'+esc(h.urn)+'</span><span class="sh-op">'+esc(h.operation)+'</span><span class="sh-t" title="'+esc(h.title)+'">'+esc(h.title)+'</span><span class="sh-date">'+esc(h.date)+'</span><span class="sh-by">'+esc(rulesOf(h.matchedBy))+'</span></li>'; }).join('')+'</ul>' : '<p class="sh-nohits">No hits yet — this nominal has not matched any report.</p>';
+        var hits = res.hits.length ? '<ul class="sh-hits">'+res.hits.map(function(h){ return '<li class="sh-hit" data-urn="'+esc(h.urn)+'"><span class="sh-urn">'+esc(h.urn)+'</span><span class="sh-op">'+esc(h.operation)+'</span><span class="sh-t" data-tip="'+esc(h.title)+'" tabindex="0">'+esc(h.title)+'</span><span class="sh-date">'+esc(h.date)+'</span><span class="sh-by">'+esc(rulesOf(h.matchedBy))+'</span></li>'; }).join('')+'</ul>' : '<p class="sh-nohits">No hits yet — this nominal has not matched any report.</p>';
         return '<div class="sh-card"><div class="sh-head"><div><span class="sh-name">'+esc(w.label)+'</span>'+(w.dob?' <span class="dos-dim">DOB '+esc(w.dob)+'</span>':'')+(w.note?' <span class="sh-note">'+esc(w.note)+'</span>':'')+'</div><div><span class="sh-count">'+res.hitCount+' hit'+(res.hitCount===1?'':'s')+'</span> <button type="button" class="btn danger sh-rm" data-id="'+esc(w.id)+'">Remove</button></div></div>'+hits+'</div>'; }).join('')
         : emptyState({
             title: 'Your watchlist is empty',
@@ -890,8 +890,8 @@
               return '<tr><td class="c-no">'+(i+1)+'</td>'
                 + '<td class="c-report"><pre class="item-text">'+highlightExtract(it.text, siHighlightOn)+'</pre></td>'
                 + '<td class="c-src"><button type="button" class="src-chip" data-src="'+esc(it.sourceType)+'" style="--src:'+esc(col)+'" title="What is '+esc(it.sourceType)+'? Show its other checks in this operation">'+esc(it.sourceType)+'</button></td>'
-                + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-rel="'+esc(it.sourceEval)+'" title="Explain this grade">'+esc(it.sourceEval)+'</button></td>'
-                + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-assess="'+esc(it.intelEval)+'" title="Explain this grade">'+esc(it.intelEval)+'</button></td></tr>'; }).join('')
+                + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-rel="'+esc(it.sourceEval)+'" data-tip="Source evaluation '+esc(it.sourceEval)+' — grade '+esc(gr)+', handling '+esc(hd)+'. Click to explain.">'+esc(it.sourceEval)+'</button></td>'
+                + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-assess="'+esc(it.intelEval)+'" data-tip="Intelligence evaluation '+esc(it.intelEval)+' — grade '+esc(gr)+', handling '+esc(hd)+'. Click to explain.">'+esc(it.intelEval)+'</button></td></tr>'; }).join('')
           + '</tbody></table>'
         : '<p class="empty">No items.</p>';
       var irProvTable = '<table class="ir-items ir-prov"><tbody><tr><td class="c-no">P</td><td class="c-report"><pre class="item-text">'+highlightExtract(pvd.text || '—', true)+'</pre></td><td class="c-src">Assessment</td><td class="c-si" data-rel="'+esc(pvd.sourceEval||'')+'">'+esc(pvd.sourceEval||'-')+'</td><td class="c-si" data-assess="'+esc(pvd.intelEval||'')+'">'+esc(pvd.intelEval||'-')+'</td></tr></tbody></table>';
@@ -1631,9 +1631,12 @@
       // swatch is now accessible: role=img + aria-label names the threat area
       // (was aria-hidden decoration) so screen readers announce the icon's meaning.
       var swLabel = esc(g.ta) + ' threat area';
+      // visible hover-card: full threat name + "N ops · M reports" (data-tip is
+      // rendered as plain text by the portal tooltip, so it is XSS-safe).
+      var swTip = esc(g.ta) + ' — ' + g.ops.length + ' op' + (g.ops.length === 1 ? '' : 's') + ' · ' + repTotal + ' report' + (repTotal === 1 ? '' : 's');
       var sw = ic
-        ? '<span class="ta-swatch has-icon" style="--ta-icon:url(assets/threat/' + ic + '.png)" role="img" aria-label="' + swLabel + '"></span>'
-        : '<span class="ta-swatch" role="img" aria-label="' + swLabel + '"></span>';
+        ? '<span class="ta-swatch has-icon" style="--ta-icon:url(assets/threat/' + ic + '.png)" role="img" aria-label="' + swLabel + '" data-tip="' + swTip + '"></span>'
+        : '<span class="ta-swatch" role="img" aria-label="' + swLabel + '" data-tip="' + swTip + '"></span>';
       return '<details class="ta-group"' + (q ? ' open' : '') + ' data-ta="' + esc(g.ta) + '" style="--ta:' + esc(T.colour(g.ta)) + '">' +
         '<summary class="ta-head">' + sw +
           '<span class="ta-name">' + esc(g.ta) + '</span>' +
