@@ -228,10 +228,18 @@
       else if (kind === "err") { window.SolarSound.play("error"); }
     }
   }
+  var MARKING_TIP = {
+    "OFFICIAL": "Government Security Classification: routine public-sector information. The baseline marking — most operational intelligence sits here.",
+    "OFFICIAL-SENSITIVE": "OFFICIAL with the -SENSITIVE handling caveat: still OFFICIAL-tier, but limited distribution and need-to-know apply because compromise would cause more than minor harm.",
+    "SECRET": "Very sensitive information whose compromise would cause serious damage. Handle, store and share only via SECRET-approved channels.",
+    "TOP SECRET": "The most sensitive information, whose compromise would cause exceptionally grave damage. Strict TOP SECRET handling controls apply."
+  };
   function setBanner(mk) {
     var m = (M.PROTECTIVE_MARKING.indexOf(mk) !== -1) ? mk : "OFFICIAL";
     els.banner.textContent = m;
     els.banner.setAttribute("data-mk", m);
+    var tip = MARKING_TIP[m] || "Protective marking — governs how this information must be handled, stored and shared.";
+    els.banner.setAttribute("data-tip", tip);
   }
   function opt(value, label, sel) {
     return '<option value="' + esc(value) + '"' + (sel === value ? " selected" : "") + ">" + esc(label) + "</option>";
@@ -884,7 +892,8 @@
         ? esc(h.code) + ' — ' + esc(h.instructions || 'Lawful sharing permitted with conditions') + ' <span class="ir-sub">(' + cond + ')</span>'
         : esc(h.code || '—') + ' — Lawful sharing permitted';
       function irHdr(k,v){ return '<div class="ir-hcell"><span class="ir-hk">'+esc(k)+'</span><span class="ir-hv">'+v+'</span></div>'; }
-      function irSiRow(k,v){ return '<div class="ir-si-row"><span class="ir-si-k">'+esc(k)+'</span><span class="ir-si-v">'+v+'</span></div>'; }
+      function irSiRow(k,v,tip){ return '<div class="ir-si-row"'+(tip?' data-tip="'+esc(tip)+'"':'')+'><span class="ir-si-k">'+esc(k)+'</span><span class="ir-si-v">'+v+'</span></div>'; }
+      var HANDLING_TIP = 'Handling code governs onward sharing. P — lawful sharing permitted, no special conditions. C — permitted subject to conditions, shown as an action / sanitisation code pair (e.g. A2 / S2): the action code sets what the recipient may do, the sanitisation code what must be removed or protected before sharing.';
       var _rg = V.reportGrade(ir);
       var irGrade = _rg
         ? '<div class="ir-grade"><span class="ir-grade-k">Report grade</span>'
@@ -893,11 +902,14 @@
         : '';
       var _SM = (typeof window!=='undefined' && window.RegistrySourceMeta) ? window.RegistrySourceMeta : null;
       var irItems = items.length
-        ? '<table class="ir-items"><thead><tr><th class="c-no">Item</th><th>Report</th><th class="c-src">Source</th><th class="c-si">S</th><th class="c-si">I</th></tr></thead><tbody>'
+        ? '<table class="ir-items"><thead><tr><th class="c-no">Item</th><th>Report</th><th class="c-src">Source</th>'
+          + '<th class="c-si" data-tip="S — source evaluation (1–5): how reliable the source is. 1 Always reliable · 2 Mostly reliable · 3 Sometimes reliable · 4 Unreliable · 5 Untested.">S</th>'
+          + '<th class="c-si" data-tip="I — intelligence evaluation (A–E): confidence in the information itself. A Known true · B Known personally to source · C Not known personally but corroborated · D Cannot be judged · E Suspected false.">I</th></tr></thead><tbody>'
           + items.map(function(it,i){ var col=_SM?_SM.colour(it.sourceType):'#8d99ae'; var gr=esc(it.sourceEval)+esc(it.intelEval), hd=esc(h.code||'P');
+              var srcTip=_SM?(_SM.describe(it.sourceType).text||''):'';
               return '<tr><td class="c-no">'+(i+1)+'</td>'
                 + '<td class="c-report"><pre class="item-text" data-hl-item="'+i+'">'+highlightExtract(it.text, siHighlightOn)+'</pre></td>'
-                + '<td class="c-src"><button type="button" class="src-chip" data-src="'+esc(it.sourceType)+'" style="--src:'+esc(col)+'" title="What is '+esc(it.sourceType)+'? Show its other checks in this operation">'+esc(it.sourceType)+'</button></td>'
+                + '<td class="c-src"><button type="button" class="src-chip" data-src="'+esc(it.sourceType)+'" style="--src:'+esc(col)+'" data-tip="'+esc(srcTip)+' Click to show its other checks in this operation.">'+esc(it.sourceType)+'</button></td>'
                 + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-rel="'+esc(it.sourceEval)+'" data-tip="Source evaluation '+esc(it.sourceEval)+' — grade '+esc(gr)+', handling '+esc(hd)+'. Click to explain.">'+esc(it.sourceEval)+'</button></td>'
                 + '<td class="c-si"><button type="button" class="si-cell" data-grade="'+gr+'" data-handling="'+hd+'" data-assess="'+esc(it.intelEval)+'" data-tip="Intelligence evaluation '+esc(it.intelEval)+' — grade '+esc(gr)+', handling '+esc(hd)+'. Click to explain.">'+esc(it.intelEval)+'</button></td></tr>'; }).join('')
           + '</tbody></table>'
@@ -926,7 +938,7 @@
           '</div>' +
           '<div class="ir-si"><div class="ir-si-h">Supporting information</div>' +
             irSiRow('Threats', irThreatLine) +
-            irSiRow('Handling code', irHandLine) +
+            irSiRow('Handling code', irHandLine, HANDLING_TIP) +
             irSiRow('Confidence', confidenceLevel(ir.confidence)) +
           '</div>' +
           (ssSection ? '<div class="ir-sssrc">' + ssSection + '</div>' : '') +
