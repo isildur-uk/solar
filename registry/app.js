@@ -637,6 +637,11 @@
      dr-lede + dr-foot (the real, defensible definition). Full breakdown stays on click. */
   var GRADE_TIP = 'Graded on the 3×5×2 system: source-evaluation number, intelligence-evaluation letter, handling code. Source 1 Reliable · 2 Untested · 3 Not reliable. Intelligence A–E, known-true to suspected-false. Handling P permitted · C permitted subject to conditions.';
 
+  /* whether the analyst has dismissed the "select text to highlight" hint */
+  var USER_HL_HINT_KEY = "reg_hl_hint_dismissed_v1";
+  function userHlHintDismissed(){ try { return localStorage.getItem(USER_HL_HINT_KEY) === "1"; } catch(e){ return false; } }
+  function dismissUserHlHint(){ try { localStorage.setItem(USER_HL_HINT_KEY, "1"); } catch(e){ /* ignore */ } }
+
   function explainGrade(grade, handling){
     var sc=String(grade||''), s=sc.charAt(0), i=sc.charAt(1).toUpperCase(), hc=String(handling||'P').toUpperCase();
     var se=G.SOURCE_EVAL[s], as=G.ASSESSMENT[i], ha=G.HANDLING[hc];
@@ -928,7 +933,18 @@
           irGrade +
           '<details class="ir-sec" open><summary>Items (' + items.length + ')</summary>' +
           '<div class="items-head">' +
-          '<label class="hl-toggle" title="Bold + colour the entities extracted from this report, by type"><input type="checkbox" id="hl-entities"' + (siHighlightOn ? ' checked' : '') + '> Highlight extracted entities</label></div>' +
+          '<label class="hl-toggle" title="Bold + colour the entities extracted from this report, by type"><input type="checkbox" id="hl-entities"' + (siHighlightOn ? ' checked' : '') + '> Highlight extracted entities</label>' +
+          // Discoverable entry point for the USER highlighter (select text -> mark +
+          // save a note). Distinct from the entity-extraction checkbox above. The
+          // hint is dismissible and stays dismissed (localStorage).
+          (userHlHintDismissed()
+            ? ''
+            : '<span class="hl-hint" role="note">' +
+                '<span class="hl-hint-badge" aria-hidden="true">✎ Highlight &amp; note</span>' +
+                '<span class="hl-hint-text">Select any text below to highlight it and save a note.</span>' +
+                '<button type="button" class="hl-hint-x" id="hl-hint-dismiss" aria-label="Dismiss this hint">✕</button>' +
+              '</span>') +
+          '</div>' +
           irItems + '</details>' +
           '<details class="ir-sec" open><summary>Provenance</summary>' +
           irProvTable + '</details>' +
@@ -969,6 +985,12 @@
       if (window.RegistryHighlighter && window.RegistryHighlighter.attach) {
         try { window.RegistryHighlighter.attach(els.main, ir.urn); } catch (e) { /* never break the report view */ }
       }
+      var _hlHintX = document.getElementById("hl-hint-dismiss");
+      if (_hlHintX) _hlHintX.addEventListener("click", function () {
+        dismissUserHlHint();
+        var host = _hlHintX.closest(".hl-hint");
+        if (host && host.parentNode) host.parentNode.removeChild(host);
+      });
       [].forEach.call(els.main.querySelectorAll('.src-chip'), function(c){ c.addEventListener('click', function(){ openSourceDrawer(c.getAttribute('data-src')); }); });
       [].forEach.call(els.main.querySelectorAll('[data-grade]'), function(g){ g.addEventListener('click', function(){ openIrDrawer(explainGrade(g.getAttribute('data-grade'), g.getAttribute('data-handling'))); }); });
       var _dx=document.getElementById('ir-drawer-x'); if(_dx) _dx.addEventListener('click', closeIrDrawer);

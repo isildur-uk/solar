@@ -536,6 +536,25 @@ details.facet>summary .c{background:var(--accent-soft);color:var(--accent);borde
 .items-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
 .hl-toggle { font: var(--fs-2xs) var(--mono); color: var(--faint); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; user-select: none; }
 .hl-toggle input { accent-color: var(--accent); }
+/* Discoverable affordance for the USER highlighter (select text -> mark + note).
+   A quiet on-brand hint: a periwinkle "✎ Highlight & note" badge + one-line
+   explainer + a dismiss ×. Distinct from the entity-extraction checkbox. */
+.hl-hint {
+  display: inline-flex; align-items: center; gap: 8px; margin-left: auto;
+  font: var(--fs-2xs) var(--mono); color: var(--dim);
+  padding: 3px 4px 3px 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
+}
+.hl-hint-badge { color: var(--accent); font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
+.hl-hint-text { color: var(--dim); }
+.hl-hint-x {
+  background: transparent; border: 0; color: var(--faint); cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 2px 5px; border-radius: 999px;
+}
+.hl-hint-x:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.hl-hint-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (max-width: 640px) { .hl-hint-text { display: none; } }
 /* one UI accent on all native checkboxes/radios (safety-critical submitter + handling fields) */
 input[type=radio], input[type=checkbox] { accent-color: var(--accent); }
 .item-text .si-hl { font-weight: 700; background: transparent; cursor: pointer; border-radius: 2px; padding: 0 1px; }
