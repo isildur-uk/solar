@@ -173,13 +173,21 @@
       font: { color: pk("#c9d4e0", "#26241b"), size: 12, face: "Segoe UI", strokeWidth: 5, strokeColor: pk("#0c0c0b", "#f4efe1"), vadjust: 2 },
       title: titleFor(e)
     };
-    // persisted manual position
+    // Persisted manual position: honour the saved x/y, but NEVER apply `fixed`
+    // to the node. In vis-network a fixed node is not user-draggable, so pinning
+    // via `fixed` makes entities immovable — the layout is instead held by
+    // turning physics OFF the instant a drag begins (see the dragStart handler),
+    // which stops any re-solve from drifting other nodes while keeping every node
+    // freely draggable. This also MIGRATES cases saved by the earlier buggy
+    // build (which persisted chart.fixed:true on every node): they load with
+    // their positions intact and fully draggable.
     if (e.chart && typeof e.chart.x === "number") {
       n.x = e.chart.x; n.y = e.chart.y;
-      n.fixed = { x: !!e.chart.fixed, y: !!e.chart.fixed };
-    } else {
-      n.fixed = false;
     }
+    // Only an EXPLICIT per-node pin (chart.pinned) makes a node non-draggable;
+    // legacy chart.fixed from the buggy build is ignored, so those cases load
+    // fully draggable with their positions preserved.
+    n.fixed = (e.chart && e.chart.pinned) ? { x: true, y: true } : false;
     // time-window / search highlight: everything outside the set dims
     if (hlSet && !hlSet[e.id]) {
       n.opacity = 0.15;
@@ -468,7 +476,8 @@
     Object.keys(positions).forEach(function (id) {
       var e = store.getEntity(id);
       if (!e) return;
-      e.chart = { x: Math.round(positions[id].x), y: Math.round(positions[id].y), fixed: false };
+      // preset positions are draggable (no explicit pin); physics goes off below
+      e.chart = { x: Math.round(positions[id].x), y: Math.round(positions[id].y), pinned: false };
     });
     if (physicsOn) togglePhysics();
     store._emit("layout");
@@ -620,6 +629,18 @@
       nodes: { chosen: true }
     });
 
+    /* Best-effort: if this build emits "stabilized", drop to physics-off once the
+       initial auto-layout settles, so a chart left untouched also rests in manual
+       mode. NOTE this event does NOT fire in the vendored vis build, so it is not
+       the guarantee — the drag protection lives on dragStart (below), which fires
+       reliably and covers even the very first drag. Kept as belt-and-braces. */
+    network.on("stabilized", function () {
+      if (physicsOn) {
+        physicsOn = false;
+        try { network.setOptions({ physics: { enabled: false } }); } catch (e) { /* noop */ }
+      }
+    });
+
     network.on("click", function (p) {
       if (p.nodes.length) {
         if (isBendNode(p.nodes[0])) { onSelect({ kind: "link", id: linkIdOf(p.nodes[0]) }); return; }
@@ -677,67 +698,30 @@
       ctx.restore();
     });
 
-    /* Dragging a node must NOT drag the rest of the chart. With physics ON,
-       vis re-solves the layout whenever a node moves, so every OTHER un-pinned
-       node (in particular the central/most-connected hub, which sits unpinned at
-       the centre) is pushed by the spring forces and drifts — the "central
-       entity moves when I move a peripheral one" bug Ben reported. The drift
-       happens BOTH during the drag (continuous simulation) AND after release
-       (the graph re-equilibrates around the node's new position).
+    /* Dragging a node must NOT drag the rest of the chart. The mechanism is the
+       PHYSICS STATE, not node pinning: the instant a drag begins we turn physics
+       OFF, so while the node is dragged the solver re-solves nothing and no other
+       node — in particular the central hub — can drift. That is the root-cause
+       fix for "moving a peripheral entity moves the core", and because we never
+       set `fixed` (which vis treats as "undraggable"), EVERY node stays freely
+       draggable, during and after the drag and across a reload.
 
-       Root-cause fix: a manual drag makes the layout MANUAL. On dragStart we
-       fix every not-being-dragged node in place; on dragEnd we KEEP them fixed
-       and persist that (e.chart.fixed) and stop the simulation, so physics can
-       never re-solve the placed layout — the core stays put to the pixel. The
-       dragged node itself pins where dropped (the existing behaviour). Physics
-       is NOT lost: "Force layout" and the Organic preset re-enable it and
-       re-flow the whole chart explicitly (they clear e.chart first). A fixed
-       node is not integrated by the solver, which is why this is exact, not
-       approximate.
-
-       We fix the LIVE physics-body nodes (network.body.nodes[id]) — what the
-       solver reads — because a nodes-DataSet update does not reliably propagate
-       a transient `fixed` flag to the body in time for the drag. Gated on
-       physicsOn: with physics off nothing re-solves, so there is nothing to do. */
-    var _dragFrozen = null;   // { id: priorFixedBool } captured at dragStart
-    function bodyNode(id) { return network.body && network.body.nodes ? network.body.nodes[id] : null; }
-    function isBodyFixed(bn) { var f = bn && bn.options && bn.options.fixed; return f === true || !!(f && (f.x || f.y)); }
+       We disable physics on dragStart rather than on a settle event because this
+       vendored vis-network build does not reliably emit "stabilized" — dragStart
+       is a guaranteed hook that protects even the very first drag. Force layout /
+       Organic re-enable physics for an explicit re-flow; a subsequent drag (or
+       the drag's own release) drops it back to the safe manual state. */
     network.on("dragStart", function (p) {
-      _dragFrozen = null;
-      if (!physicsOn || !p.nodes || !p.nodes.length) { return; }
-      var dragging = {};
-      p.nodes.forEach(function (id) { dragging[id] = true; });
-      var frozen = {};
-      (network.body.nodeIndices || []).forEach(function (id) {
-        if (dragging[id]) { return; }               // never freeze the grabbed node
-        var bn = bodyNode(id);
-        if (!bn) { return; }
-        frozen[id] = isBodyFixed(bn);               // remember which were already pinned
-        bn.options.fixed = { x: true, y: true };    // hold every other node for the drag
-      });
-      _dragFrozen = frozen;
+      if (!p.nodes || !p.nodes.length) { return; }   // panning the canvas: leave physics as-is
+      if (physicsOn) {
+        physicsOn = false;
+        try { network.setOptions({ physics: { enabled: false } }); } catch (e) { /* noop */ }
+      }
     });
 
-    /* Keep the not-being-dragged nodes fixed where they are, and persist the pin
-       for the ones that were previously free so the manual layout survives a
-       save/reload (and a later re-render doesn't unpin them). Called on dragEnd. */
-    function settleDragFrozen() {
-      if (!_dragFrozen) { return; }
-      Object.keys(_dragFrozen).forEach(function (id) {
-        var bn = bodyNode(id);
-        if (!bn) { return; }
-        bn.options.fixed = { x: true, y: true };    // stays put — no physics re-solve
-        if (_dragFrozen[id] === false) {            // was free before the drag → persist the new pin
-          var ent = store.getEntity(id);
-          if (ent) { ent.chart = { x: Math.round(bn.x), y: Math.round(bn.y), fixed: true }; }
-        }
-      });
-      _dragFrozen = null;
-    }
-
-    // dragging pins entities where they're dropped; corners update their link
+    // dragging repositions entities where they're dropped; corners update their link
     network.on("dragEnd", function (p) {
-      if (!p.nodes || !p.nodes.length) { settleDragFrozen(); return; }
+      if (!p.nodes || !p.nodes.length) { return; }
       var positions = network.getPositions(p.nodes);
       var touched = false;
       p.nodes.forEach(function (id) {
@@ -759,17 +743,18 @@
         } else {
           var e = store.getEntity(id);
           if (e) {
-            e.chart = { x: Math.round(px), y: Math.round(py), fixed: physicsOn };
+            var keepPinned = !!(e.chart && e.chart.pinned);
+            e.chart = { x: Math.round(px), y: Math.round(py), pinned: keepPinned };
             touched = true;
           }
         }
       });
-      // keep the other nodes fixed where they are (persisting the pin), then HALT
-      // the simulation so the placed layout holds — without this, physics would
-      // re-solve around the dropped node and drift the core again. Physics stays
-      // available on demand: Force layout / Organic both re-enable it and re-flow
-      // the whole chart explicitly. A plain manual drag no longer re-flows.
-      settleDragFrozen();
+      // Settle back to the manual (physics-off) resting state so nothing drifts
+      // after the drop. If the user was in Force mode, this ends that session.
+      if (physicsOn) {
+        physicsOn = false;
+        try { network.setOptions({ physics: { enabled: false } }); } catch (e) { /* noop */ }
+      }
       try { network.stopSimulation(); } catch (e) { /* noop */ }
       if (touched) store._emit("layout");
     });
@@ -922,20 +907,28 @@
   }
   function canvasPos(x, y) { return network.DOMtoCanvas({ x: x, y: y }); }
 
+  // Explicit per-node pin (context menu "Pin in place"). This is a DELIBERATE
+  // user choice to make one node immovable, and is tracked with `chart.pinned`
+  // — deliberately NOT the legacy `chart.fixed`, which the earlier buggy build
+  // wrote onto every node and which we now ignore on load (see nodeFromEntity).
   function setPinned(id, pinned) {
     var e = store.getEntity(id);
     if (!e) return;
     if (pinned) {
       var p = network.getPositions([id])[id];
-      e.chart = { x: Math.round(p.x), y: Math.round(p.y), fixed: true };
+      e.chart = { x: Math.round(p.x), y: Math.round(p.y), pinned: true };
+      var bn = network.body && network.body.nodes ? network.body.nodes[id] : null;
+      if (bn) { bn.options.fixed = { x: true, y: true }; }   // apply immediately
     } else {
       delete e.chart;
+      var bn2 = network.body && network.body.nodes ? network.body.nodes[id] : null;
+      if (bn2) { bn2.options.fixed = { x: false, y: false }; }
     }
     store._emit("layout");
   }
   function isPinned(id) {
     var e = store.getEntity(id);
-    return !!(e && e.chart && e.chart.fixed);
+    return !!(e && e.chart && e.chart.pinned);
   }
 
   function getNetwork() { return network; }
