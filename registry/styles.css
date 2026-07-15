@@ -1132,17 +1132,51 @@ html[data-theme="light"] .rh-toggle-count { color: #fff; }
 }
 .rp-lightbox.is-open::backdrop { opacity: 1; }
 
+/* CARD-VIEW aesthetic (Ben): reads as a polished, floating card — crisp rounded
+   corners, a faint cosmic periwinkle→violet edge, layered elevation with a soft
+   brand glow, and a subtle top-edge sheen. `position: relative` so the ::before
+   gradient-border sits under the content. */
 .rp-card {
-  border-radius: 12px; padding: 20px 22px;
-  background: linear-gradient(180deg, rgba(142,162,255,0.07), rgba(0,0,0,0)), var(--panel);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
-  box-shadow: 0 26px 70px rgba(0,0,0,0.6);
+  position: relative;
+  border-radius: 16px; padding: 20px 22px;
+  background:
+    linear-gradient(180deg, rgba(142,162,255,0.09), rgba(0,0,0,0) 42%),
+    var(--panel);
+  border: 1px solid transparent;
+  /* layered elevation: ambient depth + a faint periwinkle glow + a hairline
+     inner top sheen so light appears to catch the card's upper edge. */
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 18px 48px rgba(0,0,0,0.5),
+    0 34px 90px rgba(0,0,0,0.42),
+    0 0 40px rgba(142,162,255,0.12);
 }
-html[data-theme="light"] .rp-card { background: linear-gradient(180deg, rgba(74,91,214,0.06), rgba(0,0,0,0)), var(--panel); }
-/* reversible fade + scale on the card; the dialog toggles .is-open */
-.rp-lightbox .rp-card { opacity: 0; transform: scale(0.96); transition: opacity .2s ease, transform .2s cubic-bezier(.22,1,.36,1); }
+/* faint cosmic gradient edge — a soft periwinkle→violet rim drawn as a masked
+   border ring, so the card feels lit from within rather than boxed by a line. */
+.rp-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  padding: 1px; pointer-events: none;
+  background: linear-gradient(150deg,
+    color-mix(in srgb, var(--accent) 55%, transparent),
+    color-mix(in srgb, #b39dff 40%, transparent) 45%,
+    color-mix(in srgb, var(--accent) 20%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+html[data-theme="light"] .rp-card {
+  background: linear-gradient(180deg, rgba(74,91,214,0.07), rgba(0,0,0,0) 42%), var(--panel);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.7) inset,
+    0 16px 40px rgba(31,41,92,0.16),
+    0 30px 76px rgba(31,41,92,0.12),
+    0 0 32px rgba(74,91,214,0.10);
+}
+/* reversible fade + subtle LIFT + scale on the card (a card rising into place);
+   the dialog toggles .is-open */
+.rp-lightbox .rp-card { opacity: 0; transform: translateY(8px) scale(0.965); transition: opacity .22s ease, transform .26s cubic-bezier(.22,1,.36,1); }
 .rp-lightbox.is-open .rp-card { opacity: 1; transform: none; }
-/* reduced-motion: opacity only, no scale, no backdrop blur transition */
+/* reduced-motion: opacity only, no lift/scale, no backdrop blur transition */
 .rp-lightbox.rp-reduced .rp-card { transform: none; transition: opacity .12s ease; }
 .rp-lightbox.rp-reduced::backdrop { transition: none; }
 @media (prefers-reduced-motion: reduce) {
