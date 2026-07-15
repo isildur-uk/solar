@@ -132,36 +132,42 @@ body.warping .content {
           background-clip: text;
   -webkit-text-fill-color: transparent;
           color: transparent;
-  /* Ben's fx-smoke, looping but calm (3.4s). Each letter blurs and drifts
-     UPWARD, dissolving into smoke, then re-forms crisply into the paint.
-     will-change keeps the transform/opacity/filter animation smooth. */
+  /* ONE-SHOT entrance: each letter CONDENSES out of smoke (from up high, blurred
+     and tinted) into the crisp signature paint, staggered by --i, then HOLDS
+     static. No loop, no repeat — the mark appears once and rests. The smoke only
+     runs again on exit, when the analyst clicks a CTA (see .is-leaving below),
+     mirroring the in-app fx-smoke mode-switch dissolve. */
   will-change: transform, opacity, filter;
-  animation: fx-smoke 3.4s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.19s);   /* slightly wider stagger = soft ripple */
+  animation: fx-smoke-in 1.15s cubic-bezier(0.16,1,0.3,1) both;
+  animation-delay: calc(0.15s + var(--i) * 0.11s);
 }
-/* fx-smoke — DISSOLVE (not tilt-and-fade): near-zero rotate, small x-drift, a
-   strong UPWARD waft, and a STRONG increasing blur as opacity fades to 0 (blur
-   is what reads as "dissolving into smoke"). Scale stays gentle (~1.1) so it
-   wafts rather than zooms. Then it re-forms crisply into the signature paint. */
-@keyframes fx-smoke {
-  0%, 46%   { transform: none; opacity: 1; filter: blur(0);
-              -webkit-text-fill-color: transparent; color: transparent; }
-  /* brief cosmic colour-flash as the letter begins to lift + soften */
-  58%       { transform: translateY(-6px) scale(1.03); filter: blur(1.5px);
-              -webkit-text-fill-color: var(--ink-3); color: var(--ink-3); }
-  /* mid-waft: rising, blurring, tinting periwinkle, opacity dropping */
-  68%       { transform: translate(2px, -18px) rotate(2deg) scale(1.08);
-              opacity: 0.55; filter: blur(6px);
-              -webkit-text-fill-color: var(--ink-2); color: var(--ink-2); }
-  /* peak dissolve: fully wafted up, heavy blur, gone */
-  78%       { transform: translate(3px, -34px) rotate(2deg) scale(1.12);
-              opacity: 0; filter: blur(15px);
-              -webkit-text-fill-color: var(--ink-2); color: var(--ink-2); }
-  /* re-condense from just below, still soft, before snapping crisp */
-  82%       { transform: translateY(7px) scale(0.9); opacity: 0; filter: blur(5px); }
-  /* re-form back into the signature paint */
-  90%, 100% { transform: none; opacity: 1; filter: blur(0);
-              -webkit-text-fill-color: transparent; color: transparent; }
+/* fx-smoke-in — the letter condenses DOWN out of smoke: starts high, heavily
+   blurred, tinted cosmic and transparent; wafts down, sharpens, and settles into
+   the signature paint. Runs once (`both` holds the final crisp frame). */
+@keyframes fx-smoke-in {
+  0%   { transform: translate(3px, -30px) scale(1.12); opacity: 0; filter: blur(15px);
+         -webkit-text-fill-color: var(--ink-2); color: var(--ink-2); }
+  45%  { transform: translate(1px, -12px) scale(1.06); opacity: 0.6; filter: blur(6px);
+         -webkit-text-fill-color: var(--ink-3); color: var(--ink-3); }
+  100% { transform: none; opacity: 1; filter: blur(0);
+         -webkit-text-fill-color: transparent; color: transparent; }
+}
+
+/* EXIT dissolve — fired only when the user clicks DATABASE or CHARTING. Each
+   letter wafts UPWARD and dissolves into smoke (Ben's #61), staggered by --i,
+   as the transition INTO the chosen surface. Same shape as the in-app
+   sh-mode-smoke. JS navigates when this finishes (with a fallback timeout). */
+.wordmark.is-leaving b {
+  animation: fx-smoke-out 0.62s ease-in both;
+  animation-delay: calc(var(--i) * 0.05s);
+}
+@keyframes fx-smoke-out {
+  0%   { transform: none; opacity: 1; filter: blur(0);
+         -webkit-text-fill-color: transparent; color: transparent; }
+  40%  { transform: translateY(-6px) scale(1.03); opacity: 0.7; filter: blur(1.6px);
+         -webkit-text-fill-color: var(--ink-3); color: var(--ink-3); }
+  100% { transform: translate(3px, -34px) rotate(2deg) scale(1.12); opacity: 0; filter: blur(15px);
+         -webkit-text-fill-color: var(--ink-2); color: var(--ink-2); }
 }
 
 
@@ -339,8 +345,10 @@ body.warping .content {
 
 @media (prefers-reduced-motion: reduce) {
   .wordmark, .enter, .launch-nav { animation: none; opacity: 1; }
-  /* no smoke: letters rest in the static full signature paint */
-  .wordmark b { animation: none; transform: none; opacity: 1; filter: none; }
+  /* no smoke in OR out: letters just appear and rest in the signature paint;
+     clicking a CTA navigates immediately without the dissolve (handled in JS). */
+  .wordmark b,
+  .wordmark.is-leaving b { animation: none; transform: none; opacity: 1; filter: none; }
   #cosmos { display: none; }
 }
 </style>
@@ -762,16 +770,34 @@ body.warping .content {
 
   window.addEventListener("resize", function () { sizeTrail(); sizeBurst(); });
 
+  /* the SOLAR wordmark — dissolves on exit as the transition into the surface */
+  var wordmarkEl = document.getElementById("wordmark");
   var launched = false;
-  function detonate() {
+
+  /* detonate(dest): the one entry transition. The wordmark smoke-dissolves (the
+     same fx-smoke as the in-app mode switch), the nebula bloom erupts, the frame
+     veils to the dark app background, then we navigate to `dest`. A hard fallback
+     timer guarantees navigation even if an animation stalls or a frame is
+     dropped — the same belt-and-braces as the in-app A2 mode-switch dissolve. */
+  function detonate(dest) {
     if (launched) return;
     launched = true;
+    dest = dest || "index.html";
+
+    /* the wordmark dissolves away (one-shot; letters waft up into smoke) */
+    if (wordmarkEl) { wordmarkEl.classList.add("is-leaving"); }
     document.body.classList.add("warping");
-    /* the ONLY effect: the nebula's own bloom erupts to engulf the frame */
     if (typeof window.__solarNebulaBoom === "function") window.__solarNebulaBoom();
 
-    /* reduced-motion: skip the animation, just go */
-    if (reduceMotion) { setTimeout(function () { window.location.href = "index.html"; }, 400); return; }
+    var navigated = false;
+    function go() { if (navigated) return; navigated = true; window.location.href = dest; }
+
+    /* reduced-motion: no dissolve — go promptly */
+    if (reduceMotion) { setTimeout(go, 320); return; }
+
+    /* fallback: never let the transition hang the navigation */
+    var FAILSAFE_MS = 1500;
+    setTimeout(go, FAILSAFE_MS);
 
     burst.style.opacity = 1;
     var start = performance.now();
@@ -779,25 +805,38 @@ body.warping .content {
       var k = Math.min((now - start) / 1250, 1);
       bx.clearRect(0, 0, BW, BH);
       /* no particles — the nebula engulfs, then settles to obsidian so the
-         hand-off to the (dark) chart screen is dark-to-dark, not a flash */
+         hand-off to the (dark) app screen is dark-to-dark, not a flash */
       if (k > 0.5) {
         var wv = (k - 0.5) / 0.5; wv = wv * wv;
-        bx.fillStyle = "rgba(11,16,23," + Math.min(wv, 1).toFixed(3) + ")";   /* = chart screen --bg #0b1017 */
+        bx.fillStyle = "rgba(11,16,23," + Math.min(wv, 1).toFixed(3) + ")";   /* = app --bg #0b1017 */
         bx.fillRect(0, 0, BW, BH);
       }
       if (k < 1) requestAnimationFrame(veil);
-      else window.location.href = "index.html";
+      else go();
     })(start);
   }
 
+  /* CHARTING (the ENTER button) → the workbench */
   var enterBtn = document.getElementById("enter");
-  enterBtn.addEventListener("click", detonate);
+  enterBtn.addEventListener("click", function () { detonate("index.html"); });
+
+  /* DATABASE (the primary pill) → the registry, with the SAME dissolve transition
+     (previously it navigated plainly with no dissolve). We intercept the link so
+     the wordmark can dissolve first, then follow its href. */
+  var dbLink = document.getElementById("go-database");
+  if (dbLink) {
+    dbLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      detonate(dbLink.getAttribute("href") || "registry/");
+    });
+  }
+
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter") return;
     /* don't hijack Enter when a launcher link/button is focused — let it activate */
     var a = document.activeElement;
     if (a && a !== enterBtn && (a.tagName === "A" || a.classList.contains("pill"))) return;
-    detonate();
+    detonate("index.html");
   });
 
   /* trail loop */
