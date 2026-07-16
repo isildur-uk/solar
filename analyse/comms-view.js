@@ -21,6 +21,8 @@
   var state = { res: null, events: [], summary: null, sorted: [], map: null, mapLayers: null, filterN: null, built: false, tab: "table", showAllCols: false, i2Format: false };
   // Technical columns hidden by default even when populated (analyst can reveal).
   var DEFAULT_HIDDEN = { imei: 1, imsi: 1, cellGeneration: 1, cellAzimuth: 1 };
+  // Column -> entity type, so identifiers paint with the same hue scheme as Charting/Database.
+  var ENT_COL = { aParty: "phone", bParty: "phone", cellName: "location", cellPostcode: "location" };
 
   /* ---- tiny DOM helpers (safe) ---- */
   function el(tag, cls, text) { var e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
@@ -148,6 +150,7 @@
     if (!CD) { flash("Comms-data core not loaded."); return; }
     var res = CD.cleanFromRows(rows);
     state.res = res; state.events = res.events;
+    state.target = String((res.meta && res.meta["Target identity"]) || "").replace(/\D/g, ""); // subject number, digits only
     state.summary = CD.summarise(res.events);
     state.sorted = res.events.slice().sort(function (a, b) { var da = parseDt(a.startDt), db = parseDt(b.startDt); return (da ? da.getTime() : 0) - (db ? db.getTime() : 0); });
     state.filterN = state.sorted.length;
@@ -167,8 +170,14 @@
     var bits = [];
     if (res.meta && res.meta.URN) bits.push("URN " + res.meta.URN);
     if (res.meta && res.meta["Target identity"]) bits.push("Target " + res.meta["Target identity"]);
-    if (res.meta && res.meta.Grade) bits.push(res.meta.Grade);
-    m.textContent = bits.join("  ·  ");
+    m.appendChild(doc.createTextNode(bits.join("  ·  ")));
+    // Classification as a marking pill (same treatment as the Database's .pill.mk-*).
+    if (res.meta && res.meta.Grade) { if (bits.length) m.appendChild(doc.createTextNode("  ")); m.appendChild(gradePill(res.meta.Grade)); }
+  }
+  function gradePill(g) {
+    var p = el("span", "cd-grade", g), s = String(g).toUpperCase();
+    p.setAttribute("data-mk", /SECRET/.test(s) ? "bad" : /SENSITIVE/.test(s) ? "warn" : "ok");
+    return p;
   }
   function renderSummary() {
     var s = doc.getElementById("cd-summary"); if (!s) return; clear(s);
@@ -213,7 +222,13 @@
     var tb = el("tbody");
     state.sorted.forEach(function (ev) {
       var tr = el("tr");
-      cols.forEach(function (c) { tr.appendChild(el("td", (c.key === "lat" || c.key === "lon") ? "cd-num" : null, cellText(c.key, ev[c.key]))); });
+      cols.forEach(function (c) {
+        var cls = (c.key === "lat" || c.key === "lon") ? "cd-num" : "";
+        var et = ENT_COL[c.key];
+        if (et === "phone" && state.target && String(ev[c.key] == null ? "" : ev[c.key]).replace(/\D/g, "") === state.target) cls += " cd-subject";
+        else if (et) cls += " cd-ent-" + et;
+        tr.appendChild(el("td", cls.trim() || null, cellText(c.key, ev[c.key])));
+      });
       tb.appendChild(tr);
     });
     tbl.appendChild(tb); wrap.appendChild(tbl); pane.appendChild(wrap);
@@ -379,7 +394,10 @@
     c.appendChild(el("div", "cd-card-t", title));
     c.appendChild(el("div", "cd-card-sub", sub));
     if (loc) {
-      c.appendChild(el("div", "cd-card-v", loc.name || loc.key));
+      var v = el("div", "cd-card-v");
+      if (window.SolarEntityStyle) v.appendChild(window.SolarEntityStyle.icon("location", 16)); // same location glyph as Charting
+      v.appendChild(doc.createTextNode(loc.name || loc.key));
+      c.appendChild(v);
       var m = []; if (loc.postcode) m.push(loc.postcode); m.push(loc.count + " events");
       c.appendChild(el("div", "cd-card-m", m.join("  ·  ")));
       if (loc.lat != null) { c.classList.add("cd-tl-geo"); c.onclick = function () { showTab("map"); if (state.map) state.map.setView([loc.lat, loc.lon], 14); }; }
@@ -507,14 +525,19 @@
       ".cd-table{border-collapse:collapse;width:100%;font-size:var(--fs-xs)}",
       ".cd-table th,.cd-table td{border:1px solid var(--line);padding:4px 7px;text-align:left;white-space:nowrap}",
       ".cd-table td{font-family:var(--mono);font-variant-numeric:tabular-nums}",
-      ".cd-table th{position:sticky;top:0;background:var(--panel-2);color:var(--dim)}.cd-num{text-align:right;font-variant-numeric:tabular-nums}",
+      ".cd-table tbody tr:hover{background:rgba(142,162,255,.06)}",
+      ".cd-ent-phone{color:var(--c-phone)}.cd-ent-location{color:var(--c-location)}.cd-ent-vehicle{color:var(--c-vehicle)}",
+      ".cd-subject{color:var(--accent);font-weight:700}",
+      ".cd-table th{position:sticky;top:0;background:var(--panel-2);color:var(--faint);font-family:var(--mono);font-size:var(--fs-2xs);text-transform:uppercase;letter-spacing:.04em}.cd-num{text-align:right;font-variant-numeric:tabular-nums}",
       ".cd-empty{color:var(--faint);padding:24px;text-align:center}",
       ".cd-h{margin:16px 0 6px;font-size:var(--fs-sm);color:var(--dim);font-weight:600}.cd-h:first-child{margin-top:0}",
       ".cd-cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px}",
       ".cd-card{flex:1;min-width:220px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}",
       ".cd-card.cd-tl-geo{cursor:pointer}.cd-card.cd-tl-geo:hover{border-color:var(--accent-dim)}",
       ".cd-card-t{font-weight:600;color:var(--text)}.cd-card-sub{font-size:var(--fs-2xs);color:var(--faint);margin-bottom:8px}",
-      ".cd-card-v{font-size:var(--fs-md);color:var(--accent);font-family:var(--mono)}.cd-card-m{font-size:var(--fs-xs);color:var(--dim);margin-top:2px}",
+      ".cd-card-v{display:flex;align-items:center;gap:6px;font-size:var(--fs-md);color:var(--accent);font-family:var(--mono)}.cd-card-m{font-size:var(--fs-xs);color:var(--dim);margin-top:2px}",
+      ".cd-grade{display:inline-block;font-family:var(--mono);font-size:var(--fs-2xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid currentColor;border-radius:var(--radius);padding:1px 6px;vertical-align:middle}.cd-grade[data-mk=ok]{color:var(--ok)}.cd-grade[data-mk=warn]{color:var(--warn)}.cd-grade[data-mk=bad]{color:var(--bad)}",
+      ".ent-ico img{border-radius:3px;display:block}",
       ".cd-hist{display:flex;align-items:flex-end;gap:2px;height:110px;padding-top:6px;border-bottom:1px solid var(--line);margin-bottom:6px}",
       ".cd-hist-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}",
       ".cd-hist-bar{width:72%;background:var(--accent);border-radius:2px 2px 0 0;opacity:.85}",

@@ -113,6 +113,7 @@
     if (!state.datasets.length) { rail.appendChild(el("span", "cl-empty", "No subjects loaded — add returns or load the demo.")); return; }
     state.datasets.forEach(function (d, i) {
       var chip = el("span", "cl-subj");
+      if (window.SolarEntityStyle) chip.appendChild(window.SolarEntityStyle.icon(window.SolarEntityStyle.typeOf(d.identity || d.label), 14)); // phone/vehicle glyph, Charting scheme
       chip.appendChild(el("b", null, d.label));
       chip.appendChild(doc.createTextNode(" · " + (d.events ? d.events.length : 0) + " events"));
       var x = el("button", "cl-x"); x.type = "button"; x.title = "Remove"; x.setAttribute("aria-label", "Remove subject"); x.appendChild(svgX()); x.onclick = function () { removeDataset(i); }; chip.appendChild(x);
@@ -132,13 +133,18 @@
     flash(state.cc.shared.length + " shared contacts · " + state.cc.directLinks.length + " direct links · " + state.co.length + " co-locations");
   }
 
-  function tableFrom(headers, rows, emptyMsg) {
+  // types: optional per-column entity type (e.g. "phone"/"location") -> hue class, matching Charting/Database.
+  function tableFrom(headers, rows, emptyMsg, types) {
     if (!rows.length) return el("p", "cl-empty", emptyMsg);
     var wrap = el("div", "cl-tablewrap"), t = el("table", "cl-table"), thead = el("thead"), htr = el("tr");
     headers.forEach(function (h) { htr.appendChild(el("th", null, h)); });
     thead.appendChild(htr); t.appendChild(thead);
     var tb = el("tbody");
-    rows.forEach(function (cells) { var tr = el("tr"); cells.forEach(function (c) { tr.appendChild(el("td", null, c == null ? "" : String(c))); }); tb.appendChild(tr); });
+    rows.forEach(function (cells) {
+      var tr = el("tr");
+      cells.forEach(function (c, ci) { tr.appendChild(el("td", (types && types[ci]) ? "cl-ent-" + types[ci] : null, c == null ? "" : String(c))); });
+      tb.appendChild(tr);
+    });
     t.appendChild(tb); wrap.appendChild(t); return wrap;
   }
 
@@ -148,13 +154,13 @@
     pane.appendChild(el("h3", "cl-h", "Direct contact between subjects"));
     pane.appendChild(tableFrom(["From", "To", "Number", "Events"],
       state.cc.directLinks.map(function (l) { return [l.from, l.to, l.via, l.count]; }),
-      "No direct subject-to-subject contact found."));
+      "No direct subject-to-subject contact found.", ["phone", "phone", "phone", null]));
     pane.appendChild(el("h3", "cl-h", "Shared contacts (two or more subjects)"));
     pane.appendChild(tableFrom(["Contact", "# subjects", "Subjects (counts)", "Total events"],
       state.cc.shared.map(function (s) {
         var per = s.targets.map(function (t) { return t + " (" + s.perTarget[t] + ")"; }).join(", ");
         return [s.contact + (s.isTargetIdentity ? "  ⟵ a loaded subject" : ""), s.targetCount, per, s.total];
-      }), "No contacts are shared across subjects."));
+      }), "No contacts are shared across subjects.", ["phone", null, null, null]));
   }
 
   function renderColoc() {
@@ -162,7 +168,7 @@
     if (!state.co) { host.appendChild(el("p", "cl-empty", "Load two or more subjects and select Analyse.")); return; }
     host.appendChild(tableFrom(["Subject A", "Subject B", "Location", "A time", "B time", "Gap (min)"],
       state.co.map(function (r) { return [r.targetA, r.targetB, r.place, fmtDt(r.timeA), fmtDt(r.timeB), r.gapMins]; }),
-      "No co-locations within the current window/radius."));
+      "No co-locations within the current window/radius.", ["phone", "phone", "location", null, null, null]));
   }
 
   function renderMap() {
@@ -243,7 +249,10 @@
       ".cl-body{flex:1;min-height:0;position:relative}.cl-pane{position:absolute;inset:0;overflow:auto;padding:12px 14px}",
       ".cl-h{margin:14px 0 6px;font-size:var(--fs-sm);color:var(--dim);font-weight:600}.cl-h:first-child{margin-top:0}",
       ".cl-tablewrap{overflow:auto}.cl-table{border-collapse:collapse;width:100%;font-size:var(--fs-xs);margin-bottom:6px}",
-      ".cl-table th,.cl-table td{border:1px solid var(--line);padding:4px 7px;text-align:left;white-space:nowrap}.cl-table th{position:sticky;top:0;background:var(--panel-2);color:var(--dim)}",
+      ".cl-table th,.cl-table td{border:1px solid var(--line);padding:4px 7px;text-align:left;white-space:nowrap}.cl-table td{font-family:var(--mono);font-variant-numeric:tabular-nums}.cl-table th{position:sticky;top:0;background:var(--panel-2);color:var(--faint);font-family:var(--mono);font-size:var(--fs-2xs);text-transform:uppercase;letter-spacing:.04em}",
+      ".cl-table tbody tr:hover{background:rgba(142,162,255,.06)}",
+      ".cl-ent-phone{color:var(--c-phone)}.cl-ent-location{color:var(--c-location)}.cl-ent-vehicle{color:var(--c-vehicle)}",
+      ".ent-ico img{border-radius:3px;display:block}",
       ".cl-coloc-table{max-height:45%;overflow:auto;margin-bottom:10px}",
       ".cl-map{position:relative;height:50%;min-height:220px;background:var(--bg,#0a0f18)}.cl-map-offline{background:var(--bg,#0a0f18)}",
       ".cl-empty{color:var(--faint);padding:16px;text-align:center}",
