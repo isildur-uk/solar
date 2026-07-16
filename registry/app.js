@@ -962,7 +962,7 @@
             : '<span class="hl-hint" role="note">' +
                 '<span class="hl-hint-badge" aria-hidden="true">✎ Highlight &amp; note</span>' +
                 '<span class="hl-hint-text">Select any text below to highlight it and save a note.</span>' +
-                '<button type="button" class="hl-hint-x" id="hl-hint-dismiss" aria-label="Dismiss this hint">✕</button>' +
+                '<button type="button" class="hl-hint-x" id="hl-hint-dismiss" aria-label="Dismiss this hint"><svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false" style="display:inline-block;vertical-align:-0.08em"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button>' +
               '</span>') +
           '</div>' +
           irItems + '</details>' +
@@ -990,7 +990,7 @@
         '</details>' +
         '</div>' +
         '<aside id="overlap-panel" class="overlap-rail" aria-label="Reports sharing entities with this one"></aside>' +
-        '<div id="ir-drawer" class="ir-drawer" hidden><div class="ir-drawer-scrim" id="ir-drawer-scrim"></div><div class="ir-drawer-panel" role="dialog" aria-label="Explanation"><button type="button" class="ir-drawer-x" id="ir-drawer-x" aria-label="Close">✕</button><div id="ir-drawer-body"></div></div></div>' +
+        '<div id="ir-drawer" class="ir-drawer" hidden><div class="ir-drawer-scrim" id="ir-drawer-scrim"></div><div class="ir-drawer-panel" role="dialog" aria-label="Explanation"><button type="button" class="ir-drawer-x" id="ir-drawer-x" aria-label="Close"><svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false" style="display:inline-block;vertical-align:-0.08em"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button><div id="ir-drawer-body"></div></div></div>' +
         '</div>';
 
       var _bk = document.getElementById("dt-back");

@@ -172,7 +172,7 @@
     v.className = "modal-veil"; v.id = "an-veil";
     v.setAttribute("role", "dialog"); v.setAttribute("aria-modal", "true"); v.setAttribute("aria-label", "case analytics");
     v.innerHTML = '<div class="modal"><div class="modal-head"><h2>Case analytics</h2>' +
-      '<button class="btn x" id="an-close" aria-label="close">✕</button></div>' +
+      '<button class="btn x" id="an-close" aria-label="close"><svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false" style="display:inline-block;vertical-align:-0.08em"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button></div>' +
       '<div class="modal-body" id="an-body"></div></div>';
     document.body.appendChild(v);
     v.querySelector("#an-close").addEventListener("click", function () { U.closeModal("an-veil"); });

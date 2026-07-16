@@ -305,7 +305,7 @@
       veil.setAttribute("role", "dialog"); veil.setAttribute("aria-modal", "true");
       veil.setAttribute("aria-label", "choose subject");
       veil.innerHTML = '<div class="modal narrow"><div class="modal-head"><h2>Which subject?</h2>' +
-        '<button class="btn x" id="pp-close" aria-label="close">✕</button></div>' +
+        '<button class="btn x" id="pp-close" aria-label="close"><svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false" style="display:inline-block;vertical-align:-0.08em"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button></div>' +
         '<div class="modal-body"><p class="note">A subject profile covers one individual. Choose who this profile is about:</p>' +
         '<div id="pp-list" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div></div></div>';
       document.body.appendChild(veil);

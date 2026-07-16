@@ -186,12 +186,12 @@
         return '<div class="ee-gen" data-i="' + i + '" style="display:flex;gap:6px;margin-top:5px">' +
           '<input class="ee-gk" placeholder="attribute" value="' + U.escAttr(attrLabel(r.key)) + '" aria-label="attribute name" style="' + IN + ';flex:0 0 38%">' +
           '<input class="ee-gv" placeholder="value" value="' + U.escAttr(r.val) + '" aria-label="attribute value" style="' + IN + ';flex:1">' +
-          '<button type="button" class="btn ee-grm" aria-label="remove attribute" style="flex:0 0 auto;padding:3px 9px">✕</button></div>';
+          '<button type="button" class="btn ee-grm" aria-label="remove attribute" style="flex:0 0 auto;padding:3px 9px"><svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false" style="display:inline-block;vertical-align:-0.08em"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button></div>';
       }).join("");
 
       modal.innerHTML =
         '<div class="modal-head"><h2>' + (mode === "edit" ? "Edit entity" : "Add entity") + "</h2>" +
-        '<button class="btn ghost" id="ee-x" aria-label="close">✕</button></div>' +
+        '<button class="btn ghost" id="ee-x" aria-label="close"><svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false" style="display:inline-block;vertical-align:-0.08em"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button></div>' +
         '<div class="modal-body" style="overflow:auto">' +
         (migrationNote ? '<div style="background:var(--accent-soft);border:1px solid var(--accent-dim);color:var(--text);font:11px var(--mono);padding:7px 9px;border-radius:4px;margin-bottom:8px">' + U.esc(migrationNote) + "</div>" : "") +
         '<label style="' + LB + '" for="ee-type">Type</label>' +

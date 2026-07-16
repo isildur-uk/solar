@@ -164,7 +164,7 @@
         U.escAttr(mm.name + (mm.face ? " (node face)" : " — click to set as node face")) + '">' +
         '<figcaption style="font:8px var(--mono);color:#76879b;max-width:64px;overflow:hidden;text-overflow:ellipsis">' +
         U.esc(mm.name) + '</figcaption>' +
-        '<button class="btn danger insp-med-del" data-med="' + U.escAttr(mm.id) + '" style="font-size:8px;padding:1px 4px" aria-label="remove image">✕</button>' +
+        '<button class="btn danger insp-med-del" data-med="' + U.escAttr(mm.id) + '" style="font-size:8px;padding:1px 4px" aria-label="remove image"><svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false" style="display:inline-block;vertical-align:-0.08em"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button>' +
         "</figure>";
     });
     html += '</div><button class="btn" id="insp-addphoto" style="margin-top:6px">+ Add photo</button>';
