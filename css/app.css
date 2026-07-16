@@ -60,6 +60,11 @@
 
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
+/* Reserve the scrollbar gutter permanently so switching between a surface that
+   scrolls (Database/Charting) and one that fits (Analyse) never changes the
+   content width — otherwise the shared top bar visibly resizes on each switch
+   on classic (non-overlay) scrollbars. One app, one stable frame. */
+html { overflow-y: auto; scrollbar-gutter: stable; }
 body {
   background: var(--bg);
   color: var(--text);
