@@ -984,6 +984,7 @@
           '<button type="button" class="btn secondary" id="hx-contract">Export contract</button>' +
           '<button type="button" class="btn secondary" id="hx-solar">Export SOLAR case</button>' +
           '<button type="button" class="btn" id="hx-open">Open full chart in SOLAR</button>' +
+          '<button type="button" class="btn secondary" id="hx-spine" title="Add these entities to the shared SOLAR case (used by Analyse and Charting)">Add to shared case</button>' +
         '</div>' +
         '</details>' +
         '</div>' +
@@ -1055,6 +1056,14 @@
           return;
         }
         window.location.href = "../index.html";
+      });
+      var _hxSpine = document.getElementById("hx-spine");
+      if (_hxSpine) _hxSpine.addEventListener("click", function () {
+        if (!window.SolarCase || !H.toSpine) { setStatus("Shared case spine unavailable.", "err"); return; }
+        var parts = H.toSpine(ir);
+        if (!parts.entities.length) { setStatus("No structured entities in this report to add.", "err"); return; }
+        var st = window.SolarCase.merge(parts);
+        setStatus("Added " + parts.entities.length + " entit" + (parts.entities.length===1?"y":"ies") + " + " + parts.links.length + " link(s) to the shared SOLAR case (" + st.entities + " total). They now appear in Analyse and Charting.", "ok");
       });
     });
   }

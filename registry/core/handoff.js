@@ -6,11 +6,14 @@
  *    JSON that SOLAR opens with zero changes. Entities are DEDUPLICATED across
  *    reports via the Master/Lower engine (one SOLAR node per Master), and links
  *    are remapped onto the master ids — delivering the Master-tier payoff.
+ *  - toSpine(irs): converts IR(s) into shared-spine (SolarCase) parts so Database
+ *    can push its entities into the one shared case (provenance never included).
  * Dual export: module.exports + window.RegistryHandoff. */
 "use strict";
 (function () {
   var G  = (typeof require!=="undefined") ? require("./grading.js")  : (typeof window!=="undefined"?window.RegistryGrading:null);
   var MX = (typeof require!=="undefined") ? require("./matching.js") : (typeof window!=="undefined"?window.RegistryMatching:null);
+  var SC = (typeof require!=="undefined") ? require("../../js/core/solar-case.js") : (typeof window!=="undefined"?window.SolarCase:null);
 
   // Registry entity type -> SOLAR entity type
   var TYPE_MAP = {
@@ -140,7 +143,60 @@
     };
   }
 
-  var api = { TYPE_MAP:TYPE_MAP, LINK_MAP:LINK_MAP, toHandoff:toHandoff, toSolarCase:toSolarCase };
+  /* Registry entity type -> shared-spine (SolarCase) generic type. Kept aligned
+   * with the Analyse comms-case types (location, phone, vehicle...) so the SAME
+   * real-world entity contributed from Database, Analyse or Charting collapses to
+   * one spine node. Provenance is deliberately absent — the spine never carries it. */
+  var SPINE_TYPE = {
+    person:"person", organisation:"organisation", vehicle:"vehicle", account:"account",
+    location:"location", firearm:"weapon", official_document:"document",
+    communication:"phone", cyber:"ip", drug:"drug", cash:"money"
+  };
+  function norm(s){ return String(s==null?"":s).toLowerCase().replace(/\s+/g," ").trim(); }
+  function spineEid(type, identity, label){ return "E:" + norm(type) + "|" + (norm(identity) || norm(label)); }
+
+  /* Convert IR(s) into shared-spine parts ({entities,links}) for SolarCase.merge.
+   * Master/Lower dedup collapses repeats across reports; ids follow SolarCase's
+   * scheme so they merge idempotently with spine entries from other functions. */
+  function toSpine(irs, opts){
+    opts = opts || {};
+    irs = asArray(irs).filter(Boolean);
+    if(opts.onlyAuthorised) irs = irs.filter(function(ir){ return ir.status==="AUTHORISED"; });
+
+    var allEnts = [];
+    irs.forEach(function(ir){ si(ir).entities.forEach(function(e){ allEnts.push(e); }); });
+    var entById = {}; allEnts.forEach(function(e){ entById[e.id]=e; });
+    var masters = MX ? MX.buildMasterIndex(allEnts) : [];
+
+    var lowerToSpine = {}, spineEntities = [], seenE = {};
+    masters.forEach(function(m){
+      var members = m.members.map(function(id){ return entById[id]; }).filter(Boolean);
+      var rep = members[0] || {};
+      var type = SPINE_TYPE[m.type] || "note";
+      var label = rep.label || "";
+      var id = (SC && SC.entityId)
+        ? SC.entityId({ type:type, label:label, identity:label })
+        : spineEid(type, label, label);
+      var attrs = {};
+      members.forEach(function(e){ Object.keys(e.attrs||{}).forEach(function(k){ if(attrs[k]==null && e.attrs[k]!=null) attrs[k]=e.attrs[k]; }); });
+      m.members.forEach(function(mid){ lowerToSpine[mid] = id; });
+      if(!seenE[id]){ seenE[id]=true; spineEntities.push({ id:id, type:type, label:label, identity:label, attrs:attrs, source:"registry" }); }
+    });
+
+    var seenL = {}, spineLinks = [];
+    irs.forEach(function(ir){ si(ir).links.forEach(function(l){
+      var from = lowerToSpine[l.from], to = lowerToSpine[l.to];
+      if(!from || !to || from===to) return;
+      var type = LINK_MAP[l.type] || "LINKED_TO";
+      var key = from + "|" + norm(type) + "|" + to;
+      if(seenL[key]) return; seenL[key]=true;
+      spineLinks.push({ id:"L:"+key, from:from, to:to, type:type, label:l.label||"" });
+    }); });
+
+    return { entities: spineEntities, links: spineLinks };
+  }
+
+  var api = { TYPE_MAP:TYPE_MAP, LINK_MAP:LINK_MAP, SPINE_TYPE:SPINE_TYPE, toHandoff:toHandoff, toSolarCase:toSolarCase, toSpine:toSpine };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
   if (typeof window !== "undefined") { window.RegistryHandoff = api; }
 })();

@@ -42,10 +42,20 @@
   function fire() { _subs.slice().forEach(function (fn) { try { fn(load()); } catch (e) {} }); }
 
   /* ---- identity → stable id ---- */
+  /* Type-aware identifier canonicalisation so the SAME real-world identifier
+   * yields the SAME id no matter which function contributed it (Analyse comms,
+   * Database IRs, Charting). Closes the "07700 900111" vs "07700900111" gap. */
+  function canonicalIdentity(type, value) {
+    var t = str(type).toLowerCase(), v = str(value);
+    if (t === "phone") return v.replace(/[\s().\-]/g, "");      // drop spaces, dots, dashes, parens
+    if (t === "vehicle") return v.replace(/\s+/g, "");           // VRM: drop spaces (norm lowercases)
+    if (t === "account") return v.replace(/[\s\-]/g, "");        // sort code / acct: drop spaces + dashes
+    return v;                                                    // others: norm() handles case + whitespace
+  }
   function identityKey(e) {
-    var idn = norm(e.identity);
-    if (idn) return str(e.type).toLowerCase() + "|" + idn;
-    return str(e.type).toLowerCase() + "|" + norm(e.label);
+    var t = str(e.type).toLowerCase();
+    var raw = (e.identity != null && str(e.identity) !== "") ? e.identity : e.label;
+    return t + "|" + norm(canonicalIdentity(t, raw));
   }
   function entityId(e) { return "E:" + identityKey(e); }
   function linkId(l) { return "L:" + str(l.from) + "|" + str(l.type).toLowerCase() + "|" + str(l.to); }
@@ -115,7 +125,7 @@
     upsertEntity: upsertEntity, upsertLink: upsertLink, merge: merge,
     name: name, setName: setName, clear: clear,
     subscribe: subscribe,
-    entityId: entityId, linkId: linkId, identityKey: identityKey,
+    entityId: entityId, linkId: linkId, identityKey: identityKey, canonicalIdentity: canonicalIdentity,
     _reset: function () { _cache = null; _mem = null; _subs = []; var s = store(); if (s) { try { s.removeItem(KEY); } catch (e) {} } }
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

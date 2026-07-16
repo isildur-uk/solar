@@ -86,5 +86,46 @@ eq(H.toSolarCase(irC).entities[0].provenance.handling,"C","node handling derived
 var SImod=require("../core/si-model.js");
 Object.keys(SImod.ENTITY_TYPES).forEach(function(k){ ok(!!H.TYPE_MAP[k],"TYPE_MAP covers entity type "+k); });
 
+
+/* ---- toSpine: shared-spine parts for SolarCase.merge (P4b: Database -> spine) ---- */
+var spA=fullIR("AUTHORISED"), spB=fullIR("AUTHORISED");
+var spJA=john(spA); var spVeh=SI.addEntity(spA,{type:"vehicle",label:"DE20 NTM",attrs:{vrm:"DE20 NTM"}});
+SI.addLink(spA,{from:spJA.id,to:spVeh.id,type:"ASSOCIATE"});
+john(spB); SI.addEntity(spB,{type:"organisation",label:"ACME LTD",attrs:{companyNumber:"12345678"}});
+var sp=H.toSpine([spA,spB]);
+ok(Array.isArray(sp.entities)&&Array.isArray(sp.links),"toSpine returns entities+links arrays");
+eq(sp.entities.length,3,"toSpine dedupes John (x2) across reports -> 3 spine entities");
+ok(sp.entities.every(function(e){return /^E:/.test(e.id);}),"spine entity ids use SolarCase E: scheme");
+ok(sp.entities.every(function(e){return e.source==="registry";}),"spine entities tagged source=registry");
+ok(!sp.entities.some(function(e){return "provenance" in e;}),"spine entities carry NO provenance");
+var spPerson=sp.entities.filter(function(e){return e.type==="person";})[0];
+eq(spPerson.id,"E:person|john smith","person spine id follows type|identity scheme");
+eq(sp.links.length,1,"one spine link after dedup");
+eq(sp.links[0].type,"ASSOCIATE_OF","ASSOCIATE -> ASSOCIATE_OF on spine link");
+ok(/^L:/.test(sp.links[0].id),"spine link id uses L: scheme");
+eq(sp.links[0].from,spPerson.id,"spine link remapped onto person spine id");
+
+/* spine types stay generic (location, NOT address) so they dedupe with Analyse */
+var spT=fullIR();
+SI.addEntity(spT,{type:"location",label:"1 High St",attrs:{postcode:"M1 1AA"}});
+SI.addEntity(spT,{type:"firearm",label:"Glock 17"});
+SI.addEntity(spT,{type:"communication",label:"07700900000",attrs:{number:"07700900000"}});
+SI.addEntity(spT,{type:"cyber",label:"1.2.3.4"});
+var spTypes=H.toSpine(spT).entities.map(function(e){return e.type;});
+ok(spTypes.indexOf("location")!==-1,"spine keeps location generic (not address)");
+ok(spTypes.indexOf("weapon")!==-1,"firearm->weapon on spine");
+ok(spTypes.indexOf("phone")!==-1,"communication->phone on spine");
+ok(spTypes.indexOf("ip")!==-1,"cyber->ip on spine");
+
+/* ids are stable across calls (no per-export nonce) so merges are idempotent */
+var spI1=H.toSpine(spA), spI2=H.toSpine(spA);
+eq(spI1.entities[0].id,spI2.entities[0].id,"spine ids stable across calls (idempotent merge)");
+
+/* onlyAuthorised filter honoured */
+var spDraft=fullIR("DRAFT"); john(spDraft);
+eq(H.toSpine([spDraft],{onlyAuthorised:true}).entities.length,0,"toSpine onlyAuthorised excludes drafts");
+
+/* SPINE_TYPE covers every Registry entity type (guard silent note-downgrade) */
+Object.keys(SImod.ENTITY_TYPES).forEach(function(k){ ok(!!H.SPINE_TYPE[k],"SPINE_TYPE covers entity type "+k); });
 console.log("\n"+pass+" passed, "+fail+" failed");
 process.exit(fail?1:0);
