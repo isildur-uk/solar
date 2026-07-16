@@ -435,9 +435,9 @@
 <script src="js/core/fileread.js?v=20260612e"></script>
 <script src="js/core/translate.js?v=20260618a"></script>
 <script src="js/ui/util.js?v=20260610b"></script>
-<script src="js/ui/editentity.js?v=20260622a"></script>
+<script src="js/ui/editentity.js?v=20260716b"></script>
 <script src="js/ui/icons.js?v=20260610a"></script>
-<script src="js/ui/graph.js?v=20260714d"></script>
+<script src="js/ui/graph.js?v=20260716b"></script>
 <script src="js/ui/legend.js?v=20260612g"></script>
 <script src="js/ui/chartmenu.js?v=20260612g"></script>
 <script src="js/ui/mappane.js?v=20260716b"></script>
@@ -447,10 +447,10 @@
 <script src="js/ui/diag.js?v=20260617a"></script>
 <script src="js/ui/importer.js?v=20260612d"></script>
 <script src="js/ui/dragdrop.js?v=20260616a"></script>
-<script src="js/ui/inspector.js?v=20260616b"></script>
+<script src="js/ui/inspector.js?v=20260716b"></script>
 <script src="js/ui/profiles.js?v=20260616a"></script>
-<script src="js/ui/logpanel.js?v=20260623a"></script>
-<script src="js/ui/intelexport.js?v=20260616a"></script>
+<script src="js/ui/logpanel.js?v=20260716b"></script>
+<script src="js/ui/intelexport.js?v=20260716b"></script>
 <script src="js/ui/app.js?v=20260617c"></script>
 <script src="js/ui/identity.js"></script>
 <script src="js/ui/theme.js?v=20260704b"></script>
@@ -463,8 +463,8 @@
 <script src="js/ui/ocr.js?v=20260613b"></script>
 <script src="js/ui/mobileui.js?v=20260615d"></script>
 <script src="js/ui/charttools.js?v=20260615g"></script>
-<script src="js/ui/netpanel.js?v=20260613a"></script>
-<script src="js/ui/analytics.js?v=20260613a"></script>
+<script src="js/ui/netpanel.js?v=20260716b"></script>
+<script src="js/ui/analytics.js?v=20260716b"></script>
 <script src="js/ui/space-bg.js?v=20260615e"></script>
 <!-- Analyse view — comms-data engines + views. Namespaced (RegistryComms*) and
      mount-gated: loading these runs nothing; the router mounts them on first switch. -->
@@ -529,7 +529,7 @@
       i = i || 0;
       if (i >= list.length) { return; }
       var s = document.createElement("script");
-      s.src = list[i] + "?v=20260716a";
+      s.src = list[i] + "?v=20260716b";
       s.onload = function () { loadSeq(list, i + 1); };
       s.onerror = function () { loadSeq(list, i + 1); };   // skip a miss rather than stall the chain
       document.head.appendChild(s);
