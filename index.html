@@ -27,6 +27,20 @@
   #view-host { display: contents; }
   .view[data-active] { display: contents; }
   .view:not([data-active]) { display: none !important; }
+
+  /* Analyse view — structural layout (colour/type come from the shared tokens).
+     Mirrors charting's #main flex model so it fills below the shell. */
+  .analyse-main { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; z-index: 1; }
+  .tool-switch { display: flex; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--line); }
+  .tool-host { flex: 1; min-height: 0; display: flex; }
+  .tool-host[hidden] { display: none; }
+  .tool-host > * { flex: 1; min-height: 0; }
+
+  /* Non-Charting surfaces carry their own in-view toolbar, so the charting
+     mega-menus + context row (Rows 2/3) are hidden while they're active.
+     Row 1 (identity + tab switcher) stays persistent across all surfaces. */
+  #solar-shell[data-active-surface="analyse"] .sh-menubar,
+  #solar-shell[data-active-surface="analyse"] .sh-context { display: none; }
 </style>
 </head>
 <body>
@@ -347,6 +361,16 @@
   </div>
 </div>
 </div><!-- .view.v-charting -->
+<div class="view v-analyse" data-surface="analyse">
+  <main class="analyse-main" id="analyse-main" aria-live="polite">
+    <div class="tool-switch" id="tool-switch">
+      <button class="btn btn-on" type="button" data-tool="cdr">CDR viewer</button>
+      <button class="btn" type="button" data-tool="link">Cross-file analysis</button>
+    </div>
+    <div class="tool-host" id="tool-cdr"></div>
+    <div class="tool-host" id="tool-link" hidden></div>
+  </main>
+</div><!-- .view.v-analyse -->
 </div><!-- #view-host -->
 
 <script src="js/ui/native.js?v=20260613a"></script>
@@ -414,18 +438,50 @@
 <script src="js/ui/netpanel.js?v=20260613a"></script>
 <script src="js/ui/analytics.js?v=20260613a"></script>
 <script src="js/ui/space-bg.js?v=20260615e"></script>
+<!-- Analyse view — comms-data engines + views. Namespaced (RegistryComms*) and
+     mount-gated: loading these runs nothing; the router mounts them on first switch. -->
+<script src="js/core/comms-data.js?v=20260716a"></script>
+<script src="js/core/comms-link.js?v=20260716a"></script>
+<script src="js/core/comms-pattern.js?v=20260716a"></script>
+<script src="js/core/comms-journeys.js?v=20260716a"></script>
+<script src="js/core/comms-case.js?v=20260716a"></script>
+<script src="js/lib/xlsx.full.min.js?v=20260716a"></script>
+<script src="js/ui/entity-style.js?v=20260716a"></script>
+<script src="analyse/comms-view.js?v=20260716a"></script>
+<script src="analyse/comms-link-view.js?v=20260716a"></script>
 <script src="js/ui/router.js?v=20260716a"></script>
 <script src="js/ui/shell.js?v=20260714k"></script>
 <script src="js/ui/tooltip.js?v=20260714b"></script>
 <script>
-  /* Unified-shell bootstrap — register the three surfaces as views of one
-     document. P1: Charting is the in-document view; Analyse / Database still
-     navigate (external) until P2 / P3 mount them here. */
+  /* Unified-shell bootstrap — register the surfaces as views of one document.
+     P2: Charting + Analyse are in-document views (instant toggle, no reload).
+     Database still navigates (external) until P3 mounts it here. */
   (function () {
     var R = window.SolarRouter;
     if (!R) { return; }
+
+    // Analyse mounts on first activation — same boot as its standalone page,
+    // scoped to the view container (RegistryComms* expose explicit mount()s).
+    function mountAnalyse(el) {
+      var cdr = el.querySelector("#tool-cdr"), link = el.querySelector("#tool-link");
+      if (cdr && window.RegistryCommsView) { window.RegistryCommsView.mount(cdr); }
+      if (link && window.RegistryCommsLinkView) { window.RegistryCommsLinkView.mount(link); }
+      var sw = el.querySelector("#tool-switch");
+      if (sw) {
+        sw.addEventListener("click", function (e) {
+          var b = e.target && e.target.closest ? e.target.closest("[data-tool]") : null;
+          if (!b) { return; }
+          var showCdr = b.getAttribute("data-tool") === "cdr";
+          [].forEach.call(sw.querySelectorAll(".btn"), function (x) { x.classList.toggle("btn-on", x === b); });
+          if (cdr) { cdr.toggleAttribute("hidden", !showCdr); }
+          if (link) { link.toggleAttribute("hidden", showCdr); }
+          if (!showCdr && window.RegistryCommsLinkView && window.RegistryCommsLinkView.refresh) { window.RegistryCommsLinkView.refresh(); }
+        });
+      }
+    }
+
     R.register("charting", { el: document.querySelector(".v-charting") });
-    R.register("analyse",  { external: true, href: "analyse/index.html" });
+    R.register("analyse",  { el: document.querySelector(".v-analyse"), mount: mountAnalyse });
     R.register("database", { external: true, href: "registry/index.html" });
     R.start("charting");
   })();

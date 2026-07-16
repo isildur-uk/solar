@@ -440,17 +440,47 @@
       Database: "Database — the structured-intelligence registry (reports & entities)"
     };
     var HREF = { Charting: PFX + "index.html", Analyse: PFX + "analyse/index.html", Database: PFX + "registry/index.html" };
+    var surfBtns = {};   // surface (lowercase) -> anchor, for reflecting the active view
     function surfLink(label) {
+      var surface = label.toLowerCase();
       var isCurrent = (label === CURRENT);
       var a = el("a", isCurrent ? { class: "sh-surf-btn fx-6", href: "#", "aria-current": "true" } : { class: "sh-surf-btn fx-6", href: "#" },
         '<span class="sh-surf-label">' + label + '</span>');
+      surfBtns[surface] = a;
       tip(a, isCurrent ? GLOSS[label] + " · current" : GLOSS[label] + " · switch");
-      if (!isCurrent) a.addEventListener("click", function (e) { e.preventDefault(); switchTo(HREF[label]); });
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        // In the unified host the router toggles in-document views (instant, no
+        // reload) and navigates for surfaces not yet mounted here. Standalone
+        // pages have no router → fall back to the animated navigation.
+        if (window.SolarRouter && window.SolarRouter.has(surface)) { window.SolarRouter.activate(surface); }
+        else if (!isCurrent) { switchTo(HREF[label]); }
+      });
       return a;
     }
     surf.appendChild(surfLink("Charting"));
     surf.appendChild(surfLink("Analyse"));
     surf.appendChild(surfLink("Database"));
+    /* Reflect the active in-document view across Row 1 + the shell: highlight the
+       current tab, swap the wordmark mode word, and set data-active-surface (which
+       drives hiding the charting Rows 2/3 for surfaces that carry their own bar). */
+    var CAPS = { charting: "Charting", analyse: "Analyse", database: "Database" };
+    function reflectSurface(activeSurface) {
+      Object.keys(surfBtns).forEach(function (s) {
+        var a = surfBtns[s];
+        if (s === activeSurface) { a.setAttribute("aria-current", "true"); tip(a, GLOSS[CAPS[s]] + " · current"); }
+        else { a.removeAttribute("aria-current"); tip(a, GLOSS[CAPS[s]] + " · switch"); }
+      });
+      var wordHost = wm.querySelector(".sh-mode-word .fx-marker") || wm.querySelector(".sh-mode-word");
+      if (wordHost && CAPS[activeSurface]) { wordHost.textContent = CAPS[activeSurface]; }
+      shell.setAttribute("data-active-surface", activeSurface);
+    }
+    if (window.SolarRouter && window.SolarRouter.onChange) {
+      window.SolarRouter.onChange(function (s) { reflectSurface(s); });
+      reflectSurface(window.SolarRouter.current() || CURRENT.toLowerCase());
+    } else {
+      shell.setAttribute("data-active-surface", CURRENT.toLowerCase());
+    }
     var _id = (typeof window !== "undefined" && window.SolarIdentity && window.SolarIdentity.get) ? window.SolarIdentity.get() : { grade: "G5", name: "Analyst" };
     var user = el("div", { class: "sh-user" }, '<span class="sh-grade">' + escHtml(_id.grade) + '</span><span>' + escHtml(_id.name) + '</span>');
     idRow.appendChild(wm); idRow.appendChild(surf);
