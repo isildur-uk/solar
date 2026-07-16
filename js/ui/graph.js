@@ -506,7 +506,10 @@
     var ents = visibleEntities();
     if (!ents.length) return;
     if (kind !== "grid") { setGridMode(false); }         // any other preset leaves grid mode
-    if (kind !== "hierarchy") { setEdgeStyle(false); }   // restore gentle curves; tree sets its own
+    setEdgeStyle(false);                                 // gentle curves; the tree routes via bends
+    // Drop any orthogonal tree routing a previous Hierarchy layout left behind, so
+    // every other layout (and a fresh Hierarchy) starts from clean straight links.
+    store.links.forEach(function (l) { if (l._autoBend) { delete l.bends; delete l._autoBend; } });
     var pos = {};
 
     if (kind === "grid") {
@@ -593,14 +596,15 @@
         if (!vis[l.from] || !vis[l.to] || l.from === l.to) return;
         degree[l.from] = (degree[l.from] || 0) + 1;
         degree[l.to] = (degree[l.to] || 0) + 1;
-        adj[l.from].push(l.to); adj[l.to].push(l.from);
+        adj[l.from].push({ to: l.to, lid: l.id });
+        adj[l.to].push({ to: l.from, lid: l.id });
       });
       // Roots, most-connected first, so a forest (or disconnected extras) all place.
       var order = ents.slice().sort(function (a, b) {
         var d = (degree[b.id] || 0) - (degree[a.id] || 0);
         return d !== 0 ? d : (a.type + a.label).localeCompare(b.type + b.label);
       });
-      var seen = {}, children = {}, depth = {};
+      var seen = {}, children = {}, depth = {}, parentLink = {};
       ents.forEach(function (e) { children[e.id] = []; });
       order.forEach(function (root) {
         if (seen[root.id]) return;
@@ -608,8 +612,8 @@
         var q = [root.id];
         while (q.length) {
           var cur = q.shift();
-          adj[cur].slice().sort().forEach(function (nb) {
-            if (!seen[nb]) { seen[nb] = true; children[cur].push(nb); q.push(nb); }
+          adj[cur].slice().sort(function (x, y) { return String(x.to).localeCompare(String(y.to)); }).forEach(function (nbr) {
+            if (!seen[nbr.to]) { seen[nbr.to] = true; children[cur].push(nbr.to); parentLink[nbr.to] = nbr.lid; q.push(nbr.to); }
           });
         }
       });
@@ -630,8 +634,24 @@
       var allX = ents.map(function (e) { return pos[e.id] ? pos[e.id].x : 0; });
       var mid = (Math.min.apply(null, allX) + Math.max.apply(null, allX)) / 2;
       ents.forEach(function (e) { if (pos[e.id]) pos[e.id].x -= mid; });
-      setEdgeStyle(true);          // vertical org-chart connectors for the tree
+      // Chessboard routing: each tree edge moves on X or Y only — drop straight
+      // from the parent to a bus line halfway down, run across to the child's
+      // column, then drop in. Hard corners, no curves. Uses the bend system so the
+      // real edge (with its label + arrow) is what bends; marked _autoBend so any
+      // other layout clears it. A single centred child collapses to one vertical.
+      Object.keys(parentLink).forEach(function (childId) {
+        var l = store.links.find(function (x) { return x.id === parentLink[childId]; });
+        if (!l || !pos[childId]) return;
+        var pId = (l.from === childId) ? l.to : l.from;   // parent = the other end
+        if (!pos[pId]) return;
+        var px = pos[pId].x, py = pos[pId].y, cx = pos[childId].x, cy = pos[childId].y;
+        var busY = (py + cy) / 2;
+        var wpP = { x: px, y: busY }, wpC = { x: cx, y: busY };
+        l.bends = (l.from === pId) ? [wpP, wpC] : [wpC, wpP];
+        l._autoBend = true;
+      });
       pinAll(pos);
+      store._emit("link:update");   // materialise the orthogonal bends
       return;
     }
   }
