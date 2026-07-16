@@ -179,6 +179,28 @@ body {
   z-index: 30;
 }
 #chart-tools .btn { font-size: var(--fs-2xs); padding: 4px 8px; }
+/* Always-visible layout switcher on the canvas (js/ui/chartbar.js) — the common
+   arrange presets, out of the Tools menu and one click away. Quiet glass pill;
+   the active preset takes the one accent. */
+#chart-layoutbar {
+  position: absolute; top: 10px; left: 10px; z-index: 31;
+  display: flex; align-items: center; gap: 2px;
+  padding: 3px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--glass-fill); backdrop-filter: blur(7px);
+}
+#chart-layoutbar .clb-lead {
+  font: 600 var(--fs-2xs) var(--mono); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--faint); padding: 0 8px 0 6px;
+}
+#chart-layoutbar .clb-btn {
+  font: var(--fs-2xs) var(--sans); color: var(--dim);
+  background: transparent; border: 0; border-radius: 999px;
+  padding: 4px 11px; cursor: pointer; white-space: nowrap;
+  transition: color .12s ease, background .12s ease;
+}
+#chart-layoutbar .clb-btn:hover { color: var(--text); background: var(--panel-2); }
+#chart-layoutbar .clb-on { color: var(--accent); background: rgba(142,162,255,.12); }
+html[data-theme="light"] #chart-layoutbar .clb-on { background: rgba(74,91,214,.12); }
 #chart-empty {
   position: absolute; inset: 0;
   display: flex; flex-direction: column;

@@ -797,6 +797,7 @@
       '<div class="sh-modal-sec" id="sh-set-about"><h3>About</h3>' +
         '<p style="font-size:var(--fs-sm);color:var(--dim);margin:0 0 6px">SOLAR — link-analysis workbench and structured-intelligence database. Local-only: all case data stays in this browser.</p>' +
         '<p style="font-size:var(--fs-xs);color:var(--faint);margin:0">OFFICIAL · one shared case across both surfaces.</p>' +
+        '<p style="font-size:var(--fs-2xs);color:var(--faint);margin:6px 0 0;font-family:var(--mono)">Build <b style="color:var(--dim)">' + (window.SOLAR_BUILD || "dev") + '</b> — if this doesn’t match the latest deploy, hard-refresh (F5).</p>' +
       '</div>' +
       '<div class="sh-modal-foot">' +
         '<button class="btn" id="sh-set-close" type="button">Close</button>' +
