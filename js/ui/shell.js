@@ -787,6 +787,9 @@
         '<div class="sh-set-row"><span class="sh-set-row-label">Theme</span><span id="sh-set-theme-slot"></span></div>' +
         '<div class="sh-set-row"><span class="sh-set-row-label">UI sound</span><span id="sh-set-sound-slot"></span></div>' +
       '</div>' +
+      '<div class="sh-modal-sec"><h3>Developer</h3>' +
+        '<div class="sh-set-row"><span class="sh-set-row-label">Developer mode<br><span style="font-size:var(--fs-xs);color:var(--faint);font-weight:400">Click any text to edit it inline · Ctrl+Shift+D</span></span><span id="sh-set-dev-slot"></span></div>' +
+      '</div>' +
       '<div class="sh-modal-sec"><h3>Identity</h3>' +
         '<label>Signed in as<span style="font-family:var(--mono);color:var(--dim)">G5 · Benedict WILSON</span></label>' +
         '<p style="font-size:var(--fs-xs);color:var(--faint);margin:2px 0 0">Set your working identity from the header user chip on the ' + (IS_REGISTRY ? "database" : "workbench") + '.</p>' +
@@ -804,6 +807,16 @@
     var themeSwitch = buildThemeSwitch(false);
     byId("sh-set-theme-slot").appendChild(themeSwitch);
     byId("sh-set-sound-slot").appendChild(buildSoundToggle(false));
+    var devSlot = byId("sh-set-dev-slot");
+    if (devSlot && window.SolarDev) {
+      var devBtn = el("button", { type: "button", class: "sh-switch", role: "switch" });
+      devBtn.innerHTML = '<span class="sh-switch-track"><span class="sh-switch-thumb"></span></span>';
+      var reflectDev = function () { devBtn.setAttribute("aria-checked", window.SolarDev.get() ? "true" : "false"); };
+      reflectDev();
+      devBtn.addEventListener("click", function () { window.SolarDev.toggle(); reflectDev(); });
+      window.addEventListener("solar-devmode", reflectDev);
+      devSlot.appendChild(devBtn);
+    }
     byId("sh-set-close").addEventListener("click", closeSettings);
     veil.addEventListener("click", function (e) { if (e.target === veil) { closeSettings(); } });
     document.addEventListener("keydown", settingsEsc);

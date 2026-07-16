@@ -58,7 +58,13 @@
     input.onchange = function () { if (input.files && input.files[0]) onFile(input.files[0]); };
     drop.appendChild(input);
     bar.appendChild(drop);
-    var demo = el("button", "cd-btn", "Load demo data"); demo.type = "button"; demo.onclick = loadDemo; bar.appendChild(demo);
+    var demo = el("select", "cd-btn cd-demo"); demo.id = "cd-demo";
+    demo.title = "Load a fictitious sample return (subjects overlap the Database sample reports)";
+    [["", "Load sample data…"], ["3", "3-day sample"], ["14", "2 weeks"], ["28", "4 weeks"], ["56", "8 weeks"]].forEach(function (o) {
+      var op = el("option", null, o[1]); op.value = o[0]; demo.appendChild(op);
+    });
+    demo.onchange = function () { if (demo.value) { loadDemo(+demo.value); demo.value = ""; } };
+    bar.appendChild(demo);
     var exp = el("button", "cd-btn", "Export tidy CSV"); exp.type = "button"; exp.id = "cd-export"; exp.onclick = exportCsv; exp.disabled = true; bar.appendChild(exp);
     var addb = el("button", "cd-btn", "Add to case"); addb.type = "button"; addb.id = "cd-addcase"; addb.title = "Add these subjects, contacts and locations to the shared SOLAR case"; addb.disabled = true; addb.onclick = addToCase; bar.appendChild(addb);
     panel.appendChild(bar);
@@ -70,6 +76,8 @@
 
     // summary strip
     var sum = el("div", "cd-summary"); sum.id = "cd-summary"; panel.appendChild(sum);
+    // cross-reference strip — which loaded identities are already known to the Database
+    var xref = el("div", "cd-xref"); xref.id = "cd-xref"; xref.setAttribute("hidden", ""); panel.appendChild(xref);
 
     // tabs
     var tabs = el("div", "cd-tabs");
@@ -92,6 +100,7 @@
     if (host) { host.appendChild(panel); }
     else { var ov = el("div", "cd-overlay"); ov.id = "cd-overlay"; ov.setAttribute("hidden", ""); ov.appendChild(panel); doc.body.appendChild(ov); }
     state.built = true;
+    renderTable(); // show the empty-state hero until a return is loaded
     function mk(id) { var d = el("div", "cd-pane"); d.id = id; return d; }
     function mkId(tag, id) { var d = el(tag, null); d.id = id; return d; }
   }
@@ -156,7 +165,7 @@
     state.filterN = state.sorted.length;
     var exp = doc.getElementById("cd-export"); if (exp) exp.disabled = res.events.length === 0;
     var addb = doc.getElementById("cd-addcase"); if (addb) addb.disabled = res.events.length === 0;
-    renderMeta(res); renderSummary(); renderTable(); renderTimeline(); renderPatterns(); renderJourneys();
+    renderMeta(res); renderSummary(); renderCrossRef(); renderTable(); renderTimeline(); renderPatterns(); renderJourneys();
     if (state.map) { state.map.remove(); state.map = null; }  // force map rebuild for new data
     if (state.tab === "map") renderMap();
     flash(res.events.length + " events parsed (" + res.format.toUpperCase() + ").");
@@ -193,6 +202,45 @@
     else s.appendChild(chip("handset combos", swaps));
   }
 
+  /* Cross-reference: which loaded identities are already known to the Database.
+     Sources: the fixed known-entities overlap (SolarKnownEntities) plus anything
+     in the live shared case (SolarCase). Shown as a strip under the summary. */
+  function knownFor(type, value) {
+    var KE = window.SolarKnownEntities, k = KE && KE.lookup(type, value);
+    if (k) { return { label: k.label, where: k.operation, code: k.opCode }; }
+    if (window.SolarCase && window.SolarCase.entities) {
+      var key = String(value == null ? "" : value).replace(/\D/g, "");
+      var e = window.SolarCase.entities().filter(function (x) {
+        return x.type === type && String(x.identity || x.label).replace(/\D/g, "") === key && key;
+      })[0];
+      if (e) { return { label: e.label, where: "shared case", code: "CASE" }; }
+    }
+    return null;
+  }
+  function renderCrossRef() {
+    var box = doc.getElementById("cd-xref"); if (!box) { return; }
+    clear(box);
+    var seen = {}, ids = [];
+    state.sorted.forEach(function (ev) {
+      [ev.aParty, ev.bParty, ev.fwdParty].forEach(function (p) { if (p && !seen[p]) { seen[p] = 1; ids.push(p); } });
+    });
+    var matches = [];
+    ids.forEach(function (p) { var k = knownFor("phone", p); if (k) { matches.push({ v: p, k: k }); } });
+    if (!matches.length) { box.setAttribute("hidden", ""); return; }
+    box.removeAttribute("hidden");
+    var lbl = el("span", "cd-xref-lbl"); lbl.appendChild(doc.createTextNode("Known to Database"));
+    box.appendChild(lbl);
+    matches.forEach(function (m) {
+      var chip = el("span", "cd-xref-chip");
+      if (window.SolarEntityStyle) { chip.appendChild(window.SolarEntityStyle.icon("phone", 12)); }
+      chip.appendChild(el("b", null, m.v));
+      chip.appendChild(doc.createTextNode(" " + m.k.label));
+      chip.appendChild(el("span", "cd-xref-op", m.k.where));
+      chip.setAttribute("data-tip", m.v + " is already known to the Database — " + m.k.label + " · " + m.k.where);
+      box.appendChild(chip);
+    });
+  }
+
   // Columns actually shown: drop entirely-empty columns and hide the technical
   // set by default; "Show all columns" reveals everything.
   function visibleColumns() {
@@ -208,9 +256,27 @@
     var l = el("label", "cd-chk"); var i = el("input"); i.type = "checkbox"; i.checked = !!checked;
     i.onchange = function () { onchange(i.checked); }; l.appendChild(i); l.appendChild(doc.createTextNode(" " + label)); return l;
   }
+  function renderEmptyState(pane) {
+    var hero = el("div", "cd-empty-hero");
+    var mark = doc.createElement("div"); mark.className = "cd-empty-mark";
+    mark.innerHTML = "<svg viewBox='0 0 48 48' width='44' height='44' fill='none' stroke='currentColor' stroke-width='2.4' stroke-linecap='round'>" +
+      "<path d='M10 30v6M19 24v12M28 18v18M37 12v24'/><circle cx='24' cy='42' r='1.6' fill='currentColor' stroke='none'/></svg>";
+    hero.appendChild(mark);
+    hero.appendChild(el("h3", "cd-empty-h", "Comms-data analysis"));
+    hero.appendChild(el("p", "cd-empty-sub", "Drop a Call Data CSV or ADM Telephony workbook onto the bar above — or load a fictitious sample return to explore the cleaning, mapping, timeline, pattern-of-life and journey tools."));
+    var picks = el("div", "cd-empty-picks");
+    [["3", "3-day sample"], ["14", "2 weeks"], ["28", "4 weeks"], ["56", "8 weeks"]].forEach(function (o) {
+      var b = el("button", "cd-empty-pick", o[1]); b.type = "button";
+      b.onclick = function () { loadDemo(+o[0]); };
+      picks.appendChild(b);
+    });
+    hero.appendChild(picks);
+    hero.appendChild(el("p", "cd-empty-note", "Sample subjects overlap the Database sample reports — once loaded, a “Known to Database” strip flags which identities are already on record, and where."));
+    pane.appendChild(hero);
+  }
   function renderTable() {
     var pane = doc.getElementById("cd-pane-table"); if (!pane) return; clear(pane);
-    if (!state.sorted.length) { pane.appendChild(el("p", "cd-empty", "No events — drop a return or load the demo.")); return; }
+    if (!state.sorted.length) { renderEmptyState(pane); return; }
     var ctl = el("div", "cd-tablectl");
     ctl.appendChild(chk("Show all columns", state.showAllCols, function (on) { state.showAllCols = on; renderTable(); }));
     ctl.appendChild(chk("i2 format (ISO dates, hyphen-safe)", state.i2Format, function (on) { state.i2Format = on; renderTable(); }));
@@ -227,6 +293,7 @@
         var et = ENT_COL[c.key];
         if (et === "phone" && state.target && String(ev[c.key] == null ? "" : ev[c.key]).replace(/\D/g, "") === state.target) cls += " cd-subject";
         else if (et) cls += " cd-ent-" + et;
+        if (et === "phone" && knownFor("phone", ev[c.key])) cls += " cd-known";   // already in the Database
         tr.appendChild(el("td", cls.trim() || null, cellText(c.key, ev[c.key])));
       });
       tb.appendChild(tr);
@@ -349,41 +416,63 @@
 
   function flash(msg) { if (typeof window !== "undefined" && window.SolarStatus && window.SolarStatus.show) { window.SolarStatus.show(msg); return; } var m = doc && doc.getElementById("cd-meta"); if (m && !m.textContent) m.textContent = msg; }
 
-  /* ---- demo data (fictitious; Luton/Dunstable area) ---- */
-  function loadDemo() { ingestRows(CD.parseDelimited(DEMO_CSV())); }
-  function DEMO_CSV() {
-    var H = ["Start Date","Start Time (local)","End Date","End Time (local)","Calling Number","Called Number","Forwarding Number","CDR Type","IMSI","IMEI","Ring time (secs)","Call Duration (HH:mm:ss)","IPv4 address","IPv6 address","Data Volume Uploaded (KB)","Data Volume Downloaded (KB)","APN","Country of Origin","Operator","Start Cell ID or MAC Address","Start Cell Site Name","Start Cell 1st line of Address","Start Cell ID Postcode","Start Cell Generation","Start Cell Easting","Start Cell Northing","Start Cell Azimuth","End Cell ID or MAC Address","End Cell Site Name","End Cell 1st line of Address","End Cell ID Postcode","End Cell Generation","End Cell Easting","End Cell Northing","End Cell Azimuth","Row"];
-    // fictitious cell sites around Luton (OS grid, TL)
-    var cells = [
-      ["LTN-A","LUTON TOWN HALL","George St","LU1 2BQ","4G",509200,221600,90],
-      ["LTN-B","BURY PARK","Dunstable Rd","LU1 1HW","4G",508100,221900,150],
-      ["DUN-C","DUNSTABLE CENTRAL","High St North","LU6 1LF","4G",502100,221900,270],
-      ["LTN-D","LUTON AIRPORT","Airport Way","LU2 9LY","5G",512700,220900,45],
-      ["LEA-E","LEAGRAVE","Compton Ave","LU4 9AB","4G",506200,224400,200]
+  /* ---- demo data (fictitious; Luton/Dunstable area; pattern-of-life) ----
+     Sizes: 3-day sample, 2 / 4 / 8 weeks. Subject + several contacts overlap the
+     Database sample reports (js/core/known-entities.js) so a loaded return shows
+     which parties are already known to the intelligence picture, and where. */
+  function loadDemo(days) { ingestRows(CD.parseDelimited(buildDemoCSV(days || 3))); }
+  var DEMO_H = ["Start Date","Start Time (local)","End Date","End Time (local)","Calling Number","Called Number","Forwarding Number","CDR Type","IMSI","IMEI","Ring time (secs)","Call Duration (HH:mm:ss)","IPv4 address","IPv6 address","Data Volume Uploaded (KB)","Data Volume Downloaded (KB)","APN","Country of Origin","Operator","Start Cell ID or MAC Address","Start Cell Site Name","Start Cell 1st line of Address","Start Cell ID Postcode","Start Cell Generation","Start Cell Easting","Start Cell Northing","Start Cell Azimuth","End Cell ID or MAC Address","End Cell Site Name","End Cell 1st line of Address","End Cell ID Postcode","End Cell Generation","End Cell Easting","End Cell Northing","End Cell Azimuth","Row"];
+  function DEMO_CELLS() {
+    return [
+      ["LTN-A","LUTON TOWN HALL","George St","LU1 2BQ","4G",509200,221600,90],        // 0 base (weekday day)
+      ["LTN-B","BURY PARK","Dunstable Rd","LU1 1HW","4G",508100,221900,150],          // 1 secondary
+      ["DUN-C","DUNSTABLE CENTRAL","High St North","LU6 1LF","4G",502100,221900,270],  // 2 occasional
+      ["LTN-D","LUTON AIRPORT","Airport Way","LU2 9LY","5G",512700,220900,45],         // 3 travel
+      ["LEA-E","LEAGRAVE","Compton Ave","LU4 9AB","4G",506200,224400,200]              // 4 home (overnight)
     ];
-    // Three weekdays (Mon-Wed): overnight at LEA-E (home, idx 4), weekday
-    // daytime at LTN-A (base, idx 0) — gives a clear pattern-of-life.
-    var evs = [
-      ["02/09/2024","06:50:11","Data","07700900111","","","00:00:00",4],
-      ["02/09/2024","08:40:02","Voice","07700900111","07700900222","3","00:01:12",0],
-      ["02/09/2024","13:15:33","Voice","07700900111","07700900333","3","00:00:47",0],
-      ["02/09/2024","18:30:07","Voice","07700900111","07700900222","3","00:00:31",1],
-      ["02/09/2024","23:20:44","SMS-MO","07700900111","07700900444","","00:00:00",4],
-      ["03/09/2024","00:45:19","Data","07700900111","","","00:00:00",4],
-      ["03/09/2024","08:55:40","Voice","07700900111","07700900222","3","00:02:05",0],
-      ["03/09/2024","12:40:50","SMS-MT","07700900555","07700900111","","00:00:00",2],
-      ["03/09/2024","22:50:26","Voice","07700900111","07700900444","3","00:01:58",4],
-      ["04/09/2024","05:30:00","Data","07700900111","","","00:00:00",4],
-      ["04/09/2024","09:10:15","Voice","07700900111","07700900333","3","00:00:52",0],
-      ["04/09/2024","15:20:33","Voice","07700900111","07700900222","3","00:01:20",3],
-      ["04/09/2024","23:05:12","SMS-MO","07700900111","07700900222","","00:00:00",4]
-    ];
-    var lines = ["URN:,,,,IR774120","Grade:,,,,OFFICIAL-SENSITIVE","Target identity:,,,,07700900111","Operator:,,,,EE","", H.join(","), ""];
-    evs.forEach(function (e, i) {
-      var c = cells[e[7]]; var imei = (i === 7) ? "350000000000099" : "350000000000012"; // one SIM-swap
-      var row = [e[0], e[1], e[0], e[1], e[3], e[4], "", e[2], "234300000000001", imei, e[5], e[6], "", "", "", "", "", "GBR", "EE", c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7], "", "", "", "", "", "", "", "", String(i + 1)];
-      lines.push(row.map(function (v) { v = String(v); return /[",]/.test(v) ? '"' + v + '"' : v; }).join(","));
-    });
+  }
+  var DEMO_SUBJECT = "07700900111";  // Geoffrey BAINES (known in Database)
+  var DEMO_CONTACTS = [
+    { n: "07700900222", w: 34 }, { n: "07700900333", w: 22 }, { n: "07700900777", w: 8 },  // known in DB
+    { n: "07700900444", w: 16 }, { n: "07700900555", w: 10 }, { n: "07700900666", w: 10 }   // new contacts
+  ];
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function p2(n) { n = String(n); return n.length < 2 ? "0" + n : n; }
+  function weighted(rng, list) { var t = 0, i; for (i = 0; i < list.length; i++) { t += list[i].w; } var r = rng() * t; for (i = 0; i < list.length; i++) { r -= list[i].w; if (r <= 0) { return list[i].n; } } return list[list.length - 1].n; }
+  function buildDemoCSV(days) {
+    var cells = DEMO_CELLS(), rng = mulberry32(0xBA1E5 + days), start = new Date(2024, 8, 2), rows = [], rowNo = 0;
+    function emit(dObj, hh, mm, ss, type, a, b, cellIdx, handset) {
+      var c = cells[cellIdx];
+      var dt = p2(dObj.getDate()) + "/" + p2(dObj.getMonth() + 1) + "/" + dObj.getFullYear();
+      var tm = p2(hh) + ":" + p2(mm) + ":" + p2(ss);
+      var dur = (type === "Voice") ? "00:" + p2(1 + Math.floor(rng() * 4)) + ":" + p2(Math.floor(rng() * 60)) : "00:00:00";
+      var ring = (type === "Voice") ? String(1 + Math.floor(rng() * 8)) : "";
+      rowNo++;
+      rows.push([dt, tm, dt, tm, a, b, "", type, "234300000000001", handset, ring, dur, "", "", "", "", "", "GBR", "EE",
+        c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7], "", "", "", "", "", "", "", "", String(rowNo)]);
+    }
+    for (var d = 0; d < days; d++) {
+      var day = new Date(start.getTime()); day.setDate(start.getDate() + d);
+      var dow = day.getDay(), weekend = (dow === 0 || dow === 6);
+      var handset = (d >= Math.floor(days * 0.6)) ? "350000000000099" : "350000000000012";  // SIM-swap partway
+      emit(day, 0, 20 + Math.floor(rng() * 40), Math.floor(rng() * 60), "Data", DEMO_SUBJECT, "", 4, handset);   // overnight at home
+      emit(day, 5, Math.floor(rng() * 45), Math.floor(rng() * 60), "Data", DEMO_SUBJECT, "", 4, handset);
+      var nCalls = weekend ? (3 + Math.floor(rng() * 4)) : (9 + Math.floor(rng() * 8));
+      for (var k = 0; k < nCalls; k++) {
+        var hh = 7 + Math.floor(rng() * 15), mm = Math.floor(rng() * 60), ss = Math.floor(rng() * 60);
+        var roll = rng(), type = roll < 0.62 ? "Voice" : (roll < 0.82 ? "SMS-MO" : "Data");
+        var contact = weighted(rng, DEMO_CONTACTS);
+        var cellIdx = weekend ? (rng() < 0.6 ? 4 : (rng() < 0.5 ? 1 : 2)) : (rng() < 0.68 ? 0 : (rng() < 0.5 ? 1 : 2));
+        var a = DEMO_SUBJECT, b = contact;
+        if (type === "Data") { b = ""; }
+        else if (rng() < 0.22) { a = contact; b = DEMO_SUBJECT; if (type === "SMS-MO") { type = "SMS-MT"; } }  // incoming
+        emit(day, hh, mm, ss, type, a, b, cellIdx, handset);
+      }
+      if (!weekend && rng() < 0.14) { emit(day, 10, Math.floor(rng() * 40), Math.floor(rng() * 60), "Voice", DEMO_SUBJECT, "07700900222", 3, handset); }  // airport trip
+      emit(day, 22, Math.floor(rng() * 50), Math.floor(rng() * 60), "Voice", DEMO_SUBJECT, weighted(rng, DEMO_CONTACTS), 4, handset);  // evening at home
+    }
+    var lines = ["URN:,,,,IR774120","Grade:,,,,OFFICIAL-SENSITIVE","Target identity:,,,," + DEMO_SUBJECT,"Operator:,,,,EE","", DEMO_H.join(","), ""];
+    rows.forEach(function (row) { lines.push(row.map(function (v) { v = String(v); return /[",]/.test(v) ? '"' + v + '"' : v; }).join(",")); });
     return lines.join("\n");
   }
 
@@ -514,6 +603,11 @@
       ".cd-btn{background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:var(--radius);padding:7px 12px;cursor:pointer;font:inherit}.cd-btn:hover:not(:disabled){border-color:var(--accent-dim)}.cd-btn:disabled{opacity:.45;cursor:default}",
       ".cd-summary{display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)}",
       ".cd-chip{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:3px 10px;font-size:var(--fs-xs);color:var(--dim)}.cd-chip b{color:var(--text);font-variant-numeric:tabular-nums}.cd-chip.cd-warn{border-color:var(--warn);color:var(--warn)}",
+      ".cd-xref{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid var(--line);background:rgba(142,162,255,.05)}.cd-xref[hidden]{display:none}",
+      ".cd-xref-lbl{font-size:var(--fs-2xs);text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-family:var(--mono)}",
+      ".cd-xref-chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel-2);border:1px solid var(--accent-dim);border-radius:var(--radius);padding:3px 9px;font-size:var(--fs-xs);color:var(--text)}.cd-xref-chip b{font-family:var(--mono);color:var(--accent)}.cd-xref-op{color:var(--faint);font-size:var(--fs-2xs)}",
+      ".cd-known::after{content:'\\25C6';color:var(--accent);margin-left:5px;font-size:.72em;vertical-align:middle}",
+      "select.cd-demo{cursor:pointer}",
       ".cd-tabs{display:flex;gap:4px;padding:8px 14px 0}",
       ".cd-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--faint);padding:7px 12px;cursor:pointer;font:inherit}.cd-tab:hover{color:var(--dim)}.cd-tab-on{color:var(--accent);border-bottom-color:var(--accent)}",
       ".cd-body{flex:1;min-height:0;position:relative}",
@@ -530,6 +624,13 @@
       ".cd-subject{color:var(--accent);font-weight:700}",
       ".cd-table th{position:sticky;top:0;background:var(--panel-2);color:var(--faint);font-family:var(--mono);font-size:var(--fs-2xs);text-transform:uppercase;letter-spacing:.04em}.cd-num{text-align:right;font-variant-numeric:tabular-nums}",
       ".cd-empty{color:var(--faint);padding:24px;text-align:center}",
+      ".cd-empty-hero{max-width:520px;margin:0 auto;padding:8vh 24px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}",
+      ".cd-empty-mark{color:var(--accent);opacity:.85}",
+      ".cd-empty-h{margin:0;font-size:var(--fs-lg);font-weight:600;color:var(--text)}",
+      ".cd-empty-sub{margin:0;color:var(--dim);font-size:var(--fs-sm);line-height:1.55}",
+      ".cd-empty-picks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:4px}",
+      ".cd-empty-pick{background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:var(--radius);padding:8px 16px;cursor:pointer;font:inherit}.cd-empty-pick:hover{border-color:var(--accent);color:var(--accent)}",
+      ".cd-empty-note{margin:8px 0 0;color:var(--faint);font-size:var(--fs-xs);line-height:1.5}",
       ".cd-h{margin:16px 0 6px;font-size:var(--fs-sm);color:var(--dim);font-weight:600}.cd-h:first-child{margin-top:0}",
       ".cd-cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px}",
       ".cd-card{flex:1;min-width:220px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}",

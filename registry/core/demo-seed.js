@@ -108,6 +108,13 @@
     bridgeSt: function(){ return {type:"location",label:"23 Bridge Street, Chester CH1 1NG",attrs:{premiseNumber:"23",postcode:"CH1 1NG"}}; },
     wallet:   function(){ return {type:"cyber",label:"BTC bc1qdemo9d4",attrs:{address:"bc1qdemo9d4"}}; }
   };
+  // Fixed selectors shared with Analyse's sample comms (single source: js/core/known-entities.js).
+  // Carried on each principal's STABLE report so a CDR/ANPR return matches a real DB record.
+  var KNOWN_SELECTORS = {
+    "Geoffrey BAINES": { phone:"07700900111", vrm:"LD12ABC" },
+    "Marcus DELANEY":  { phone:"07700900333" },
+    "Stefan VOSS":     { phone:"07700900777" }
+  };
   var CROSS = {
     "OP NEPTUNE":["bridgeSt"], "OP METEOR":["phone1"], "OP COMET":["franklin","meridian"], "OP ECLIPSE":["meridian"],
     "OP AURORA":["franklin"], "OP PULSAR":["meridian"], "OP QUASAR":["phone1"], "OP NEBULA":["bmw"],
@@ -268,6 +275,13 @@
     bridges.forEach(function(bk){ var spec=BRIDGES[bk](); var lk=(spec.type==="person"?"ASSOCIATE":(spec.type==="location"?"LIVES_AT":"USES"));
       var be=addEnt(ir,spec,authd); lnk(ir,pSubj,be,lk,authd); cands.push({label:spec.label,type:spec.type,attrs:spec.attrs||{},link:lk}); });
 
+    // Cross-surface join-up: attach the known selector so the CDR phone resolves to this record.
+    if(r%3===0 && KNOWN_SELECTORS[nomLabel]){
+      var ks=KNOWN_SELECTORS[nomLabel];
+      if(ks.phone){ var kp=addEnt(ir,{type:"communication",label:ks.phone,attrs:{number:ks.phone}},authd); lnk(ir,pSubj,kp,"USES",authd); cands.push({label:ks.phone,type:"communication",attrs:{number:ks.phone},link:"USES"}); }
+      if(ks.vrm){ var kv=addEnt(ir,{type:"vehicle",label:ks.vrm,attrs:{vrm:ks.vrm,make:"Land Rover",colour:"Green"}},authd); lnk(ir,pSubj,kv,"OWNS",authd); cands.push({label:ks.vrm,type:"vehicle",attrs:{vrm:ks.vrm},link:"OWNS"}); }
+    }
+
     var personBridge=cands.filter(function(c){return c.type==="person";})[0];
     var associate = personBridge?personBridge.label:associateFor(uid);
     var assoc2 = associateFor(uid*5+3);
@@ -405,7 +419,7 @@
 
   function buildDemoDataset(){ var out=[]; var nOps=OPS.list().length; for(var i=0;i<nOps;i++){ for(var r=0;r<REPORTS_PER_OP;r++){ out.push(genReport(i,r)); } } return out; }
 
-  var SEED_VERSION="2026-06-25-messy";  // realistic-messy: seeded variable source returns + labelled conflicts (over the 06-23-cm CM rewrite)
+  var SEED_VERSION="2026-07-16-xref";  // + cross-surface selectors (known BAINES/DELANEY/VOSS phones + LD12ABC) so Analyse CDR matches DB records
   var api={ buildDemoDataset:buildDemoDataset, SEED_VERSION:SEED_VERSION, OPERATION_COUNT:OPS.list().length, REPORTS_PER_OP:REPORTS_PER_OP, BRIDGE_KEYS:Object.keys(BRIDGES) };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
   if (typeof window !== "undefined") { window.RegistryDemo = api; }

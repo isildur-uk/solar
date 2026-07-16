@@ -20,6 +20,7 @@
   var overlay = null;      // analysis drawings (measure/radius) — survives rebuild()
   var store = null;
   var markers = {}; // entityId -> marker
+  var didInitialFit = false; // frame the located entities once, on first appearance
   var selectedId = null;
   var onSelectCb = null;
   var arrowDefsDone = false;
@@ -161,6 +162,13 @@
       pts.push(c);
     });
     drawArcs(coords);
+    // Frame the located entities the first time any appear, so the pane shows the
+    // case geography instead of a world-view void. Only auto-fits once (or when
+    // markers first arrive) — never yanks the view while the analyst is working.
+    if (pts.length && !didInitialFit) {
+      didInitialFit = true;
+      map.fitBounds(L.latLngBounds(pts).pad(0.35), { animate: false, maxZoom: 12 });
+    }
     return pts;
   }
 
