@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<script>(function(){try{var t=localStorage.getItem("solar_theme")||"dark";document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analyse — SOLAR</title>
+<link rel="stylesheet" href="../css/lib/leaflet.css">
+<link rel="stylesheet" href="../css/shell.css?v=20260714o">
+<style>
+  html,body{height:100%;margin:0}
+  body{display:flex;flex-direction:column}
+  .analyse-main{flex:1;min-height:0;display:flex}
+  .analyse-main > *{flex:1;min-height:0}
+</style>
+</head>
+<body>
+<div id="marking-banner" class="marking-banner" data-mk="OFFICIAL">OFFICIAL</div>
+
+<header class="masthead">
+  <a class="brand" href="../hero.html" title="SOLAR home">SOLAR</a>
+  <nav class="masthead-nav">
+    <a class="btn" href="../registry/index.html" title="Intelligence database">Database</a>
+    <a class="btn" href="../index.html" title="Link chart">Charting</a>
+    <a class="btn btn-on" href="./index.html" aria-current="page" title="Analytical tools">Analyse</a>
+  </nav>
+  <span class="masthead-spacer" style="flex:1"></span>
+  <span class="masthead-user" title="Analytical workspace">Analyse</span>
+</header>
+
+<main class="analyse-main" id="analyse-main" aria-live="polite"></main>
+
+<!-- Data-standards layer (load first) -->
+<script src="../js/core/cm-vocab.js"></script>
+<script src="../js/core/cm-standards.js"></script>
+<!-- Comms-data CORE (parse / de-bloat / offline BNG->WGS84) -->
+<script src="../js/core/comms-data.js"></script>
+<!-- Vendored libs (offline, no CDN except the Leaflet basemap tiles) -->
+<script src="../js/lib/leaflet.js"></script>
+<script src="../js/lib/xlsx.full.min.js"></script>
+<!-- Analyse view -->
+<script src="./comms-view.js"></script>
+<script>
+  (function(){
+    function boot(){
+      var host = document.getElementById("analyse-main");
+      if (host && window.RegistryCommsView && window.RegistryCommsView.mount) window.RegistryCommsView.mount(host);
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
+  })();
+</script>
+</body>
+</html>
