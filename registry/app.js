@@ -235,6 +235,7 @@
     "TOP SECRET": "The most sensitive information, whose compromise would cause exceptionally grave damage. Strict TOP SECRET handling controls apply."
   };
   function setBanner(mk) {
+    if (!els.banner) { return; }   // the always-on OFFICIAL banner was removed; per-report marking still lives on each record
     var m = (M.PROTECTIVE_MARKING.indexOf(mk) !== -1) ? mk : "OFFICIAL";
     els.banner.textContent = m;
     els.banner.setAttribute("data-mk", m);
