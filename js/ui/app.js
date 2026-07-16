@@ -54,10 +54,35 @@
       var _pc = window.localStorage && window.localStorage.getItem("solar_pending_case");
       if (_pc) {
         window.localStorage.removeItem("solar_pending_case");
-        store.fromJSON(JSON.parse(_pc));
+        var _parsed = JSON.parse(_pc);
+        // Non-destructive handoff (P4): merge the handed-off case INTO the
+        // current chart via the shared bridge instead of overwriting it. Falls
+        // back to the legacy replace if the bridge isn't present.
+        if (window.CRSolarBridge) {
+          var _tmp = new window.CRModel.CaseStore();
+          _tmp.fromJSON(_parsed);
+          window.CRSolarBridge.mergeIntoStore(store, window.CRSolarBridge.fromChartStore(_tmp));
+        } else {
+          store.fromJSON(_parsed);
+        }
         pendingCase = true;
       }
     } catch (e) { pendingCase = false; /* ignore — fall back to whatever loadLocal gave us */ }
+
+    // Shared spine (P4): non-destructively merge anything Analyse or Database
+    // wrote to the SolarCase spine into this chart. The bridge dedupes and
+    // collapses, so this is idempotent and never clears the chart — safe on
+    // every boot. Fully guarded so a missing/broken spine can't stop charting.
+    var spineAdded = 0;
+    try {
+      if (window.CRSolarBridge && window.SolarCase) {
+        var _sc = window.SolarCase.get();
+        if (_sc && _sc.entities && _sc.entities.length) {
+          var _m = window.CRSolarBridge.mergeIntoStore(store, _sc);
+          spineAdded = _m.entities + _m.links;
+        }
+      }
+    } catch (e) { spineAdded = 0; }
 
     window.CRGraph.init(U.el("chart"), store, onChartSelect);
     window.CRMapPane.init("map", store, selectEntity);
@@ -88,6 +113,12 @@
     if (pendingCase) {
       try { store.saveLocal(); } catch (e) { /* noop */ }
       status("Loaded case from Registry handoff");
+      setTimeout(function () { try { window.CRGraph.fit(); window.CRMapPane.fitToData(); } catch (e) { /* noop */ } }, 400);
+    }
+    // Freshly merged spine items (from Analyse "Add to case" or a Database handoff).
+    if (spineAdded) {
+      try { store.saveLocal(); } catch (e) { /* noop */ }
+      status("Merged " + spineAdded + " item(s) from the shared case");
       setTimeout(function () { try { window.CRGraph.fit(); window.CRMapPane.fitToData(); } catch (e) { /* noop */ } }, 400);
     }
     if (hadLocal && store.entities.length) {

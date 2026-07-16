@@ -58,6 +58,7 @@
     bar.appendChild(drop);
     var demo = el("button", "cd-btn", "Load demo data"); demo.type = "button"; demo.onclick = loadDemo; bar.appendChild(demo);
     var exp = el("button", "cd-btn", "Export tidy CSV"); exp.type = "button"; exp.id = "cd-export"; exp.onclick = exportCsv; exp.disabled = true; bar.appendChild(exp);
+    var addb = el("button", "cd-btn", "Add to case"); addb.type = "button"; addb.id = "cd-addcase"; addb.title = "Add these subjects, contacts and locations to the shared SOLAR case"; addb.disabled = true; addb.onclick = addToCase; bar.appendChild(addb);
     panel.appendChild(bar);
 
     // DnD
@@ -151,6 +152,7 @@
     state.sorted = res.events.slice().sort(function (a, b) { var da = parseDt(a.startDt), db = parseDt(b.startDt); return (da ? da.getTime() : 0) - (db ? db.getTime() : 0); });
     state.filterN = state.sorted.length;
     var exp = doc.getElementById("cd-export"); if (exp) exp.disabled = res.events.length === 0;
+    var addb = doc.getElementById("cd-addcase"); if (addb) addb.disabled = res.events.length === 0;
     renderMeta(res); renderSummary(); renderTable(); renderTimeline(); renderPatterns(); renderJourneys();
     if (state.map) { state.map.remove(); state.map = null; }  // force map rebuild for new data
     if (state.tab === "map") renderMap();
@@ -261,23 +263,23 @@
     var latlngs = [];
     pts.forEach(function (e, idx) {
       var ll = [e.lat, e.lon]; latlngs.push(ll);
-      var mk = L.circleMarker(ll, { radius: 6, color: "#e8a13a", weight: 2, fillColor: "#e8a13a", fillOpacity: 0.7 });
+      var mk = L.circleMarker(ll, { radius: 6, color: "#8ea2ff", weight: 2, fillColor: "#8ea2ff", fillOpacity: 0.7 });
       mk.bindPopup(popupHtml(e, idx + 1));
       mk.addTo(state.map); state.mapLayers.push(mk);
       if (e.cellAzimuth != null && isFinite(e.cellAzimuth)) {
         var sec = sector(e.lat, e.lon, e.cellAzimuth, 60, 0.35);
-        var poly = L.polygon(sec, { color: "#e8a13a", weight: 1, fillColor: "#e8a13a", fillOpacity: 0.12 });
+        var poly = L.polygon(sec, { color: "#8ea2ff", weight: 1, fillColor: "#8ea2ff", fillOpacity: 0.12 });
         poly.addTo(state.map); state.mapLayers.push(poly);
       }
     });
     if (latlngs.length > 1 && JRN) {
       JRN.analyseJourneys(pts).legs.forEach(function (lg) {
-        var seg = L.polyline([[lg.fromLat, lg.fromLon], [lg.toLat, lg.toLon]], { color: JRN.MODE_COLOUR[lg.mode] || "#6aa0ff", weight: lg.impossible ? 3 : 2.5, opacity: 0.85, dashArray: lg.impossible ? "4,4" : null });
+        var seg = L.polyline([[lg.fromLat, lg.fromLon], [lg.toLat, lg.toLon]], { color: JRN.MODE_COLOUR[lg.mode] || "#8ea2ff", weight: lg.impossible ? 3 : 2.5, opacity: 0.85, dashArray: lg.impossible ? "4,4" : null });
         seg.bindTooltip(lg.mode + (lg.speedKmh != null ? " · " + lg.speedKmh + " km/h" : "") + (lg.roadHint ? " · " + lg.roadHint : ""));
         seg.addTo(state.map); state.mapLayers.push(seg);
       });
     } else if (latlngs.length > 1) {
-      var line = L.polyline(latlngs, { color: "#6aa0ff", weight: 2, opacity: 0.7, dashArray: "5,5" }); line.addTo(state.map); state.mapLayers.push(line);
+      var line = L.polyline(latlngs, { color: "#8ea2ff", weight: 2, opacity: 0.7, dashArray: "5,5" }); line.addTo(state.map); state.mapLayers.push(line);
     }
     if (latlngs.length) state.map.fitBounds(L.latLngBounds(latlngs).pad(0.2));
     setTimeout(function () { if (state.map) state.map.invalidateSize(); }, 50);
@@ -308,6 +310,14 @@
     var la2 = Math.asin(Math.sin(la1) * Math.cos(dr) + Math.cos(la1) * Math.sin(dr) * Math.cos(br));
     var lo2 = lo1 + Math.atan2(Math.sin(br) * Math.sin(dr) * Math.cos(la1), Math.cos(dr) - Math.sin(la1) * Math.sin(la2));
     return [la2 * 180 / Math.PI, lo2 * 180 / Math.PI];
+  }
+
+  /* ---- add findings to the shared SOLAR case (spine for Charting/Database) ---- */
+  function addToCase() {
+    if (typeof window === "undefined" || !window.SolarCase || !window.CRCommsCase) { flash("Shared case spine unavailable."); return; }
+    var parts = window.CRCommsCase.fromEvents(state.sorted, (state.res && state.res.meta) || {});
+    var s = window.SolarCase.merge(parts);
+    flash("Added " + parts.entities.length + " entities + " + parts.links.length + " links to the shared case (" + s.entities + " total).");
   }
 
   /* ---- export tidy CSV ---- */
@@ -474,50 +484,51 @@
   function injectStyle() {
     if (doc.getElementById("cd-style")) return;
     var css = [
-      "#cd-overlay{position:fixed;inset:0;z-index:9000;background:rgba(6,10,18,.72);backdrop-filter:blur(3px);display:flex;padding:2.5vh 2.5vw}",
+      "#cd-overlay{position:fixed;inset:0;z-index:9000;background:rgba(6,6,5,.72);backdrop-filter:blur(3px);display:flex;padding:2.5vh 2.5vw}",
       "#cd-overlay[hidden]{display:none}",
-      ".cd-panel{margin:auto;width:100%;height:95vh;max-width:1400px;display:flex;flex-direction:column;background:var(--panel,#0e141f);border:1px solid var(--line,#26303f);border-radius:12px;overflow:hidden;color:var(--ink,#dce4f0);font:13px/1.45 system-ui,Segoe UI,Roboto,sans-serif}",
-      ".cd-inline{margin:0;width:100%;height:100%;max-width:none;border:none;border-radius:0}",
-      ".cd-head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line,#26303f)}",
-      ".cd-title{font-weight:600}.cd-meta{color:#8fa3bd;font-size:12px}.cd-spacer{flex:1}",
-      ".cd-bar{display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line,#26303f)}",
-      ".cd-drop{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;border:1px dashed #3a4a5f;border-radius:8px;color:#9fb2cc;cursor:pointer}",
-      ".cd-drop.cd-drag{border-color:#e8a13a;color:#e8a13a}.cd-file{display:none}",
-      ".cd-btn{background:#1a2434;color:#dce4f0;border:1px solid #2c3a4e;border-radius:7px;padding:7px 12px;cursor:pointer;font:inherit}.cd-btn:hover{border-color:#40546e}.cd-btn:disabled{opacity:.45;cursor:default}",
-      ".cd-summary{display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line,#26303f)}",
-      ".cd-chip{background:#141d2b;border:1px solid #26303f;border-radius:20px;padding:3px 10px;font-size:12px;color:#9fb2cc}.cd-chip b{color:#dce4f0}.cd-chip.cd-warn{border-color:#c9603a;color:#e8a13a}",
+      ".cd-panel{margin:auto;width:100%;height:95vh;max-width:1400px;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;color:var(--text);font:var(--fs-sm)/1.45 var(--sans)}",
+      ".cd-inline{margin:0;width:100%;height:100%;max-width:none;border:none;border-radius:0;background:transparent}",
+      ".cd-head{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line)}",
+      ".cd-title{font-weight:600}.cd-meta{color:var(--faint);font-size:var(--fs-xs)}.cd-spacer{flex:1}",
+      ".cd-bar{display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}",
+      ".cd-drop{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;border:1px dashed var(--line-2);border-radius:var(--radius);color:var(--dim);cursor:pointer}",
+      ".cd-drop.cd-drag{border-color:var(--accent);color:var(--accent)}.cd-file{display:none}",
+      ".cd-btn{background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:var(--radius);padding:7px 12px;cursor:pointer;font:inherit}.cd-btn:hover:not(:disabled){border-color:var(--accent-dim)}.cd-btn:disabled{opacity:.45;cursor:default}",
+      ".cd-summary{display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)}",
+      ".cd-chip{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:3px 10px;font-size:var(--fs-xs);color:var(--dim)}.cd-chip b{color:var(--text);font-variant-numeric:tabular-nums}.cd-chip.cd-warn{border-color:var(--warn);color:var(--warn)}",
       ".cd-tabs{display:flex;gap:4px;padding:8px 14px 0}",
-      ".cd-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#8fa3bd;padding:7px 12px;cursor:pointer;font:inherit}.cd-tab-on{color:#e8a13a;border-bottom-color:#e8a13a}",
+      ".cd-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--faint);padding:7px 12px;cursor:pointer;font:inherit}.cd-tab:hover{color:var(--dim)}.cd-tab-on{color:var(--accent);border-bottom-color:var(--accent)}",
       ".cd-body{flex:1;min-height:0;position:relative}",
       ".cd-pane{position:absolute;inset:0;overflow:auto;padding:12px 14px}",
-      "#cd-map{position:absolute;inset:0;background:#0a0f18}.cd-map-offline{background:#0a0f18}",
+      "#cd-map{position:absolute;inset:0;background:var(--bg)}.cd-map-offline{background:var(--bg)}",
       ".cd-tablewrap{overflow:auto;max-height:100%}",
-      ".cd-tablectl{display:flex;gap:16px;margin-bottom:8px;color:#9fb2cc;font-size:12px}",
-      ".cd-chk{display:flex;align-items:center;gap:5px;cursor:pointer}",
-      ".cd-table{border-collapse:collapse;width:100%;font-size:12px}",
-      ".cd-table th,.cd-table td{border:1px solid #222c3a;padding:4px 7px;text-align:left;white-space:nowrap}",
-      ".cd-table th{position:sticky;top:0;background:#141d2b;color:#b9c8dd}.cd-num{text-align:right;font-variant-numeric:tabular-nums}",
-      ".cd-empty{color:#7d8ea6;padding:24px;text-align:center}",
-      ".cd-h{margin:16px 0 6px;font-size:13px;color:#b9c8dd}.cd-h:first-child{margin-top:0}",
+      ".cd-tablectl{display:flex;gap:16px;margin-bottom:8px;color:var(--dim);font-size:var(--fs-xs)}",
+      ".cd-chk{display:flex;align-items:center;gap:5px;cursor:pointer}.cd-chk input,.cd-slider{accent-color:var(--accent)}",
+      ".cd-table{border-collapse:collapse;width:100%;font-size:var(--fs-xs)}",
+      ".cd-table th,.cd-table td{border:1px solid var(--line);padding:4px 7px;text-align:left;white-space:nowrap}",
+      ".cd-table td{font-family:var(--mono);font-variant-numeric:tabular-nums}",
+      ".cd-table th{position:sticky;top:0;background:var(--panel-2);color:var(--dim)}.cd-num{text-align:right;font-variant-numeric:tabular-nums}",
+      ".cd-empty{color:var(--faint);padding:24px;text-align:center}",
+      ".cd-h{margin:16px 0 6px;font-size:var(--fs-sm);color:var(--dim);font-weight:600}.cd-h:first-child{margin-top:0}",
       ".cd-cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px}",
-      ".cd-card{flex:1;min-width:220px;background:#141d2b;border:1px solid #26303f;border-radius:10px;padding:12px 14px}",
-      ".cd-card.cd-tl-geo{cursor:pointer}.cd-card.cd-tl-geo:hover{border-color:#e8a13a}",
-      ".cd-card-t{font-weight:600;color:#dce4f0}.cd-card-sub{font-size:11px;color:#7d8ea6;margin-bottom:8px}",
-      ".cd-card-v{font-size:15px;color:#e8a13a}.cd-card-m{font-size:12px;color:#9fb2cc;margin-top:2px}",
-      ".cd-hist{display:flex;align-items:flex-end;gap:2px;height:110px;padding-top:6px;border-bottom:1px solid #26303f;margin-bottom:6px}",
+      ".cd-card{flex:1;min-width:220px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}",
+      ".cd-card.cd-tl-geo{cursor:pointer}.cd-card.cd-tl-geo:hover{border-color:var(--accent-dim)}",
+      ".cd-card-t{font-weight:600;color:var(--text)}.cd-card-sub{font-size:var(--fs-2xs);color:var(--faint);margin-bottom:8px}",
+      ".cd-card-v{font-size:var(--fs-md);color:var(--accent);font-family:var(--mono)}.cd-card-m{font-size:var(--fs-xs);color:var(--dim);margin-top:2px}",
+      ".cd-hist{display:flex;align-items:flex-end;gap:2px;height:110px;padding-top:6px;border-bottom:1px solid var(--line);margin-bottom:6px}",
       ".cd-hist-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}",
-      ".cd-hist-bar{width:72%;background:#e8a13a;border-radius:2px 2px 0 0;opacity:.85}",
-      ".cd-hist-lab{font-size:9px;color:#7d8ea6;margin-top:3px;white-space:nowrap}",
-      ".cd-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;font-size:11px;color:#9fb2cc}",
+      ".cd-hist-bar{width:72%;background:var(--accent);border-radius:2px 2px 0 0;opacity:.85}",
+      ".cd-hist-lab{font-size:var(--fs-2xs);color:var(--faint);margin-top:3px;white-space:nowrap;font-variant-numeric:tabular-nums}",
+      ".cd-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;font-size:var(--fs-2xs);color:var(--dim)}",
       ".cd-legkey{display:flex;align-items:center;gap:4px}.cd-legdot{width:10px;height:10px;border-radius:2px;display:inline-block}",
-      ".cd-imp-banner{background:#2a1414;border:1px solid #c9603a;color:#e8a13a;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12px}",
-      ".cd-imp td{color:#e05a5a}",
-      ".cd-tl-ctrl{display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#9fb2cc}.cd-slider{flex:1;max-width:360px}",
+      ".cd-imp-banner{background:rgba(216,106,106,.12);border:1px solid var(--warn);color:var(--warn);border-radius:var(--radius);padding:8px 10px;margin-bottom:10px;font-size:var(--fs-xs)}",
+      ".cd-imp td{color:var(--bad)}",
+      ".cd-tl-ctrl{display:flex;align-items:center;gap:8px;margin-bottom:10px;color:var(--dim)}.cd-slider{flex:1;max-width:360px}",
       ".cd-tl{list-style:none;margin:0;padding:0}",
-      ".cd-tl-item{display:grid;grid-template-columns:150px 1fr auto;gap:12px;padding:7px 8px;border-left:2px solid #26303f;margin-left:6px}",
-      ".cd-tl-item.cd-tl-geo{cursor:pointer;border-left-color:#e8a13a}.cd-tl-item.cd-tl-geo:hover{background:#131c29}",
-      ".cd-tl-time{color:#8fa3bd;font-variant-numeric:tabular-nums}.cd-tl-loc{color:#9fb2cc}",
-      ".cd-pop{font:12px system-ui}.cd-pop-t{font-weight:600;margin-bottom:3px}"
+      ".cd-tl-item{display:grid;grid-template-columns:150px 1fr auto;gap:12px;padding:7px 8px;border-left:2px solid var(--line);margin-left:6px}",
+      ".cd-tl-item.cd-tl-geo{cursor:pointer;border-left-color:var(--accent)}.cd-tl-item.cd-tl-geo:hover{background:var(--panel-2)}",
+      ".cd-tl-time{color:var(--faint);font-family:var(--mono);font-variant-numeric:tabular-nums}.cd-tl-loc{color:var(--dim)}",
+      ".cd-pop{font:var(--fs-xs)/1.4 var(--sans)}.cd-pop-t{font-weight:600;margin-bottom:3px}"
     ].join("\n");
     var st = el("style"); st.id = "cd-style"; st.textContent = css; doc.head.appendChild(st);
   }

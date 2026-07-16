@@ -18,6 +18,8 @@ var CD = require("../js/core/comms-data.js");
 dom.window.RegistryCommsData = CD;                 // comms-view binds to this at load
 dom.window.RegistryCommsPattern = require("../js/core/comms-pattern.js");
 dom.window.RegistryCommsJourneys = require("../js/core/comms-journeys.js");
+dom.window.SolarCase = require("../js/core/solar-case.js");
+dom.window.CRCommsCase = require("../js/core/comms-case.js");
 var CV = require("../analyse/comms-view.js");
 
 // small fixture: two events, same A-number on two IMEIs (SIM-swap), with geo.
@@ -58,6 +60,12 @@ CV._ingestRows(CD.parseDelimited(mvCsv));
 ok("journeys tab builds tables (journeys + legs)", d.querySelectorAll("#cd-pane-journeys .cd-table").length >= 2);
 ok("journeys tab shows leg rows with a mode", d.querySelectorAll("#cd-pane-journeys .cd-table tbody tr").length >= 1 && /Road vehicle|Motorway|Train|On foot/.test(d.getElementById("cd-pane-journeys").textContent));
 ok("mode legend rendered", d.querySelectorAll("#cd-pane-journeys .cd-legkey").length >= 5);
+
+/* P5: Add-to-case writes into the shared SolarCase spine */
+dom.window.SolarCase._reset();
+var ab = d.getElementById("cd-addcase"); if (ab) ab.click();
+ok("Add-to-case writes entities to the shared spine", dom.window.SolarCase.stats().entities > 0);
+ok("Add-to-case writes links to the shared spine", dom.window.SolarCase.stats().links >= 1);
 
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

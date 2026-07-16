@@ -14,6 +14,15 @@
   function el(t, c, x) { var e = doc.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
   function clear(n) { while (n && n.firstChild) n.removeChild(n.firstChild); }
   function pad(n) { n = String(n); return n.length < 2 ? "0" + n : n; }
+  // inline SVG × (never an emoji/glyph as a UI icon, per DESIGN.md)
+  function svgX() {
+    var ns = "http://www.w3.org/2000/svg", s = doc.createElementNS(ns, "svg");
+    s.setAttribute("viewBox", "0 0 12 12"); s.setAttribute("fill", "none"); s.setAttribute("stroke", "currentColor");
+    s.setAttribute("stroke-width", "1.6"); s.setAttribute("stroke-linecap", "round"); s.setAttribute("aria-hidden", "true");
+    var a = doc.createElementNS(ns, "path"); a.setAttribute("d", "M3 3l6 6");
+    var b = doc.createElementNS(ns, "path"); b.setAttribute("d", "M9 3l-6 6");
+    s.appendChild(a); s.appendChild(b); return s;
+  }
   function fmtDt(d) { if (!(d instanceof Date) || isNaN(d)) return ""; return pad(d.getDate()) + "/" + pad(d.getMonth() + 1) + "/" + d.getFullYear() + " " + pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 
   function ensureBuilt(host) {
@@ -38,6 +47,7 @@
     var cr = el("label", "cl-ctl", "Radius (m) "); var rad = el("input"); rad.type = "number"; rad.id = "cl-radius"; rad.value = "250"; rad.min = "0"; rad.className = "cl-num"; cr.appendChild(rad); bar.appendChild(cr);
     win.onchange = rad.onchange = function () { if (state.datasets.length) analyse(); };
     var runb = el("button", "cl-btn", "Analyse"); runb.type = "button"; runb.onclick = analyse; bar.appendChild(runb);
+    var addb = el("button", "cl-btn", "Add to case"); addb.type = "button"; addb.id = "cl-addcase"; addb.title = "Add these subjects, shared contacts and co-locations to the shared SOLAR case"; addb.onclick = addToCase; bar.appendChild(addb);
     panel.appendChild(bar);
 
     var rail = el("div", "cl-rail"); rail.id = "cl-rail"; panel.appendChild(rail);
@@ -105,7 +115,7 @@
       var chip = el("span", "cl-subj");
       chip.appendChild(el("b", null, d.label));
       chip.appendChild(doc.createTextNode(" · " + (d.events ? d.events.length : 0) + " events"));
-      var x = el("button", "cl-x", "×"); x.type = "button"; x.title = "Remove"; x.onclick = function () { removeDataset(i); }; chip.appendChild(x);
+      var x = el("button", "cl-x"); x.type = "button"; x.title = "Remove"; x.setAttribute("aria-label", "Remove subject"); x.appendChild(svgX()); x.onclick = function () { removeDataset(i); }; chip.appendChild(x);
       rail.appendChild(chip);
     });
   }
@@ -169,7 +179,7 @@
     var lls = [];
     pts.forEach(function (r) {
       var ll = [r.lat, r.lon]; lls.push(ll);
-      var mk = L.circleMarker(ll, { radius: 7, color: "#e05a5a", weight: 2, fillColor: "#e05a5a", fillOpacity: 0.75 });
+      var mk = L.circleMarker(ll, { radius: 7, color: "#d86a6a", weight: 2, fillColor: "#d86a6a", fillOpacity: 0.75 });
       var pop = el("div", "cl-pop");
       pop.appendChild(el("div", "cl-pop-t", r.targetA + " ↔ " + r.targetB));
       if (r.place) pop.appendChild(el("div", null, r.place));
@@ -208,28 +218,36 @@
     analyse();
   }
 
+  function addToCase() {
+    if (typeof window === "undefined" || !window.SolarCase || !window.CRCommsCase) { flash("Shared case spine unavailable."); return; }
+    if (!state.cc) { flash("Load subjects and Analyse first."); return; }
+    var parts = window.CRCommsCase.fromLink(state.cc, state.co || []);
+    var s = window.SolarCase.merge(parts);
+    flash("Added " + parts.entities.length + " subjects/contacts + " + parts.links.length + " links to the shared case (" + s.entities + " total).");
+  }
+
   function injectStyle() {
     if (doc.getElementById("cl-style")) return;
     var css = [
-      ".cl-panel{display:flex;flex-direction:column;color:var(--ink,#dce4f0);font:13px/1.45 system-ui,Segoe UI,Roboto,sans-serif;background:var(--panel,#0e141f)}",
+      ".cl-panel{display:flex;flex-direction:column;color:var(--text);font:var(--fs-sm)/1.45 var(--sans);background:transparent}",
       ".cl-inline{width:100%;height:100%}",
-      ".cl-head{display:flex;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line,#26303f)}.cl-title{font-weight:600}.cl-meta{color:#8fa3bd;font-size:12px}",
-      ".cl-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line,#26303f)}",
-      ".cl-drop{display:flex;align-items:center;padding:7px 10px;border:1px dashed #3a4a5f;border-radius:8px;color:#9fb2cc;cursor:pointer}.cl-file{display:none}",
-      ".cl-btn{background:#1a2434;color:#dce4f0;border:1px solid #2c3a4e;border-radius:7px;padding:7px 12px;cursor:pointer;font:inherit}.cl-btn:hover{border-color:#40546e}",
-      ".cl-ctl{color:#9fb2cc;display:flex;align-items:center;gap:4px}.cl-num{width:64px;background:#141d2b;border:1px solid #26303f;color:#dce4f0;border-radius:5px;padding:4px 6px}",
-      ".cl-rail{display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line,#26303f);min-height:20px}",
-      ".cl-subj{background:#141d2b;border:1px solid #26303f;border-radius:20px;padding:3px 6px 3px 12px;font-size:12px;color:#9fb2cc;display:flex;align-items:center;gap:8px}.cl-subj b{color:#dce4f0}",
-      ".cl-x{background:none;border:none;color:#8fa3bd;cursor:pointer;font-size:15px;line-height:1;padding:0 4px}.cl-x:hover{color:#e05a5a}",
-      ".cl-tabs{display:flex;gap:4px;padding:8px 14px 0}.cl-tab{background:none;border:none;border-bottom:2px solid transparent;color:#8fa3bd;padding:7px 12px;cursor:pointer;font:inherit}.cl-tab-on{color:#e8a13a;border-bottom-color:#e8a13a}",
+      ".cl-head{display:flex;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}.cl-title{font-weight:600}.cl-meta{color:var(--faint);font-size:var(--fs-xs)}",
+      ".cl-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)}",
+      ".cl-drop{display:flex;align-items:center;padding:7px 10px;border:1px dashed var(--line-2);border-radius:var(--radius);color:var(--dim);cursor:pointer}.cl-file{display:none}",
+      ".cl-btn{background:var(--panel-2);color:var(--text);border:1px solid var(--line);border-radius:var(--radius);padding:7px 12px;cursor:pointer;font:inherit}.cl-btn:hover{border-color:var(--accent-dim)}",
+      ".cl-ctl{color:var(--dim);display:flex;align-items:center;gap:4px}.cl-num{width:64px;background:var(--panel-2);border:1px solid var(--line);color:var(--text);border-radius:var(--radius);padding:4px 6px;font-family:var(--mono);accent-color:var(--accent)}",
+      ".cl-rail{display:flex;flex-wrap:wrap;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);min-height:20px}",
+      ".cl-subj{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:3px 6px 3px 12px;font-size:var(--fs-xs);color:var(--dim);display:flex;align-items:center;gap:8px}.cl-subj b{color:var(--text);font-family:var(--mono)}",
+      ".cl-x{background:none;border:none;color:var(--faint);cursor:pointer;line-height:1;padding:0 4px;display:inline-flex;align-items:center}.cl-x:hover{color:var(--bad)}.cl-x svg{width:11px;height:11px;display:block}",
+      ".cl-tabs{display:flex;gap:4px;padding:8px 14px 0}.cl-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--faint);padding:7px 12px;cursor:pointer;font:inherit}.cl-tab:hover{color:var(--dim)}.cl-tab-on{color:var(--accent);border-bottom-color:var(--accent)}",
       ".cl-body{flex:1;min-height:0;position:relative}.cl-pane{position:absolute;inset:0;overflow:auto;padding:12px 14px}",
-      ".cl-h{margin:14px 0 6px;font-size:13px;color:#b9c8dd}.cl-h:first-child{margin-top:0}",
-      ".cl-tablewrap{overflow:auto}.cl-table{border-collapse:collapse;width:100%;font-size:12px;margin-bottom:6px}",
-      ".cl-table th,.cl-table td{border:1px solid #222c3a;padding:4px 7px;text-align:left;white-space:nowrap}.cl-table th{position:sticky;top:0;background:#141d2b;color:#b9c8dd}",
+      ".cl-h{margin:14px 0 6px;font-size:var(--fs-sm);color:var(--dim);font-weight:600}.cl-h:first-child{margin-top:0}",
+      ".cl-tablewrap{overflow:auto}.cl-table{border-collapse:collapse;width:100%;font-size:var(--fs-xs);margin-bottom:6px}",
+      ".cl-table th,.cl-table td{border:1px solid var(--line);padding:4px 7px;text-align:left;white-space:nowrap}.cl-table th{position:sticky;top:0;background:var(--panel-2);color:var(--dim)}",
       ".cl-coloc-table{max-height:45%;overflow:auto;margin-bottom:10px}",
-      ".cl-map{position:relative;height:50%;min-height:220px;background:#0a0f18}.cl-map-offline{background:#0a0f18}",
-      ".cl-empty{color:#7d8ea6;padding:16px;text-align:center}",
-      ".cl-pop{font:12px system-ui}.cl-pop-t{font-weight:600;margin-bottom:3px}"
+      ".cl-map{position:relative;height:50%;min-height:220px;background:var(--bg,#0a0f18)}.cl-map-offline{background:var(--bg,#0a0f18)}",
+      ".cl-empty{color:var(--faint);padding:16px;text-align:center}",
+      ".cl-pop{font:var(--fs-xs) var(--sans)}.cl-pop-t{font-weight:600;margin-bottom:3px}"
     ].join("\n");
     var st = el("style"); st.id = "cl-style"; st.textContent = css; doc.head.appendChild(st);
   }

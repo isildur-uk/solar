@@ -431,21 +431,28 @@
     // carries aria-current and a persistent distinct state (so it never reads as
     // just an un-hovered button). The label is wrapped so it layers above the fill.
     var surf = el("div", { class: "sh-surface" });
-    function surfLink(label, isCurrent) {
+    // Three surfaces — one product. Paths are relative to the current surface.
+    var PFX = IS_REGISTRY ? "../" : "";
+    var CURRENT = IS_REGISTRY ? "Database" : "Charting";
+    var GLOSS = {
+      Charting: "Charting — the link-analysis workbench (entities, links, timeline)",
+      Analyse: "Analyse — comms/ANPR analysis (movement, links, patterns)",
+      Database: "Database — the structured-intelligence registry (reports & entities)"
+    };
+    var HREF = { Charting: PFX + "index.html", Analyse: PFX + "analyse/index.html", Database: PFX + "registry/index.html" };
+    function surfLink(label) {
+      var isCurrent = (label === CURRENT);
       var a = el("a", isCurrent ? { class: "sh-surf-btn fx-6", href: "#", "aria-current": "true" } : { class: "sh-surf-btn fx-6", href: "#" },
         '<span class="sh-surf-label">' + label + '</span>');
-      var gloss = label === "Charting"
-        ? "Charting — the link-analysis workbench (entities, links, timeline)"
-        : "Database — the structured-intelligence registry (reports & entities)";
-      tip(a, isCurrent ? gloss + " · current" : gloss + " · switch");
+      tip(a, isCurrent ? GLOSS[label] + " · current" : GLOSS[label] + " · switch");
+      if (!isCurrent) a.addEventListener("click", function (e) { e.preventDefault(); switchTo(HREF[label]); });
       return a;
     }
-    surf.appendChild(surfLink("Charting", !IS_REGISTRY));
-    surf.appendChild(surfLink("Database", IS_REGISTRY));
-    // route the surface links to the corresponding surface (via the transition)
-    surf.children[0].addEventListener("click", function (e) { e.preventDefault(); if (IS_REGISTRY) { switchTo(OTHER); } });
-    surf.children[1].addEventListener("click", function (e) { e.preventDefault(); if (!IS_REGISTRY) { switchTo(OTHER); } });
-    var user = el("div", { class: "sh-user" }, '<span class="sh-grade">G5</span><span>Benedict WILSON</span>');
+    surf.appendChild(surfLink("Charting"));
+    surf.appendChild(surfLink("Analyse"));
+    surf.appendChild(surfLink("Database"));
+    var _id = (typeof window !== "undefined" && window.SolarIdentity && window.SolarIdentity.get) ? window.SolarIdentity.get() : { grade: "G5", name: "Analyst" };
+    var user = el("div", { class: "sh-user" }, '<span class="sh-grade">' + escHtml(_id.grade) + '</span><span>' + escHtml(_id.name) + '</span>');
     idRow.appendChild(wm); idRow.appendChild(surf);
     // Shared "Case: <name>" context — the SAME case reads on BOTH tools (one
     // product). The workbench re-parents its editable #case-name input into this

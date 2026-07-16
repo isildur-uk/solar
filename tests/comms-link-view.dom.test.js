@@ -10,6 +10,8 @@ var dom = new JSDOM("<!doctype html><html><head></head><body><div id='host'></di
 global.window = dom.window; global.document = dom.window.document;
 dom.window.RegistryCommsData = require("../js/core/comms-data.js");
 dom.window.RegistryCommsLink = require("../js/core/comms-link.js");
+dom.window.SolarCase = require("../js/core/solar-case.js");
+dom.window.CRCommsCase = require("../js/core/comms-case.js");
 var V = require("../analyse/comms-link-view.js");
 
 var cA = { id: "LTN-A", name: "Luton Town Hall", lat: 51.8790, lon: -0.4200 };
@@ -39,6 +41,12 @@ V._loadDemo();
 ok("demo loads 4 subjects (3 phones + 1 vehicle)", d.querySelectorAll(".cl-subj").length === 4);
 ok("demo co-location table includes the vehicle", /Vehicle LD12 ABC/.test(d.getElementById("cl-coloc-table").textContent));
 ok("demo still shows a shared phone contact", /07700900999/.test(d.getElementById("cl-pane-contacts").textContent));
+
+/* P5: Add-to-case writes the cross-file findings into the shared spine */
+dom.window.SolarCase._reset();
+var ab = dom.window.document.getElementById("cl-addcase"); if (ab) ab.click();
+ok("cross-file Add-to-case writes subjects to the shared spine", dom.window.SolarCase.stats().entities > 0);
+ok("cross-file Add-to-case writes links (incl co-location) to the shared spine", dom.window.SolarCase.stats().links >= 1);
 
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

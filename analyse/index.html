@@ -6,14 +6,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Analyse — SOLAR</title>
 <link rel="stylesheet" href="../css/lib/leaflet.css">
-<link rel="stylesheet" href="../css/shell.css?v=20260714o">
+<!-- Full workbench design-system stack (parity with charting/database): tokens, palette, polish, chrome. -->
+<link rel="stylesheet" href="../css/app.css?v=20260716a">
+<link rel="stylesheet" href="../css/tokens.css?v=20260716a">
+<link rel="stylesheet" href="../css/mobile.css?v=20260716a">
+<link rel="stylesheet" href="../css/enhance.css?v=20260716a">
+<link rel="stylesheet" href="../css/redesign.css?v=20260716a">
+<link rel="stylesheet" href="../css/shell.css?v=20260716a">
 <style>
+  /* Structural only — all colour/type comes from the design tokens above. */
   html,body{height:100%;margin:0}
-  body{display:flex;flex-direction:column}
+  body{display:flex;flex-direction:column;background:var(--bg)}
+  /* Chrome sits above the fixed cosmic ground (js/ui/cosmos.js, z-index:0). */
+  .marking-banner,header.masthead,.analyse-main{position:relative;z-index:1}
   .analyse-main{flex:1;min-height:0;display:flex;flex-direction:column}
-  .tool-switch{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--line,#26303f);background:var(--panel,#0e141f)}
-  .tool-switch .btn{background:#1a2434;color:#dce4f0;border:1px solid #2c3a4e;border-radius:7px;padding:6px 12px;cursor:pointer;font:inherit}
-  .tool-switch .btn.btn-on{border-color:#e8a13a;color:#e8a13a}
+  .tool-switch{display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line)}
   .tool-host{flex:1;min-height:0;display:flex}
   .tool-host[hidden]{display:none}
   .tool-host > *{flex:1;min-height:0}
@@ -50,6 +57,14 @@
 <script src="../js/core/comms-link.js"></script>
 <script src="../js/core/comms-pattern.js"></script>
 <script src="../js/core/comms-journeys.js"></script>
+<!-- Shared case spine + Analyse->case bridge -->
+<script src="../js/core/solar-case.js"></script>
+<script src="../js/core/comms-case.js"></script>
+<!-- Shared identity + shared shell top bar (one product, three functions) -->
+<script src="../js/ui/identity.js"></script>
+<script src="./shell-lite.js"></script>
+<!-- Registry-parity ambient cosmic ground (fixed layer behind the chrome) -->
+<script src="../js/ui/cosmos.js"></script>
 <!-- Vendored libs (offline, no CDN except the Leaflet basemap tiles) -->
 <script src="../js/lib/leaflet.js"></script>
 <script src="../js/lib/xlsx.full.min.js"></script>
@@ -59,6 +74,8 @@
 <script>
   (function(){
     function boot(){
+      var u = document.querySelector(".masthead-user");
+      if (u && window.SolarIdentity) { u.textContent = window.SolarIdentity.label(); u.title = "Your identity (shared across SOLAR)"; }
       var cdr = document.getElementById("tool-cdr"), link = document.getElementById("tool-link");
       if (cdr && window.RegistryCommsView) window.RegistryCommsView.mount(cdr);
       if (link && window.RegistryCommsLinkView) window.RegistryCommsLinkView.mount(link);

@@ -31,6 +31,7 @@
   var DEFAULT_TYPES = ["person", "organization", "location", "address", "vehicle", "money", "phone", "email", "date", "ip"];
 
   var _runtime = null;        // injected: function(text, types) -> Promise<[{text,start,end,label,score}]>
+  var _added = [];            // additional composed runtimes (e.g. wink, gazetteer)
   var _seq = 0;
 
   function lc(x) { return String(x == null ? "" : x).toLowerCase().trim(); }
@@ -84,19 +85,29 @@
   /* Inject the inference backend (so a vendored model can be wired without
    * editing this file). fn(text, types) must resolve to model spans. */
   function setRuntime(fn) { _runtime = (typeof fn === "function") ? fn : null; }
+  /* Compose an ADDITIONAL recall source (wink, gazetteer, …). All runtimes run
+   * and their spans concatenate before mergeInto (rules still win on overlap). */
+  function addRuntime(fn) { if (typeof fn === "function") _added.push(fn); }
 
-  function available() { return !!_runtime; }
+  function available() { return !!_runtime || _added.length > 0; }
 
-  /* Async: run the injected model. Returns [] if no runtime or on any error
-   * (smart mode must never break the rule pipeline). */
-  function extract(text, opts) {
-    opts = opts || {};
-    if (!_runtime) return Promise.resolve([]);
+  function runOne(fn, text, types) {
     try {
-      return Promise.resolve(_runtime(String(text || ""), opts.types || DEFAULT_TYPES))
+      return Promise.resolve(fn(text, types))
         .then(function (spans) { return Array.isArray(spans) ? spans : []; })
         .catch(function () { return []; });
     } catch (e) { return Promise.resolve([]); }
+  }
+  /* Async: run every injected runtime. Returns [] if none or on any error
+   * (smart mode must never break the rule pipeline). */
+  function extract(text, opts) {
+    opts = opts || {};
+    var fns = (_runtime ? [_runtime] : []).concat(_added);
+    if (!fns.length) return Promise.resolve([]);
+    var t = String(text || ""), types = opts.types || DEFAULT_TYPES;
+    return Promise.all(fns.map(function (fn) { return runOne(fn, t, types); }))
+      .then(function (results) { var out = []; results.forEach(function (r) { out = out.concat(r); }); return out; })
+      .catch(function () { return []; });
   }
 
   var CRSmartNER = {
@@ -107,6 +118,7 @@
     DEFAULT_TYPES: DEFAULT_TYPES,
     mergeInto: mergeInto,
     setRuntime: setRuntime,
+    addRuntime: addRuntime,
     available: available,
     extract: extract
   };
