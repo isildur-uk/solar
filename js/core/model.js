@@ -13,7 +13,7 @@
   var ENTITY_TYPES = {
     person:       { label: "Person",        i2: "Person",        sem: "Person",          colour: "#6ea8d8", icon: "P" },
     phone:        { label: "Telephone",     i2: "Telephone",     sem: "Phone",           colour: "#79c98f", icon: "T" },
-    email:        { label: "Email Address", i2: "Email Address", sem: "",                colour: "#cf9285", icon: "@" },
+    email:        { label: "Email Address", i2: "Email Address", sem: "Email Address",   colour: "#cf9285", icon: "@" },
     address:      { label: "Address",       i2: "Address",       sem: "Mailing Address", colour: "#9aa5b1", icon: "A" },
     location:     { label: "Location",      i2: "Location",      sem: "Location",        colour: "#5fc4c0", icon: "L" },
     organisation: { label: "Organisation",  i2: "Organization",  sem: "Organization",    colour: "#d8a16e", icon: "O" },  /* UK label; i2/sem stay US for interop */
@@ -23,8 +23,8 @@
     account:      { label: "Bank Account",  i2: "Bank Account",  sem: "Bank Account",    colour: "#d87f9b", icon: "£" },
     date:         { label: "Date",          i2: "Event",         sem: "Event",           colour: "#8d99ae", icon: "D" },
     money:        { label: "Cash",          i2: "Cash",          sem: "",                colour: "#a8c97f", icon: "£" },
-    ip:           { label: "IP Address",    i2: "IP Address",    sem: "",                colour: "#7fb0c9", icon: "#" },
-    document:     { label: "Document",      i2: "Document",      sem: "",                colour: "#b1a08d", icon: "■" },
+    ip:           { label: "IP Address",    i2: "IP Address",    sem: "IP Address",      colour: "#7fb0c9", icon: "#" },
+    document:     { label: "Document",      i2: "Document",      sem: "Document",        colour: "#b1a08d", icon: "■" },
     event:        { label: "Event",         i2: "Event",         sem: "Event",           colour: "#e0995e", icon: "E" },
     note:         { label: "Text Block",    i2: "Text Block",    sem: "",                colour: "#d9c87a", icon: "N" }
   };

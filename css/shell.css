@@ -12,6 +12,31 @@
 #solar-shell {
   position: sticky; top: 0; z-index: 120; font-family: var(--sans);
   background: var(--bg);
+  isolation: isolate;                 /* own stacking context for the cosmic layer */
+}
+/* Cosmic backdrop behind the chrome — a faint nebula wash + a few star specks,
+   so the vibrancy-backed menu bar has real celestial content to FROST through
+   (otherwise backdrop-filter just blurs a flat fill and the macOS-material read
+   is lost). Kept subtle so Row-1 text stays crisp and AA. Sits behind the bars. */
+#solar-shell::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(90% 140% at 22% 120%, rgba(142,162,255,0.26), transparent 60%),
+    radial-gradient(90% 150% at 84% 130%, rgba(179,157,255,0.22), transparent 62%),
+    radial-gradient(70% 120% at 55% -30%, rgba(120,140,240,0.14), transparent 65%),
+    radial-gradient(1px 1px at 22% 62%, rgba(255,255,255,0.55) 50%, transparent 51%),
+    radial-gradient(1px 1px at 67% 44%, rgba(200,220,255,0.5) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 47% 74%, rgba(255,255,255,0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 82% 58%, rgba(255,235,200,0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 40%, rgba(255,255,255,0.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 37% 52%, rgba(200,220,255,0.4) 50%, transparent 51%),
+    var(--bg);
+}
+html[data-theme="light"] #solar-shell::before {
+  background:
+    radial-gradient(90% 140% at 22% 120%, rgba(74,91,214,0.14), transparent 60%),
+    radial-gradient(90% 150% at 84% 130%, rgba(120,110,220,0.12), transparent 62%),
+    var(--bg);
 }
 
 /* ---- Row 1: identity strip (dark ground) ---- */
@@ -82,12 +107,19 @@ html[data-theme="light"] .sh-surf-btn[aria-current="true"] { background: rgba(74
    echoes the macOS menu-bar separation. */
 .sh-menubar {
   display: flex; align-items: center; gap: 2px;
+  /* Genuine macOS vibrancy: a markedly TRANSLUCENT base (0.30, not 0.58) so the
+     cosmic layer behind reads through, plus a stronger periwinkle wash and a
+     heavier blur+saturate so what shows through is FROSTED celestial material —
+     not a flat near-opaque fill. A soft inner top sheen mimics the light-catching
+     edge of the macOS bar. */
   background:
-    linear-gradient(180deg, rgba(142,162,255,0.05), rgba(142,162,255,0.02)),
-    rgba(14,14,12,0.58);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6);
-  border-top: 1px solid rgba(255,255,255,0.04);
-  border-bottom: 1px solid var(--line);
+    linear-gradient(180deg, rgba(142,162,255,0.14), rgba(142,162,255,0.05) 60%, rgba(179,157,255,0.06)),
+    rgba(12,13,16,0.30);
+  -webkit-backdrop-filter: blur(22px) saturate(2.0) brightness(1.05);
+          backdrop-filter: blur(22px) saturate(2.0) brightness(1.05);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
   /* z-index lifts the whole Row-2 layer (and its absolute mega dropdown) above
      the Row-3 context bar, which follows in the DOM — so an open mega-menu is
      never underlapped by the breadcrumb/search row. */
@@ -95,9 +127,17 @@ html[data-theme="light"] .sh-surf-btn[aria-current="true"] { background: rgba(74
 }
 html[data-theme="light"] .sh-menubar {
   background:
-    linear-gradient(180deg, rgba(74,91,214,0.05), rgba(74,91,214,0.02)),
-    rgba(251,248,239,0.62);
-  border-top: 1px solid rgba(255,255,255,0.5);
+    linear-gradient(180deg, rgba(74,91,214,0.12), rgba(74,91,214,0.04) 60%, rgba(120,110,220,0.05)),
+    rgba(251,248,239,0.36);
+  border-top: 1px solid rgba(255,255,255,0.6);
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+/* graceful fallback where backdrop-filter is unsupported: fall back to a more
+   opaque base so text stays legible (no see-through onto raw page). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sh-menubar { background: linear-gradient(180deg, rgba(142,162,255,0.10), rgba(142,162,255,0.03)), rgba(14,14,12,0.86); }
+  html[data-theme="light"] .sh-menubar { background: linear-gradient(180deg, rgba(74,91,214,0.08), rgba(74,91,214,0.02)), rgba(251,248,239,0.9); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .sh-tab > summary, .sh-icobtn, .sh-kbd-hint { transition: background .16s ease, color .16s ease, box-shadow .16s ease; }
@@ -121,18 +161,23 @@ html[data-theme="light"] .sh-menubar {
   text-transform: uppercase; letter-spacing: .02em;
 }
 .sh-tab > summary::-webkit-details-marker { display: none; }
-/* macOS-style HOVER PILL: a pale rounded highlight behind the label on hover. */
-.sh-tab > summary:hover { color: var(--accent); background: rgba(142,162,255,0.10); border-radius: 7px; }
-/* OPEN PILL: while the mega is open the label keeps a stronger periwinkle pill
-   with a faint inner ring, so the active menu reads as "held down" (image1). */
+/* macOS-style HOVER PILL: a clear rounded periwinkle highlight behind the label
+   on hover (brighter than before so it reads as the macOS-bar hover pill). */
+.sh-tab > summary:hover { color: var(--accent); background: rgba(142,162,255,0.18); border-radius: 7px; }
+/* OPEN PILL: while the mega is open the label gets a SOLID accent pill with dark
+   ink — the "held-down / selected" state from image1 (its blue highlight row),
+   cosmic-recoloured. Unmistakably the active menu. */
 .sh-tab[open] > summary {
-  color: var(--accent); background: rgba(142,162,255,0.16); border-radius: 7px;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
+  color: #0f1116;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, white), var(--accent));
+  border-radius: 7px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.4);
 }
-html[data-theme="light"] .sh-tab > summary:hover { background: rgba(74,91,214,0.09); }
+html[data-theme="light"] .sh-tab > summary:hover { background: rgba(74,91,214,0.14); }
 html[data-theme="light"] .sh-tab[open] > summary {
-  background: rgba(74,91,214,0.14);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+  color: #ffffff;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, white), var(--accent));
+  box-shadow: 0 1px 4px rgba(31,41,92,0.28), inset 0 1px 0 rgba(255,255,255,0.35);
 }
 .sh-tab > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 

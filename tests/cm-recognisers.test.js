@@ -2,7 +2,7 @@
  *
  * Run:  node Solar/tests/cm-recognisers.test.js
  * Maker != checker: this scores cm-recognisers.js against the hand-labelled
- * oracle (test-data/cm-acid-corpus/ORACLE-ground-truth.md). It prints a per-case
+ * oracle (test_data/cm-acid-corpus/ORACLE-ground-truth.md). It prints a per-case
  * PASS/FAIL gap report and exits non-zero if any hard assertion fails.
  *
  * STATUS: authored alongside cm-recognisers.js while the sandbox was down; this is

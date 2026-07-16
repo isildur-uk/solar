@@ -413,6 +413,7 @@
 
   function buildANX() {
     var TYPES = window.CRModel.ENTITY_TYPES;
+    var St = window.CRStandards;
     var x = '<?xml version="1.0" encoding="UTF-8"?>\n<Chart IdReferenceLinking="false">\n <ChartItemCollection>\n';
     store.entities.forEach(function (e) {
       var p = e.provenance || {};
@@ -433,12 +434,26 @@
         "   </AttributeCollection>\n  </ChartItem>\n";
     });
     store.links.forEach(function (l) {
-      var strength = l.negated ? "Tentative" : (ANX_STRENGTH[l.confidence] || "Unconfirmed");
+      // i2 link type + semantic type from CRStandards (links are stamped by the
+      // model, but recompute from LINK_META as a fallback for legacy data).
+      var lm = (St && St.linkMeta) ? St.linkMeta(l.type) : {};
+      var linkI2 = l.i2 || lm.i2 || "Link";
+      var linkSem = l.sem || lm.sem || "Association";
+      // i2 Playbook: line strength follows SOURCE reliability where a link
+      // carries a provenance grade; else fall back to internal confidence.
+      var strength = l.negated ? "Tentative"
+        : ((l.provenance && l.provenance.source && St && St.lineStrengthFromGrade)
+            ? St.lineStrengthFromGrade(l.provenance.source).strength
+            : (ANX_STRENGTH[l.confidence] || "Unconfirmed"));
       x += '  <ChartItem Label="' + xmlEsc(l.type.replace(/_/g, " ") + (l.dateISO ? " " + l.dateISO : "") + (l.negated ? " (denied)" : "")) + '">\n' +
-        '   <Link End1Id="' + xmlEsc(l.from) + '" End2Id="' + xmlEsc(l.to) + '">\n' +
+        '   <Link End1Id="' + xmlEsc(l.from) + '" End2Id="' + xmlEsc(l.to) + '" Type="' + xmlEsc(linkI2) + '">\n' +
         '    <LinkStyle ArrowStyle="ArrowOnHead" Strength="' + strength + '" LineStyle="' +
         (strength === "Confirmed" ? "Solid" : (strength === "Unconfirmed" ? "Dashed" : "Dotted")) + '"/>\n' +
-        "   </Link>\n  </ChartItem>\n";
+        "   </Link>\n" +
+        "   <AttributeCollection>\n" +
+        '    <Attribute AttributeClass="SemanticType" Value="' + xmlEsc(linkSem) + '"/>\n' +
+        "   </AttributeCollection>\n" +
+        "  </ChartItem>\n";
     });
     x += " </ChartItemCollection>\n</Chart>\n";
     return x;

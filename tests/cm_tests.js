@@ -100,6 +100,21 @@ test("LINE: high -> Confirmed solid", function () { var l = S.lineStrength("high
 test("LINE: med -> Unconfirmed dashed", function () { eq(S.lineStrength("med").strength, "Unconfirmed"); });
 test("LINE: low -> Tentative dotted", function () { eq(S.lineStrength("low").strength, "Tentative"); });
 
+/* i2 Playbook: line strength derived from the 3x5x2 SOURCE evaluation. */
+test("GRADE-LINE: source 1 (Reliable) -> Confirmed solid", function () {
+  var l = S.lineStrengthFromGrade("1"); eq(l.strength, "Confirmed"); no(l.dash);
+});
+test("GRADE-LINE: source 2 (Untested) -> Unconfirmed dashed", function () {
+  var l = S.lineStrengthFromGrade("2"); eq(l.strength, "Unconfirmed"); ok(l.dash);
+});
+test("GRADE-LINE: source 3 (Not reliable) -> Tentative dotted", function () {
+  var l = S.lineStrengthFromGrade("3"); eq(l.strength, "Tentative"); ok(l.dash);
+});
+test("GRADE-LINE: unknown/blank grade falls back to Unconfirmed", function () {
+  eq(S.lineStrengthFromGrade("").strength, "Unconfirmed");
+  eq(S.lineStrengthFromGrade("9").strength, "Unconfirmed");
+});
+
 /* ---------------- RECOGNISED-TERM DETECTION ---------------- */
 test("DETECT: status wanted + on bail", function () {
   var codes = S.detectStatus("the subject is currently wanted and on bail").map(function (x) { return x.code; });

@@ -901,10 +901,17 @@
           + '</div>'
         : '';
       var _SM = (typeof window!=='undefined' && window.RegistrySourceMeta) ? window.RegistrySourceMeta : null;
+      // Derive the S/I column legends from the authoritative grading module
+      // (College of Policing 3x5x2) so the analyst-facing tooltips can never
+      // drift from CORE. Escaped at render like every other value.
+      var _srcLegend = Object.keys(G.SOURCE_EVAL).map(function (k) { return k + ' ' + G.SOURCE_EVAL[k]; }).join(' · ');
+      var _assessLegend = Object.keys(G.ASSESSMENT).map(function (k) { return k + ' ' + G.ASSESSMENT[k]; }).join(' · ');
+      var S_TIP = 'S — source evaluation (1–3): how reliable the source is. ' + _srcLegend + '.';
+      var I_TIP = 'I — intelligence evaluation (A–E): confidence in the information itself. ' + _assessLegend + '.';
       var irItems = items.length
         ? '<table class="ir-items"><thead><tr><th class="c-no">Item</th><th>Report</th><th class="c-src">Source</th>'
-          + '<th class="c-si" data-tip="S — source evaluation (1–5): how reliable the source is. 1 Always reliable · 2 Mostly reliable · 3 Sometimes reliable · 4 Unreliable · 5 Untested.">S</th>'
-          + '<th class="c-si" data-tip="I — intelligence evaluation (A–E): confidence in the information itself. A Known true · B Known personally to source · C Not known personally but corroborated · D Cannot be judged · E Suspected false.">I</th></tr></thead><tbody>'
+          + '<th class="c-si" data-tip="' + esc(S_TIP) + '">S</th>'
+          + '<th class="c-si" data-tip="' + esc(I_TIP) + '">I</th></tr></thead><tbody>'
           + items.map(function(it,i){ var col=_SM?_SM.colour(it.sourceType):'#8d99ae'; var gr=esc(it.sourceEval)+esc(it.intelEval), hd=esc(h.code||'P');
               var srcTip=_SM?(_SM.describe(it.sourceType).text||''):'';
               return '<tr><td class="c-no">'+(i+1)+'</td>'

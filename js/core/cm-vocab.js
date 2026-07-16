@@ -40,7 +40,11 @@ CRVocab.PERSON_SUFFIXES = [
  * join to the surname for CM caps handling. EXTENSIBLE. */
 CRVocab.NAME_PARTICLES = [
   "de", "del", "della", "der", "van", "von", "da", "di", "du", "la", "le",
-  "los", "las", "bin", "ibn", "al", "el", "san", "santa", "st", "ter", "ten"
+  "los", "las", "bin", "ibn", "al", "el", "san", "santa", "st", "ter", "ten",
+  // Portuguese "of / of the" (companions to the "da" already handled)
+  "do", "dos", "das",
+  // Arabic / North-African patronymics "son / daughter of" (companions to bin/ibn)
+  "bint", "ben", "ould", "wuld"
 ];
 
 

@@ -318,8 +318,8 @@
     });
 
     // PNC — identity spine (always); ATLAS CM — identity record (always)
-    seq.push({src:"PNC", t:"The Police National Computer confirms the subject as "+nomLabel+", "+dobF+", "+pncF+" ("+croF+")."+(PREVOFFENCE[key]?" "+nom.s+" has previous convictions for "+PREVOFFENCE[key]+".":"")+(marker?" "+aOrAn(marker)+" "+marker+" warning marker is held.":""), se:"1", ie:"A"});
-    seq.push({src:"ATLAS CM", t:"ATLAS CM holds a nominal record for "+nomLabel+", "+dobF+", "+ninoF+", "+pptF+(home?", last known address "+home:"")+".", se:"1", ie:"A"});
+    seq.push({src:"PNC", t:nomLabel+", "+dobF+", "+pncF+" ("+croF+")."+(PREVOFFENCE[key]?" "+nom.s+" has previous convictions for "+PREVOFFENCE[key]+".":"")+(marker?" "+aOrAn(marker)+" "+marker+" warning marker is held.":""), se:"1", ie:"A"});
+    seq.push({src:"ATLAS CM", t:nomLabel+", "+dobF+", "+ninoF+", "+pptF+(home?", last known address "+home:"")+".", se:"1", ie:"A"});
 
     // CREDIT REFERENCE — the headline de-boilerplate: variable provider + variable field mix
     if(chance(rnd,0.72)){
@@ -334,7 +334,7 @@
         else if(fk==="card"){ bits.push("a payment card "+cardFor(rnd)); }
         else if(fk==="assoc"){ bits.push("a financial association with "+associateFor(uid*3+bi+1)); }
       }
-      if(bits.length) seq.push({src:prov, t:prov+" data for "+nomLabel+" returns "+listJoin(bits)+".", se:"1", ie:"B"});
+      if(bits.length) seq.push({src:prov, t:nomLabel+" is associated with "+listJoin(bits)+".", se:"1", ie:"B"});
     }
 
     // IPA Comms Data — kit phones + sometimes an extra handset/IMEI
@@ -342,7 +342,7 @@
     if(chance(rnd,0.25)){ seq.push({src:"IPA Comms Data", t:"Handset IMEI "+imeiFor(rnd)+" is associated with "+nomLabel+".", se:"1", ie:"A"}); }
 
     // SAR — kit accounts + variable linked card
-    accounts.forEach(function(a){ var sc=a.attrs.sortCode?(" (SC "+a.attrs.sortCode+")"):""; var cardBit=chance(rnd,0.4)?(" A linked card "+cardFor(rnd)+" was used to withdraw funds."):""; seq.push({src:"SAR", t:"A suspicious activity report discloses that account AC "+a.attrs.accountNumber+sc+", held by "+nomLabel+", received "+amountFor(uid)+" across "+countFor(uid)+" cash deposits between "+dback+" and "+date+", with funds onward-transferred to "+assoc2+"."+cardBit, se:"1", ie:"A"}); });
+    accounts.forEach(function(a){ var sc=a.attrs.sortCode?(" (SC "+a.attrs.sortCode+")"):""; var cardBit=chance(rnd,0.4)?(" A linked card "+cardFor(rnd)+" was used to withdraw funds."):""; seq.push({src:"SAR", t:"Account AC "+a.attrs.accountNumber+sc+", held by "+nomLabel+", received "+amountFor(uid)+" across "+countFor(uid)+" cash deposits between "+dback+" and "+date+", with funds onward-transferred to "+assoc2+"."+cardBit, se:"1", ie:"A"}); });
 
     // Companies House — directorships
     orgs.forEach(function(o){ seq.push({src:"Companies House", t:nomLabel+" is recorded as a director of "+o.label+(o.attrs&&o.attrs.companyNumber?", COMPANIES HOUSE "+o.attrs.companyNumber:"")+", appointed "+fmtDMY(shiftDays(collDt,-(180+uid%600)))+".", se:"1", ie:"A"}); });
@@ -350,14 +350,14 @@
     // PND / Land Registry — variable presence + provider
     if(home && chance(rnd,0.6)){
       var aSrc=pick(rnd,["PND","Land Registry","Experian"]);
-      var aT=(aSrc==="PND")?("The Police National Database records "+nomLabel+" at "+home+", in association with "+associate+".")
-            :(aSrc==="Land Registry")?("Land Registry records "+nomLabel+" as proprietor of "+home+".")
-            :("Credit reference data links "+nomLabel+" to "+home+".");
+      var aT=(aSrc==="PND")?(nomLabel+" resides at "+home+", in association with "+associate+".")
+            :(aSrc==="Land Registry")?(nomLabel+" is the proprietor of "+home+".")
+            :(nomLabel+" is linked to "+home+".");
       seq.push({src:aSrc, t:aT, se:"1", ie:"A"});
     }
 
     // travel
-    docs.forEach(function(dq){ seq.push({src:"NBTC Historical Travel", t:"NBTC records show "+nomLabel+" entered the UK at "+place+" on "+date+" presenting "+dq.label+".", se:"1", ie:"A"}); });
+    docs.forEach(function(dq){ seq.push({src:"NBTC Historical Travel", t:nomLabel+" entered the UK at "+place+" on "+date+" presenting "+dq.label+".", se:"1", ie:"A"}); });
 
     // cyber from kit
     cybers.forEach(function(cy){
@@ -372,7 +372,7 @@
       if(kind==="address_mismatch" && !home) kind="noncm_format";
       if(kind==="dob_mismatch"){
         var wd=transposeDob(nom.d);
-        seq.push({src:pick(rnd,["Experian","Equifax","GBG"]), t:"Credit reference data for "+nomLabel+" records a date of birth of "+wd+", which differs from the PNC record.", se:"2", ie:"C"});
+        seq.push({src:pick(rnd,["Experian","Equifax","GBG"]), t:nomLabel+" is recorded with a date of birth of "+wd+", which differs from the primary identity record.", se:"2", ie:"C"});
         discreps.push({kind:kind, value:wd, note:"DOB differs from PNC "+nom.d});
       } else if(kind==="alias"){
         var al=nom.f+" "+pick(rnd,SURNAMES).toUpperCase();
@@ -382,7 +382,7 @@
         discreps.push({kind:kind, value:al, note:"recorded AKA"});
       } else if(kind==="address_mismatch"){
         var pa=prevAddrFor(rnd);
-        seq.push({src:pick(rnd,["Experian","Land Registry","PND"]), t:"A further current address for "+nomLabel+" is recorded as "+pa+", inconsistent with the address held by ATLAS CM.", se:"2", ie:"C"});
+        seq.push({src:pick(rnd,["Experian","Land Registry","PND"]), t:"A further current address for "+nomLabel+" is recorded as "+pa+", inconsistent with the address previously held.", se:"2", ie:"C"});
         discreps.push({kind:kind, value:pa, note:"address differs from ATLAS CM held address"});
       } else {
         var variant=pick(rnd,["dob","phone","nino"]);

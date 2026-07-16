@@ -532,11 +532,15 @@ S.SOURCE_EVAL = {
   "2": "Untested",
   "3": "Not reliable"
 };
+/* Intelligence (information) evaluation — the "5" of 3x5x2, using the
+ * authoritative College of Policing APP wording ("Completing an intelligence
+ * report", 3x5x2 process). This REPLACES the legacy NIM 5x5x5 phrasing.
+ * Keys A-E and the API are unchanged; only the human wording is corrected. */
 S.ASSESSMENT = {
-  "A": "Known to be true without reservation",
-  "B": "Known personally to source but not to officer",
-  "C": "Not known personally to source but corroborated",
-  "D": "Cannot be judged",
+  "A": "Known directly",
+  "B": "Known indirectly but corroborated",
+  "C": "Known indirectly",
+  "D": "Not known",
   "E": "Suspected to be false"
 };
 S.HANDLING = {
@@ -583,6 +587,19 @@ var LINE_STRENGTH = {
 function lineStrength(conf) { return LINE_STRENGTH[lc(conf)] || LINE_STRENGTH.med; }
 S.lineStrength = lineStrength;
 S.LINE_STRENGTH = LINE_STRENGTH;
+
+/* i2 Import Playbook mandate: line strength = SOURCE reliability, not internal
+ * confidence. Map the 3x5x2 source evaluation (1 Reliable / 2 Untested /
+ * 3 Not reliable) to the same LINE_STRENGTH tokens the ANX writer expects
+ * (1 -> Confirmed/solid, 2 -> Unconfirmed/dashed, 3 -> Tentative/dotted).
+ * Dependency-free; accepts "1"/"2"/"3" or a leading-graded string. Unknown
+ * grades fall back to Unconfirmed (med), matching gradeCode's default. */
+var GRADE_TO_STRENGTH = { "1": "high", "2": "med", "3": "low" };
+function lineStrengthFromGrade(sourceEval) {
+  var key = GRADE_TO_STRENGTH[str(sourceEval).replace(/^\[/, "").slice(0, 1)];
+  return LINE_STRENGTH[key] || LINE_STRENGTH.med;
+}
+S.lineStrengthFromGrade = lineStrengthFromGrade;
 
 /* ================================================================== */
 /*  RECOGNISED-TERM DETECTION (drives chart status/warning badges)      */
@@ -813,3 +830,4 @@ S.vrmFormatValid = function (raw) {
 
 if (typeof module !== "undefined" && module.exports) { module.exports = S; }
 if (typeof window !== "undefined") { window.CRStandards = S; }
+/* 3x5x2 intelligence-evaluation wording aligned to College of Policing APP (ADR 2026-07-15). */

@@ -217,7 +217,12 @@
         ltype,
         l.sem || (lm && lm.sem) || "",
         dirMap[l.direction] || "None",
-        l.negated ? "Tentative" : (STRENGTH[l.confidence] || "Unconfirmed"),
+        // i2 Playbook: line strength follows SOURCE reliability where a link
+        // carries a provenance grade; else fall back to internal confidence.
+        l.negated ? "Tentative"
+          : ((l.provenance && l.provenance.source && St && St.lineStrengthFromGrade)
+              ? St.lineStrengthFromGrade(l.provenance.source).strength
+              : (STRENGTH[l.confidence] || "Unconfirmed")),
         l.dateISO ? F.ddmmyyyy(l.dateISO) : "",
         ltype + (l.amount ? " " + l.amount : "") + (l.negated ? " (denied)" : ""),
         l.sentence || ""

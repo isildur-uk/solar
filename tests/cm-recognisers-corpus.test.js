@@ -4,7 +4,7 @@
  * capitalisation false-positive persons are dropped. Run: node cm-recognisers-corpus.test.js */
 "use strict";
 var X = require("../js/core/extract.js"), fs = require("fs"), path = require("path");
-var DIR = path.join(__dirname, "../../test-data/cm-acid-corpus");
+var DIR = path.join(__dirname, "../../test_data/cm-acid-corpus");
 var pass = 0, fail = 0;
 function res(f, dir) { return X.extract(fs.readFileSync(path.join(dir || DIR, f), "utf8")); }
 function ok(name, c) { if (c) pass++; else { fail++; console.log("  FAIL " + name); } }
@@ -52,7 +52,7 @@ ok("A4 keeps real person AKINFENWA", !!personWith(A4, "AKINFENWA"));
 ok("A5 has a phone", A5.entities.some(function (e) { return e.type === "phone"; }));
 
 /* COMPREHENSIVENESS on the real narrative report (SAMPLE-IR-Geoff-Baines) */
-var B = res("SAMPLE-IR-Geoff-Baines.txt", path.join(__dirname, "../../test-data"));
+var B = res("SAMPLE-IR-Geoff-Baines.txt", path.join(__dirname, "../../test_data"));
 ok("Baines: grading captured (2C/P)", B.grading && B.grading.source === "2" && B.grading.handling === "P");
 ok("Baines: operation captured (SOLAR DAWN)", /SOLAR DAWN/.test(B.operation || ""));
 ok("Baines: ASHTON CREW is an organisation node", B.entities.some(function (e) { return e.type === "organisation" && /ASHTON CREW/.test(e.label); }));

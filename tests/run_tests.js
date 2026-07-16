@@ -679,6 +679,17 @@ test("MODEL: ENTITY_TYPES and LINK_TYPES exported", function () {
   assert(Mdl.LINK_TYPES.length > 0, "LINK_TYPES should be non-empty");
 });
 
+test("MODEL: i2 SemanticType present for email/ip/document", function () {
+  var ET = Mdl.ENTITY_TYPES;
+  assertEquals(ET.email.sem, "Email Address", "email semantic type");
+  assertEquals(ET.ip.sem, "IP Address", "ip semantic type");
+  assertEquals(ET.document.sem, "Document", "document semantic type");
+  // guard against regression to blank
+  ["email", "ip", "document"].forEach(function (k) {
+    assert(ET[k].sem && ET[k].sem.length > 0, k + " sem must be non-empty");
+  });
+});
+
 test("MODEL: CaseStore constructor works", function () {
   var cs = new Mdl.CaseStore();
   assert(cs !== null && typeof cs === "object", "CaseStore constructor");

@@ -37,7 +37,8 @@
   var LINK_TYPES = {
     ASSOCIATE:"Associate of", FAMILY:"Family of", WORKS_FOR:"Works for", USES:"Uses",
     OWNS:"Owns", ACCOUNT_HOLDER:"Account holder", LIVES_AT:"Lives at", LOCATED_AT:"Located at",
-    CONTACTED:"Contacted", ALIAS:"Alias", USES_IDENTITY_OF:"Uses identity of", OTHER:"Other"
+    CONTACTED:"Contacted", DOCUMENT_OWNERSHIP:"Document Ownership",
+    ALIAS:"Alias", USES_IDENTITY_OF:"Uses identity of", OTHER:"Other"
   };
   var IDENTITY_LINKS = { ALIAS:true, USES_IDENTITY_OF:true };
 
@@ -110,9 +111,45 @@
     return { valid: errors.length===0, errors: errors };
   }
 
+  // ---- PND-share integrity rules (SME-flagged) ----------------------------
+  // Rule 1: a LINK may only be PND-shared when BOTH end-entities are PND-shared
+  //         ("Yes" and not an alias).
+  // Rule 2 (exception): an Official Document (passport / driving licence etc.)
+  //         is not PND-shared by default, but MAY be shared to PND when it is
+  //         tied to a person by a "Document Ownership" link — the document then
+  //         inherits shareability from the (shared) owner.
+  // Returns DATA only (no HTML). Does not change validateSI's pass/fail contract.
+  function entShare(e){ return !!(e && e.pndShare === "Yes" && !e.isAlias); }
+  function pndShareRules(ir){
+    var S = si(ir), byId = {}, warnings = [], out = [];
+    S.entities.forEach(function(e){ byId[e.id] = e; });
+    S.links.forEach(function(l, i){
+      var a = byId[l.from], b = byId[l.to];
+      var requested = (l.pndShare === "Yes");
+      var bothShare = entShare(a) && entShare(b);
+      // Official-Document -> PND exception via a Document Ownership link.
+      var docException = false;
+      if (l.type === "DOCUMENT_OWNERSHIP" && a && b){
+        var doc = (a.type === "official_document") ? a : (b.type === "official_document" ? b : null);
+        var other = (doc === a) ? b : (doc === b ? a : null);
+        if (doc && other && entShare(other)) docException = true;
+      }
+      var effective = (requested && (bothShare || docException)) ? "Yes" : "No";
+      var blockedReason = "";
+      if (requested && effective === "No"){
+        blockedReason = "Link cannot be PND-shared: both end-entities must be PND-shared (or an Official Document tied by a Document Ownership link).";
+        warnings.push({ field:"links["+i+"].pndShare", message: blockedReason });
+      }
+      out.push({ id:l.id, requested:requested, effective:effective, exception:docException, blockedReason:blockedReason });
+    });
+    return { warnings: warnings, links: out };
+  }
+  function pndShareWarnings(ir){ return pndShareRules(ir).warnings; }
+
   var api = { ENTITY_TYPES:ENTITY_TYPES, ROLES:ROLES, ROLE_REQUIRED_TYPES:ROLE_REQUIRED_TYPES, PND_SHARE:PND_SHARE,
     LINK_TYPES:LINK_TYPES, IDENTITY_LINKS:IDENTITY_LINKS, createEntity:createEntity, createLink:createLink,
-    addEntity:addEntity, addLink:addLink, validateSI:validateSI };
+    addEntity:addEntity, addLink:addLink, validateSI:validateSI,
+    pndShareRules:pndShareRules, pndShareWarnings:pndShareWarnings };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
   if (typeof window !== "undefined") { window.RegistrySI = api; }
 })();
