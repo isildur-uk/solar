@@ -63,5 +63,39 @@ ok("clean columns are de-bloated (15 analyst columns)", C.CLEAN_COLUMNS.length =
 ok("clean columns include lat/long", C.CLEAN_COLUMNS.some(function (c) { return c.key === "lat"; }) && C.CLEAN_COLUMNS.some(function (c) { return c.key === "lon"; }));
 ok("clean columns exclude data-volume bloat", !C.CLEAN_COLUMNS.some(function (c) { return /data volume/i.test(c.label); }));
 
+/* ---- 5. ANPR return (vehicle sightings; GPS "(Long, -Lat)") -------------- */
+var anprRows = [
+  ["VRM", "Date/Time", "Camera", "GPS", "Error Radius", "Make", "Model", "Colour", "MMC Record"],
+  ["AB12CDE", "01/09/2024 08:00:00", "LUTON CAM 1", "(-0.4200, -51.8790)", "25", "FORD", "FOCUS", "BLUE", "No"],
+  ["AB12CDE", "01/09/2024 09:30:00", "DUNSTABLE CAM 2", "(-0.5210, -51.8865)", "40", "FORD", "FOCUS", "BLUE", "Yes"]
+];
+var anpr = C.cleanFromRows(anprRows);
+ok("ANPR detected as anpr", anpr.format === "anpr");
+ok("ANPR columns are the vehicle set (VRM 2nd col)", anpr.columns[1].key === "vrm");
+ok("ANPR two sightings", anpr.events.length === 2);
+ok("ANPR VRM captured", anpr.events[0].vrm === "AB12CDE");
+ok("ANPR VRM used as subject identity", anpr.events[0].aParty === "AB12CDE");
+ok("ANPR type label", anpr.events[0].type === "ANPR sighting");
+ok("ANPR make/colour", anpr.events[0].make === "FORD" && anpr.events[0].colour === "BLUE");
+ok("ANPR camera -> cell name", anpr.events[0].cellName === "LUTON CAM 1");
+ok("ANPR error radius numeric", anpr.events[0].errorRadius === 25);
+ok("ANPR GPS (Long,-Lat) -> positive UK lat", near(anpr.events[0].lat, 51.8790, 0.001));
+ok("ANPR GPS longitude stays negative", near(anpr.events[0].lon, -0.4200, 0.001));
+var anprCsv = 'VRM,Date/Time,Camera,GPS,Make,Colour\r\n"XY19ZZZ","01/09/2024 07:15:00","LEAGRAVE CAM","(-0.42,-51.90)","BMW","BLACK"';
+var anpr2 = C.cleanFromRows(C.parseDelimited(anprCsv));
+ok("ANPR via CSV parse detected", anpr2.format === "anpr");
+ok("ANPR via CSV lat parsed (quoted GPS survived split)", near(anpr2.events[0].lat, 51.90, 0.01));
+
+/* ---- 6. i2 normalisation (ISO dates, hyphen-safe identifiers) ------------ */
+ok("i2 datetime -> ISO", C.i2DateTime("01/09/2024 08:15:22") === "2024-09-01 08:15:22");
+ok("i2 date-only -> ISO", C.i2DateTime("02/09/2024") === "2024-09-02");
+ok("i2 already-ISO passes through", C.i2DateTime("2024-09-01 08:15:00") === "2024-09-01 08:15:00");
+ok("i2 hyphen text->number becomes tilde", C.i2Ident("Smith-100") === "Smith~100");
+ok("i2 hyphen number->text becomes tilde", C.i2Ident("AB12-CDE") === "AB12~CDE");
+ok("i2 text-text hyphen kept", C.i2Ident("LTN-A") === "LTN-A");
+ok("i2Cell date key -> ISO", C.i2Cell("startDt", "01/09/2024 08:15:22") === "2024-09-01 08:15:22");
+ok("i2Cell identifier key -> hyphen-safe", C.i2Cell("vrm", "AB12-CDE") === "AB12~CDE");
+ok("i2Cell numeric key keeps its minus sign", C.i2Cell("lat", "-0.4200") === "-0.4200");
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

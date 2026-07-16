@@ -368,6 +368,10 @@ body.warping .content {
         <span class="pill-rim" aria-hidden="true"></span>
         <span class="pill-label">Database</span>
       </a>
+      <a class="pill" id="go-analyse" href="analyse/">
+        <span class="pill-rim" aria-hidden="true"></span>
+        <span class="pill-label">Analyse</span>
+      </a>
     </nav>
     <button class="enter" id="enter" type="button" aria-label="Open the charting workbench">
       <span class="enter-fx" aria-hidden="true"></span>
@@ -828,6 +832,14 @@ body.warping .content {
     dbLink.addEventListener("click", function (e) {
       e.preventDefault();
       detonate(dbLink.getAttribute("href") || "registry/");
+    });
+  }
+  /* ANALYSE (the second pill) → the Analyse workspace, same dissolve transition. */
+  var anLink = document.getElementById("go-analyse");
+  if (anLink) {
+    anLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      detonate(anLink.getAttribute("href") || "analyse/");
     });
   }
 

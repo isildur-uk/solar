@@ -1,0 +1,9 @@
+# Files that must NOT be uploaded as Cloudflare Workers static assets.
+# Workers static-assets (unlike Pages) does not auto-exclude these, so the
+# build was trying to upload node_modules — including a 122 MiB workerd binary
+# that exceeds the 25 MiB per-asset limit. Excluding it fixes the deploy.
+node_modules
+.git
+.wrangler
+.vercel
+*.log

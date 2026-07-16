@@ -10,8 +10,13 @@
 <style>
   html,body{height:100%;margin:0}
   body{display:flex;flex-direction:column}
-  .analyse-main{flex:1;min-height:0;display:flex}
-  .analyse-main > *{flex:1;min-height:0}
+  .analyse-main{flex:1;min-height:0;display:flex;flex-direction:column}
+  .tool-switch{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--line,#26303f);background:var(--panel,#0e141f)}
+  .tool-switch .btn{background:#1a2434;color:#dce4f0;border:1px solid #2c3a4e;border-radius:7px;padding:6px 12px;cursor:pointer;font:inherit}
+  .tool-switch .btn.btn-on{border-color:#e8a13a;color:#e8a13a}
+  .tool-host{flex:1;min-height:0;display:flex}
+  .tool-host[hidden]{display:none}
+  .tool-host > *{flex:1;min-height:0}
 </style>
 </head>
 <body>
@@ -28,23 +33,44 @@
   <span class="masthead-user" title="Analytical workspace">Analyse</span>
 </header>
 
-<main class="analyse-main" id="analyse-main" aria-live="polite"></main>
+<main class="analyse-main" id="analyse-main" aria-live="polite">
+  <div class="tool-switch" id="tool-switch">
+    <button class="btn btn-on" type="button" data-tool="cdr">CDR viewer</button>
+    <button class="btn" type="button" data-tool="link">Cross-file analysis</button>
+  </div>
+  <div class="tool-host" id="tool-cdr"></div>
+  <div class="tool-host" id="tool-link" hidden></div>
+</main>
 
 <!-- Data-standards layer (load first) -->
 <script src="../js/core/cm-vocab.js"></script>
 <script src="../js/core/cm-standards.js"></script>
-<!-- Comms-data CORE (parse / de-bloat / offline BNG->WGS84) -->
+<!-- Comms-data CORE (parse / de-bloat / offline BNG->WGS84) + cross-file analysis -->
 <script src="../js/core/comms-data.js"></script>
+<script src="../js/core/comms-link.js"></script>
+<script src="../js/core/comms-pattern.js"></script>
+<script src="../js/core/comms-journeys.js"></script>
 <!-- Vendored libs (offline, no CDN except the Leaflet basemap tiles) -->
 <script src="../js/lib/leaflet.js"></script>
 <script src="../js/lib/xlsx.full.min.js"></script>
-<!-- Analyse view -->
+<!-- Analyse views -->
 <script src="./comms-view.js"></script>
+<script src="./comms-link-view.js"></script>
 <script>
   (function(){
     function boot(){
-      var host = document.getElementById("analyse-main");
-      if (host && window.RegistryCommsView && window.RegistryCommsView.mount) window.RegistryCommsView.mount(host);
+      var cdr = document.getElementById("tool-cdr"), link = document.getElementById("tool-link");
+      if (cdr && window.RegistryCommsView) window.RegistryCommsView.mount(cdr);
+      if (link && window.RegistryCommsLinkView) window.RegistryCommsLinkView.mount(link);
+      var sw = document.getElementById("tool-switch");
+      if (sw) sw.addEventListener("click", function(e){
+        var b = e.target && e.target.closest ? e.target.closest("[data-tool]") : null; if (!b) return;
+        var tool = b.getAttribute("data-tool"), showCdr = tool === "cdr";
+        [].forEach.call(sw.querySelectorAll(".btn"), function(x){ x.classList.toggle("btn-on", x === b); });
+        if (cdr) cdr.toggleAttribute("hidden", !showCdr);
+        if (link) link.toggleAttribute("hidden", showCdr);
+        if (!showCdr && window.RegistryCommsLinkView && window.RegistryCommsLinkView.refresh) window.RegistryCommsLinkView.refresh();
+      });
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
   })();

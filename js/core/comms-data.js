@@ -70,12 +70,28 @@
     { key: "lon",        label: "Long" }
   ];
 
+  // ANPR returns are vehicle sightings (keyed on VRM), so they use a different
+  // de-bloated column set. cleanFromRows picks the set by detected format.
+  var CLEAN_COLUMNS_ANPR = [
+    { key: "startDt",    label: "Sighting (local)" },
+    { key: "vrm",        label: "VRM" },
+    { key: "make",       label: "Make" },
+    { key: "model",      label: "Model" },
+    { key: "colour",     label: "Colour" },
+    { key: "cellName",   label: "Camera / site" },
+    { key: "cellPostcode", label: "Postcode" },
+    { key: "mmc",        label: "MMC" },
+    { key: "errorRadius", label: "± m" },
+    { key: "lat",        label: "Lat" },
+    { key: "lon",        label: "Long" }
+  ];
+
   /* ---- header synonym dictionary: many source headers -> one canonical key -- */
   // Keys are normalised (normKey) so "Calling Number", "Originator Comms Address
   // (*Standardised)", "Outgoing party" all resolve to the same canonical field.
   var SYNONYMS = {
-    startDate: ["start date", "start datetime", "event start time", "start date time"],
-    startTime: ["start time local", "start time"],
+    startDate: ["start date", "start datetime", "event start time", "start date time", "date"],
+    startTime: ["start time local", "start time", "time"],
     endDate: ["end date", "end datetime"],
     endTime: ["end time local", "end time"],
     type: ["cdr type", "event type", "call type"],
@@ -107,7 +123,17 @@
     eCellNorth: ["end cell northing"],
     eCellAz: ["end cell azimuth"],
     eCellLat: ["end cell latitude"],
-    eCellLon: ["end cell longitude"]
+    eCellLon: ["end cell longitude"],
+    // ANPR (vehicle sighting) fields — only consumed when format === "anpr"
+    vrm: ["vrm", "vehicle registration mark", "registration mark", "registration", "number plate", "vrn", "plate"],
+    make: ["make", "vehicle make"],
+    model: ["model", "vehicle model"],
+    colour: ["colour", "color", "vehicle colour"],
+    mmc: ["mmc record", "mmc", "hotlist", "watchlist", "watch list"],
+    camera: ["camera", "camera id", "asset id", "site name", "site", "location name", "location", "lane"],
+    gps: ["gps", "co ordinates", "coordinates", "grid reference", "position"],
+    errorRadius: ["error radius", "radius", "accuracy", "positional error"],
+    dateTime: ["date time", "datetime", "date and time", "sighting date time", "read date time", "observed"]
   };
 
   // Build a lookup: normalised-header -> canonical key. First synonym wins; a
@@ -136,6 +162,7 @@
       var joined = normKey((rows[r] || []).join(" "));
       if (joined.indexOf("calling number") !== -1 && joined.indexOf("cdr type") !== -1) return { format: "csv", headerRow: r };
       if (joined.indexOf("comms address") !== -1 && (joined.indexOf("start cell") !== -1 || joined.indexOf("event type") !== -1)) return { format: "adm", headerRow: r };
+      if (joined.indexOf("vrm") !== -1 && (joined.indexOf("camera") !== -1 || joined.indexOf("gps") !== -1 || (joined.indexOf("make") !== -1 && joined.indexOf("colour") !== -1))) return { format: "anpr", headerRow: r };
     }
     // fall back: first row that has >6 non-empty cells is the header
     for (var k = 0; k < rows.length; k++) {
@@ -188,6 +215,21 @@
     };
   }
   function round6(n) { return Math.round(n * 1e6) / 1e6; }
+  // Parse an ANPR GPS field. Returns {lat,lon}. Handles the reference-doc
+  // convention "(Long, -Lat)" (longitude first, latitude second and negated),
+  // as well as ordinary "lat, lon": whichever number falls in the UK latitude
+  // band (|v| 49..61) is taken as the (positive) latitude, the other as longitude.
+  function parseGps(s) {
+    var m = str(s).match(/-?\d+(?:\.\d+)?/g);
+    if (!m || m.length < 2) return null;
+    var a = parseFloat(m[0]), b = parseFloat(m[1]);
+    function inLat(v) { return Math.abs(v) >= 49 && Math.abs(v) <= 61; }
+    var lat, lon;
+    if (inLat(b) && !inLat(a)) { lat = Math.abs(b); lon = a; }
+    else if (inLat(a) && !inLat(b)) { lat = Math.abs(a); lon = b; }
+    else { lon = a; lat = Math.abs(b); }
+    return { lat: round6(lat), lon: round6(lon) };
+  }
 
   /* ---- main: rows -> clean events ------------------------------------------ */
   function cleanFromRows(rows, opts) {
@@ -220,9 +262,22 @@
         cellAzimuth: sc.azimuth, lat: sc.lat, lon: sc.lon,
         raw: row
       };
+      if (det.format === "anpr") {
+        var vrm = g("vrm");
+        ev.vrm = vrm; ev.make = g("make"); ev.model = g("model"); ev.colour = g("colour"); ev.mmc = g("mmc");
+        ev.errorRadius = num(g("errorRadius"));
+        ev.type = ev.type || "ANPR sighting";
+        if (!ev.aParty) ev.aParty = vrm;                 // VRM is the subject identity
+        if (!ev.startDt) ev.startDt = g("dateTime");
+        if (ev.lat == null || ev.lon == null) { var gps = parseGps(g("gps")); if (gps) { ev.lat = gps.lat; ev.lon = gps.lon; } }
+        ev.startCell.lat = ev.lat; ev.startCell.lon = ev.lon;
+        var cam = g("camera");
+        if (!ev.startCell.id) ev.startCell.id = cam;
+        if (!ev.cellName) { ev.cellName = cam; ev.startCell.name = cam; }
+      }
       events.push(ev);
     }
-    return { format: det.format, headerRow: hIdx, meta: meta, columns: CLEAN_COLUMNS, events: events };
+    return { format: det.format, headerRow: hIdx, meta: meta, columns: (det.format === "anpr" ? CLEAN_COLUMNS_ANPR : CLEAN_COLUMNS), events: events };
   }
 
   /* ---- summary (the ADM "Simple View" equivalent) -------------------------- */
@@ -328,15 +383,51 @@
     return { lat: toDeg(phi2), lon: toDeg(lam2) };
   }
 
+  /* ================================================================== */
+  /*  i2 Analyst's Notebook normalisation (per i2 Import Playbook)        */
+  /*  - dates as ISO yyyy-MM-dd[ HH:mm:ss] (i2 CSV import date format);   */
+  /*  - NO hyphen between text and numbers in labels/identifiers (i2      */
+  /*    reads the hyphen as minus and corrupts numeric attributes -> ~). */
+  /* ================================================================== */
+  function i2parse(s) {
+    s = str(s).trim(); if (!s) return null;
+    var m = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+    if (m) { var y = +m[3]; if (y < 100) y += 2000; return { y: y, mo: +m[2], d: +m[1], h: m[4] != null ? +m[4] : null, mi: +(m[5] || 0), s: +(m[6] || 0) }; }
+    var i = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+    if (i) return { y: +i[1], mo: +i[2], d: +i[3], h: i[4] != null ? +i[4] : null, mi: +(i[5] || 0), s: +(i[6] || 0) };
+    return null;
+  }
+  function i2DateTime(s) {
+    var p = i2parse(s); if (!p) return str(s);
+    function z(n) { n = String(n); return n.length < 2 ? "0" + n : n; }
+    var d = p.y + "-" + z(p.mo) + "-" + z(p.d);
+    return p.h == null ? d : d + " " + z(p.h) + ":" + z(p.mi) + ":" + z(p.s);
+  }
+  // Replace a hyphen only where a digit sits on either side (text<->number or
+  // number<->number); leaves text-text hyphens (e.g. "LTN-A") intact.
+  function i2Ident(v) { return str(v).replace(/-(?=\d)|(?<=\d)-/g, "~"); }
+  var I2_DATE_KEYS = { startDt: 1, endDt: 1 };
+  var I2_IDENT_KEYS = { aParty: 1, bParty: 1, fwdParty: 1, type: 1, vrm: 1, make: 1, model: 1, colour: 1, cellName: 1, cellPostcode: 1, imei: 1, imsi: 1, mmc: 1 };
+  function i2Cell(key, v) {
+    if (v == null) return "";
+    if (I2_DATE_KEYS[key]) return i2DateTime(v);
+    if (I2_IDENT_KEYS[key]) return i2Ident(v);  // numeric cols (lat/lon/azimuth) left untouched
+    return str(v);
+  }
+
   var api = {
     CLEAN_COLUMNS: CLEAN_COLUMNS,
+    CLEAN_COLUMNS_ANPR: CLEAN_COLUMNS_ANPR,
     parseDelimited: parseDelimited,
     detectFormat: detectFormat,
     buildColumnMap: buildColumnMap,
     cleanFromRows: cleanFromRows,
     summarise: summarise,
     osgbToWgs84: osgbToWgs84,
-    normKey: normKey
+    normKey: normKey,
+    i2DateTime: i2DateTime,
+    i2Ident: i2Ident,
+    i2Cell: i2Cell
   };
   if (typeof module !== "undefined" && module.exports) { module.exports = api; }
   if (typeof window !== "undefined") { window.RegistryCommsData = api; }

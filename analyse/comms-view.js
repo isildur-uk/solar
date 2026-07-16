@@ -14,9 +14,13 @@
 "use strict";
 (function () {
   var CD = (typeof window !== "undefined") ? window.RegistryCommsData : (typeof require !== "undefined" ? require("../js/core/comms-data.js") : null);
+  var PAT = (typeof window !== "undefined") ? window.RegistryCommsPattern : (typeof require !== "undefined" ? require("../js/core/comms-pattern.js") : null);
+  var JRN = (typeof window !== "undefined") ? window.RegistryCommsJourneys : (typeof require !== "undefined" ? require("../js/core/comms-journeys.js") : null);
   var doc = (typeof document !== "undefined") ? document : null;
 
-  var state = { res: null, events: [], summary: null, sorted: [], map: null, mapLayers: null, filterN: null, built: false, tab: "table" };
+  var state = { res: null, events: [], summary: null, sorted: [], map: null, mapLayers: null, filterN: null, built: false, tab: "table", showAllCols: false, i2Format: false };
+  // Technical columns hidden by default even when populated (analyst can reveal).
+  var DEFAULT_HIDDEN = { imei: 1, imsi: 1, cellGeneration: 1, cellAzimuth: 1 };
 
   /* ---- tiny DOM helpers (safe) ---- */
   function el(tag, cls, text) { var e = doc.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
@@ -66,10 +70,10 @@
 
     // tabs
     var tabs = el("div", "cd-tabs");
-    ["table", "map", "timeline"].forEach(function (t) {
-      var b = el("button", "cd-tab", t === "table" ? "Cleaned table" : t === "map" ? "Map" : "Timeline");
-      b.type = "button"; b.dataset.tab = t; b.onclick = function () { showTab(t); };
-      if (t === "table") b.classList.add("cd-tab-on");
+    [["table", "Cleaned table"], ["map", "Map"], ["timeline", "Timeline"], ["patterns", "Patterns"], ["journeys", "Journeys"]].forEach(function (t) {
+      var b = el("button", "cd-tab", t[1]);
+      b.type = "button"; b.dataset.tab = t[0]; b.onclick = function () { showTab(t[0]); };
+      if (t[0] === "table") b.classList.add("cd-tab-on");
       tabs.appendChild(b);
     });
     panel.appendChild(tabs);
@@ -78,6 +82,8 @@
     body.appendChild(mk("cd-pane-table"));
     var mp = mk("cd-pane-map"); mp.setAttribute("hidden", ""); mp.appendChild(mkId("div", "cd-map")); body.appendChild(mp);
     var tl = mk("cd-pane-timeline"); tl.setAttribute("hidden", ""); body.appendChild(tl);
+    var pp = mk("cd-pane-patterns"); pp.setAttribute("hidden", ""); body.appendChild(pp);
+    var jj = mk("cd-pane-journeys"); jj.setAttribute("hidden", ""); body.appendChild(jj);
     panel.appendChild(body);
 
     if (host) { host.appendChild(panel); }
@@ -89,12 +95,14 @@
 
   function showTab(t) {
     state.tab = t;
-    ["table", "map", "timeline"].forEach(function (x) {
+    ["table", "map", "timeline", "patterns", "journeys"].forEach(function (x) {
       var pane = doc.getElementById("cd-pane-" + x); if (pane) { if (x === t) pane.removeAttribute("hidden"); else pane.setAttribute("hidden", ""); }
     });
     var tabsEl = doc.querySelectorAll(".cd-tab");
     for (var i = 0; i < tabsEl.length; i++) tabsEl[i].classList.toggle("cd-tab-on", tabsEl[i].dataset.tab === t);
     if (t === "map") renderMap();
+    if (t === "patterns") renderPatterns();
+    if (t === "journeys") renderJourneys();
   }
 
   function open() { ensureBuilt(); doc.getElementById("cd-overlay").removeAttribute("hidden"); }
@@ -143,7 +151,7 @@
     state.sorted = res.events.slice().sort(function (a, b) { var da = parseDt(a.startDt), db = parseDt(b.startDt); return (da ? da.getTime() : 0) - (db ? db.getTime() : 0); });
     state.filterN = state.sorted.length;
     var exp = doc.getElementById("cd-export"); if (exp) exp.disabled = res.events.length === 0;
-    renderMeta(res); renderSummary(); renderTable(); renderTimeline();
+    renderMeta(res); renderSummary(); renderTable(); renderTimeline(); renderPatterns(); renderJourneys();
     if (state.map) { state.map.remove(); state.map = null; }  // force map rebuild for new data
     if (state.tab === "map") renderMap();
     flash(res.events.length + " events parsed (" + res.format.toUpperCase() + ").");
@@ -174,25 +182,39 @@
     else s.appendChild(chip("handset combos", swaps));
   }
 
+  // Columns actually shown: drop entirely-empty columns and hide the technical
+  // set by default; "Show all columns" reveals everything.
+  function visibleColumns() {
+    var cols = (state.res && state.res.columns) || CD.CLEAN_COLUMNS;
+    if (state.showAllCols) return cols;
+    return cols.filter(function (c) {
+      if (DEFAULT_HIDDEN[c.key]) return false;
+      return state.sorted.some(function (ev) { var v = ev[c.key]; return v != null && String(v).trim() !== ""; });
+    });
+  }
+  function cellText(key, v) { if (v == null) v = ""; return state.i2Format ? CD.i2Cell(key, v) : String(v); }
+  function chk(label, checked, onchange) {
+    var l = el("label", "cd-chk"); var i = el("input"); i.type = "checkbox"; i.checked = !!checked;
+    i.onchange = function () { onchange(i.checked); }; l.appendChild(i); l.appendChild(doc.createTextNode(" " + label)); return l;
+  }
   function renderTable() {
     var pane = doc.getElementById("cd-pane-table"); if (!pane) return; clear(pane);
-    var cols = (state.res && state.res.columns) || CD.CLEAN_COLUMNS;
-    var wrap = el("div", "cd-tablewrap");
-    var tbl = el("table", "cd-table");
-    var thead = el("thead"), htr = el("tr");
+    if (!state.sorted.length) { pane.appendChild(el("p", "cd-empty", "No events — drop a return or load the demo.")); return; }
+    var ctl = el("div", "cd-tablectl");
+    ctl.appendChild(chk("Show all columns", state.showAllCols, function (on) { state.showAllCols = on; renderTable(); }));
+    ctl.appendChild(chk("i2 format (ISO dates, hyphen-safe)", state.i2Format, function (on) { state.i2Format = on; renderTable(); }));
+    pane.appendChild(ctl);
+    var cols = visibleColumns();
+    var wrap = el("div", "cd-tablewrap"), tbl = el("table", "cd-table"), thead = el("thead"), htr = el("tr");
     cols.forEach(function (c) { htr.appendChild(el("th", null, c.label)); });
     thead.appendChild(htr); tbl.appendChild(thead);
     var tb = el("tbody");
     state.sorted.forEach(function (ev) {
       var tr = el("tr");
-      cols.forEach(function (c) {
-        var v = ev[c.key]; if (v == null) v = "";
-        tr.appendChild(el("td", (c.key === "lat" || c.key === "lon") ? "cd-num" : null, String(v)));
-      });
+      cols.forEach(function (c) { tr.appendChild(el("td", (c.key === "lat" || c.key === "lon") ? "cd-num" : null, cellText(c.key, ev[c.key]))); });
       tb.appendChild(tr);
     });
     tbl.appendChild(tb); wrap.appendChild(tbl); pane.appendChild(wrap);
-    if (!state.sorted.length) pane.appendChild(el("p", "cd-empty", "No events — drop a return or load the demo."));
   }
 
   function renderTimeline() {
@@ -248,7 +270,15 @@
         poly.addTo(state.map); state.mapLayers.push(poly);
       }
     });
-    if (latlngs.length > 1) { var line = L.polyline(latlngs, { color: "#6aa0ff", weight: 2, opacity: 0.7, dashArray: "5,5" }); line.addTo(state.map); state.mapLayers.push(line); }
+    if (latlngs.length > 1 && JRN) {
+      JRN.analyseJourneys(pts).legs.forEach(function (lg) {
+        var seg = L.polyline([[lg.fromLat, lg.fromLon], [lg.toLat, lg.toLon]], { color: JRN.MODE_COLOUR[lg.mode] || "#6aa0ff", weight: lg.impossible ? 3 : 2.5, opacity: 0.85, dashArray: lg.impossible ? "4,4" : null });
+        seg.bindTooltip(lg.mode + (lg.speedKmh != null ? " · " + lg.speedKmh + " km/h" : "") + (lg.roadHint ? " · " + lg.roadHint : ""));
+        seg.addTo(state.map); state.mapLayers.push(seg);
+      });
+    } else if (latlngs.length > 1) {
+      var line = L.polyline(latlngs, { color: "#6aa0ff", weight: 2, opacity: 0.7, dashArray: "5,5" }); line.addTo(state.map); state.mapLayers.push(line);
+    }
     if (latlngs.length) state.map.fitBounds(L.latLngBounds(latlngs).pad(0.2));
     setTimeout(function () { if (state.map) state.map.invalidateSize(); }, 50);
   }
@@ -282,10 +312,10 @@
 
   /* ---- export tidy CSV ---- */
   function exportCsv() {
-    var cols = (state.res && state.res.columns) || CD.CLEAN_COLUMNS;
+    var cols = visibleColumns();
     var lines = [cols.map(function (c) { return c.label; }).join(",")];
     state.sorted.forEach(function (ev) {
-      lines.push(cols.map(function (c) { var v = ev[c.key]; v = (v == null) ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","));
+      lines.push(cols.map(function (c) { var v = cellText(c.key, ev[c.key]); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(","));
     });
     var blob = new Blob([lines.join("\r\n")], { type: "text/csv" });
     var a = doc.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "comms-data-tidy.csv"; a.click();
@@ -306,17 +336,22 @@
       ["LTN-D","LUTON AIRPORT","Airport Way","LU2 9LY","5G",512700,220900,45],
       ["LEA-E","LEAGRAVE","Compton Ave","LU4 9AB","4G",506200,224400,200]
     ];
+    // Three weekdays (Mon-Wed): overnight at LEA-E (home, idx 4), weekday
+    // daytime at LTN-A (base, idx 0) — gives a clear pattern-of-life.
     var evs = [
-      ["01/09/2024","07:42:11","Voice","07700900111","07700900222","3","00:01:12",0],
-      ["01/09/2024","08:05:40","Voice","07700900111","07700900333","3","00:00:47",1],
-      ["01/09/2024","08:31:02","SMS-MO","07700900111","07700900222","","00:00:00",1],
-      ["01/09/2024","09:14:55","Voice","07700900111","07700900444","3","00:03:20",2],
-      ["01/09/2024","10:02:19","Data","07700900111","","","00:00:00",4],
-      ["01/09/2024","11:20:07","Voice","07700900111","07700900333","3","00:00:31",4],
-      ["01/09/2024","12:48:33","Voice","07700900111","07700900222","3","00:02:05",3],
-      ["01/09/2024","13:37:50","SMS-MT","07700900555","07700900111","","00:00:00",3],
-      ["01/09/2024","15:11:26","Voice","07700900111","07700900444","3","00:01:58",0],
-      ["01/09/2024","16:59:44","Voice","07700900111","07700900222","3","00:00:52",0]
+      ["02/09/2024","06:50:11","Data","07700900111","","","00:00:00",4],
+      ["02/09/2024","08:40:02","Voice","07700900111","07700900222","3","00:01:12",0],
+      ["02/09/2024","13:15:33","Voice","07700900111","07700900333","3","00:00:47",0],
+      ["02/09/2024","18:30:07","Voice","07700900111","07700900222","3","00:00:31",1],
+      ["02/09/2024","23:20:44","SMS-MO","07700900111","07700900444","","00:00:00",4],
+      ["03/09/2024","00:45:19","Data","07700900111","","","00:00:00",4],
+      ["03/09/2024","08:55:40","Voice","07700900111","07700900222","3","00:02:05",0],
+      ["03/09/2024","12:40:50","SMS-MT","07700900555","07700900111","","00:00:00",2],
+      ["03/09/2024","22:50:26","Voice","07700900111","07700900444","3","00:01:58",4],
+      ["04/09/2024","05:30:00","Data","07700900111","","","00:00:00",4],
+      ["04/09/2024","09:10:15","Voice","07700900111","07700900333","3","00:00:52",0],
+      ["04/09/2024","15:20:33","Voice","07700900111","07700900222","3","00:01:20",3],
+      ["04/09/2024","23:05:12","SMS-MO","07700900111","07700900222","","00:00:00",4]
     ];
     var lines = ["URN:,,,,IR774120","Grade:,,,,OFFICIAL-SENSITIVE","Target identity:,,,,07700900111","Operator:,,,,EE","", H.join(","), ""];
     evs.forEach(function (e, i) {
@@ -325,6 +360,114 @@
       lines.push(row.map(function (v) { v = String(v); return /[",]/.test(v) ? '"' + v + '"' : v; }).join(","));
     });
     return lines.join("\n");
+  }
+
+  /* ---- patterns (pattern-of-life) ---- */
+  function fmtDate(d) { if (!(d instanceof Date) || isNaN(d)) return ""; function p(n) { n = String(n); return n.length < 2 ? "0" + n : n; } return p(d.getDate()) + "/" + p(d.getMonth() + 1) + "/" + d.getFullYear() + " " + p(d.getHours()) + ":" + p(d.getMinutes()); }
+  function anchorCard(title, sub, loc) {
+    var c = el("div", "cd-card");
+    c.appendChild(el("div", "cd-card-t", title));
+    c.appendChild(el("div", "cd-card-sub", sub));
+    if (loc) {
+      c.appendChild(el("div", "cd-card-v", loc.name || loc.key));
+      var m = []; if (loc.postcode) m.push(loc.postcode); m.push(loc.count + " events");
+      c.appendChild(el("div", "cd-card-m", m.join("  ·  ")));
+      if (loc.lat != null) { c.classList.add("cd-tl-geo"); c.onclick = function () { showTab("map"); if (state.map) state.map.setView([loc.lat, loc.lon], 14); }; }
+    } else c.appendChild(el("div", "cd-card-v", "insufficient data"));
+    return c;
+  }
+  function histogram(counts, labelFn) {
+    var max = Math.max.apply(null, counts.concat([1]));
+    var h = el("div", "cd-hist");
+    counts.forEach(function (v, i) {
+      var col = el("div", "cd-hist-col");
+      var bar = el("div", "cd-hist-bar"); bar.style.height = (v ? Math.max(4, Math.round(v / max * 100)) : 0) + "%"; bar.title = v + " events";
+      col.appendChild(bar); col.appendChild(el("div", "cd-hist-lab", labelFn(i)));
+      h.appendChild(col);
+    });
+    return h;
+  }
+  function renderPatterns() {
+    var pane = doc.getElementById("cd-pane-patterns"); if (!pane) return; clear(pane);
+    if (!PAT) { pane.appendChild(el("p", "cd-empty", "Pattern module unavailable.")); return; }
+    if (!state.sorted.length) { pane.appendChild(el("p", "cd-empty", "No events — drop a return or load the demo.")); return; }
+    var P = PAT.patternOfLife(state.sorted);
+    if (!P.total) { pane.appendChild(el("p", "cd-empty", "No geolocated events to analyse.")); return; }
+    var cards = el("div", "cd-cards");
+    cards.appendChild(anchorCard("Overnight anchor — likely home", "22:00–06:00", P.nightAnchor));
+    cards.appendChild(anchorCard("Daytime anchor — likely base", "weekday 09:00–17:00", P.dayAnchor));
+    pane.appendChild(cards);
+
+    pane.appendChild(el("h3", "cd-h", "Most frequented locations"));
+    var wrap = el("div", "cd-tablewrap"), t = el("table", "cd-table"), th = el("thead"), htr = el("tr");
+    ["#", "Location", "Postcode", "Events", "First seen", "Last seen"].forEach(function (h) { htr.appendChild(el("th", null, h)); });
+    th.appendChild(htr); t.appendChild(th);
+    var tb = el("tbody");
+    P.topLocations.slice(0, 15).forEach(function (L, i) {
+      var tr = el("tr");
+      [String(i + 1), L.name || L.key, L.postcode || "", String(L.count), fmtDate(L.first), fmtDate(L.last)].forEach(function (v, ci) { tr.appendChild(el("td", ci === 3 ? "cd-num" : null, v)); });
+      if (L.lat != null) { tr.classList.add("cd-tl-geo"); tr.onclick = function () { showTab("map"); if (state.map) state.map.setView([L.lat, L.lon], 14); }; }
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); wrap.appendChild(t); pane.appendChild(wrap);
+
+    pane.appendChild(el("h3", "cd-h", "Top location by time of day"));
+    var bt = el("table", "cd-table"), bth = el("thead"), bhr = el("tr");
+    ["Time band", "Top location", "Events"].forEach(function (h) { bhr.appendChild(el("th", null, h)); });
+    bth.appendChild(bhr); bt.appendChild(bth);
+    var bb = el("tbody");
+    P.byBand.forEach(function (b) {
+      var tr = el("tr");
+      tr.appendChild(el("td", null, b.band));
+      tr.appendChild(el("td", null, b.location ? (b.location.name || b.location.key) : "—"));
+      tr.appendChild(el("td", "cd-num", b.count ? String(b.count) : ""));
+      bb.appendChild(tr);
+    });
+    bt.appendChild(bb); pane.appendChild(bt);
+
+    pane.appendChild(el("h3", "cd-h", "Activity by hour of day"));
+    pane.appendChild(histogram(P.hourly, function (i) { return (i < 10 ? "0" : "") + i; }));
+    pane.appendChild(el("h3", "cd-h", "Activity by day of week"));
+    pane.appendChild(histogram(P.dow, function (i) { return P.dowLabels[i]; }));
+  }
+
+  /* ---- journeys (mode-of-transport) ---- */
+  function renderJourneys() {
+    var pane = doc.getElementById("cd-pane-journeys"); if (!pane) return; clear(pane);
+    if (!JRN) { pane.appendChild(el("p", "cd-empty", "Journeys module unavailable.")); return; }
+    if (!state.sorted.length) { pane.appendChild(el("p", "cd-empty", "No events — drop a return or load the demo.")); return; }
+    var JR = JRN.analyseJourneys(state.sorted);
+    if (!JR.legs.length) { pane.appendChild(el("p", "cd-empty", "Not enough located events to infer movement.")); return; }
+    // legend
+    var lg = el("div", "cd-legend");
+    Object.keys(JRN.MODE).forEach(function (k) {
+      var m = JRN.MODE[k], s = el("span", "cd-legkey"), dot = el("span", "cd-legdot");
+      dot.style.background = JRN.MODE_COLOUR[m] || "#888"; s.appendChild(dot); s.appendChild(doc.createTextNode(" " + m)); lg.appendChild(s);
+    });
+    pane.appendChild(lg);
+    if (JR.impossible.length) {
+      var w = el("div", "cd-imp-banner");
+      w.textContent = JR.impossible.length + " leg(s) exceed plausible ground speed — possible cloned SIM, second handset, or clock error.";
+      pane.appendChild(w);
+    }
+    pane.appendChild(el("h3", "cd-h", "Journeys"));
+    pane.appendChild(mkTable(["#", "Start", "Mode", "Distance (km)", "Duration (min)", "Mean km/h", "Max km/h", "Straightness", "Roads"],
+      JR.journeys.map(function (j, i) { return { cells: [String(i + 1), fmtDate(j.startTime), j.mode || "", String(j.distanceKm), String(j.durationMin), j.meanKmh == null ? "" : String(j.meanKmh), j.maxKmh == null ? "" : String(j.maxKmh), j.straightness == null ? "" : String(j.straightness), j.roads.join(", ")], num: [3, 4, 5, 6, 7], imp: j.impossible }; })));
+    pane.appendChild(el("h3", "cd-h", "Legs (segment detail)"));
+    pane.appendChild(mkTable(["From", "To", "Start", "Distance (km)", "Duration (min)", "km/h", "Mode", "Road"],
+      JR.legs.map(function (l) { return { cells: [l.fromLabel, l.toLabel, fmtDate(l.fromTime), String(l.distanceKm), String(l.durationMin), l.speedKmh == null ? "∞" : String(l.speedKmh), l.mode, l.roadHint || ""], num: [3, 4, 5], imp: l.impossible }; })));
+  }
+  function mkTable(headers, rows) {
+    var wrap = el("div", "cd-tablewrap"), t = el("table", "cd-table"), th = el("thead"), htr = el("tr");
+    headers.forEach(function (h) { htr.appendChild(el("th", null, h)); });
+    th.appendChild(htr); t.appendChild(th);
+    var tb = el("tbody");
+    rows.forEach(function (r) {
+      var tr = el("tr"); if (r.imp) tr.classList.add("cd-imp");
+      r.cells.forEach(function (v, ci) { tr.appendChild(el("td", (r.num && r.num.indexOf(ci) !== -1) ? "cd-num" : null, v)); });
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb); wrap.appendChild(t); return wrap;
   }
 
   /* ---- scoped styles ---- */
@@ -349,10 +492,26 @@
       ".cd-pane{position:absolute;inset:0;overflow:auto;padding:12px 14px}",
       "#cd-map{position:absolute;inset:0;background:#0a0f18}.cd-map-offline{background:#0a0f18}",
       ".cd-tablewrap{overflow:auto;max-height:100%}",
+      ".cd-tablectl{display:flex;gap:16px;margin-bottom:8px;color:#9fb2cc;font-size:12px}",
+      ".cd-chk{display:flex;align-items:center;gap:5px;cursor:pointer}",
       ".cd-table{border-collapse:collapse;width:100%;font-size:12px}",
       ".cd-table th,.cd-table td{border:1px solid #222c3a;padding:4px 7px;text-align:left;white-space:nowrap}",
       ".cd-table th{position:sticky;top:0;background:#141d2b;color:#b9c8dd}.cd-num{text-align:right;font-variant-numeric:tabular-nums}",
       ".cd-empty{color:#7d8ea6;padding:24px;text-align:center}",
+      ".cd-h{margin:16px 0 6px;font-size:13px;color:#b9c8dd}.cd-h:first-child{margin-top:0}",
+      ".cd-cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:4px}",
+      ".cd-card{flex:1;min-width:220px;background:#141d2b;border:1px solid #26303f;border-radius:10px;padding:12px 14px}",
+      ".cd-card.cd-tl-geo{cursor:pointer}.cd-card.cd-tl-geo:hover{border-color:#e8a13a}",
+      ".cd-card-t{font-weight:600;color:#dce4f0}.cd-card-sub{font-size:11px;color:#7d8ea6;margin-bottom:8px}",
+      ".cd-card-v{font-size:15px;color:#e8a13a}.cd-card-m{font-size:12px;color:#9fb2cc;margin-top:2px}",
+      ".cd-hist{display:flex;align-items:flex-end;gap:2px;height:110px;padding-top:6px;border-bottom:1px solid #26303f;margin-bottom:6px}",
+      ".cd-hist-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}",
+      ".cd-hist-bar{width:72%;background:#e8a13a;border-radius:2px 2px 0 0;opacity:.85}",
+      ".cd-hist-lab{font-size:9px;color:#7d8ea6;margin-top:3px;white-space:nowrap}",
+      ".cd-legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;font-size:11px;color:#9fb2cc}",
+      ".cd-legkey{display:flex;align-items:center;gap:4px}.cd-legdot{width:10px;height:10px;border-radius:2px;display:inline-block}",
+      ".cd-imp-banner{background:#2a1414;border:1px solid #c9603a;color:#e8a13a;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12px}",
+      ".cd-imp td{color:#e05a5a}",
       ".cd-tl-ctrl{display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#9fb2cc}.cd-slider{flex:1;max-width:360px}",
       ".cd-tl{list-style:none;margin:0;padding:0}",
       ".cd-tl-item{display:grid;grid-template-columns:150px 1fr auto;gap:12px;padding:7px 8px;border-left:2px solid #26303f;margin-left:6px}",
