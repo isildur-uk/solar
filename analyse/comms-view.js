@@ -269,7 +269,7 @@
     var pts = geoEvents();
     if (!state.map) {
       state.map = L.map(host, { zoomControl: true, attributionControl: true }).setView([54, -2], 6);
-      var tiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" });
+      var tiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19, attribution: "© OpenStreetMap © CARTO" });
       tiles.on("tileerror", function () { host.classList.add("cd-map-offline"); }); // graceful dark fallback
       tiles.addTo(state.map);
     }

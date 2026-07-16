@@ -177,7 +177,7 @@
     var pts = (state.co || []).filter(function (r) { return r.lat != null && r.lon != null; });
     if (!state.map) {
       state.map = L.map(hostEl, { zoomControl: true }).setView([54, -2], 6);
-      var tiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" });
+      var tiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19, attribution: "© OpenStreetMap © CARTO" });
       tiles.on("tileerror", function () { hostEl.classList.add("cl-map-offline"); });
       tiles.addTo(state.map);
     }

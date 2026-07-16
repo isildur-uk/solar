@@ -11,7 +11,7 @@
       Q = window.RegistryQuery;
 
   if (!M || !V || !G || !N || !T || !RR || !SI || !MX || !W || !D || !H || !O || !Q) {
-    document.getElementById("main").textContent =
+    document.getElementById("registry-main").textContent =
       "Registry failed to load. Ensure SOLAR's cm-vocab.js and cm-standards.js are reachable at ../js/core/.";
     return;
   }
@@ -34,10 +34,10 @@
     return c;
   }
   var els = {
-    main: document.getElementById("main"),
+    main: document.getElementById("registry-main"),
     list: document.getElementById("report-list"),
     listEmpty: document.getElementById("list-empty"),
-    search: document.getElementById("search"),
+    search: document.getElementById("reg-search"),
     status: document.getElementById("statusline"),
     banner: document.getElementById("marking-banner")
   };
@@ -124,7 +124,7 @@
     if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
     var a = document.activeElement, tag = (a && a.tagName) || "";
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || (a && a.isContentEditable)) return;
-    var box = document.getElementById("search");
+    var box = document.getElementById("reg-search");
     if (box) { e.preventDefault(); box.focus(); box.select && box.select(); }
   });
   // rgba glow from a #rrggbb hex (mirrors graph.js glowOf).

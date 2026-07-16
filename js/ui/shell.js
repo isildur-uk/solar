@@ -12,7 +12,10 @@
   "use strict";
 
   // Which surface are we on? registry pages live under /registry/.
-  var IS_REGISTRY = /\/registry\//.test(location.pathname) || !!document.querySelector("header.masthead");
+  // In the unified host (#view-host present) the shell is always charting-primary
+  // and reflects the active surface dynamically — the Database view's own
+  // header.masthead must NOT flip the whole shell into registry mode.
+  var IS_REGISTRY = (/\/registry\//.test(location.pathname) || !!document.querySelector("header.masthead")) && !document.getElementById("view-host");
   var HERO = IS_REGISTRY ? "../hero.html" : "hero.html";
   var OTHER = IS_REGISTRY ? "../index.html" : "registry/index.html";
 
@@ -144,7 +147,7 @@
   }
 
   // focus + select the surface search box (real, live on both surfaces)
-  function focusSearch() { var s = byId("search"); return s ? function () { s.focus(); if (s.select) { s.select(); } } : null; }
+  function focusSearch() { var s = byId("search") || byId("reg-search"); return s ? function () { s.focus(); if (s.select) { s.select(); } } : null; }
 
   // layout preset — CRGraph.applyLayout(name), else the preset button
   function layout(name) {
@@ -343,9 +346,10 @@
   var crumbRootRun = null;   // surface sets how its root navigates (e.g. registry showHome)
   function setBreadcrumbRoot(fn) { crumbRootRun = fn; }
   function setBreadcrumb(trail) {
-    var root = { label: IS_REGISTRY ? "Database" : "Charting" };
-    if (typeof crumbRootRun === "function") { root.run = crumbRootRun; }
-    renderCrumbs([root].concat(trail || []));
+    // Row 1 already names the active surface (wordmark mode word + current tab), so
+    // the breadcrumb shows ONLY the drill-down trail — no surface name repeated two
+    // rows down. When there's no trail (a surface's home), it's empty.
+    renderCrumbs(trail || []);
   }
 
   /* Render a tab's columns of items into its mega-menu panel. */
@@ -458,9 +462,10 @@
       });
       return a;
     }
-    surf.appendChild(surfLink("Charting"));
-    surf.appendChild(surfLink("Analyse"));
+    // Order: Database → Analyse → Charting (source data → analysis → visualisation).
     surf.appendChild(surfLink("Database"));
+    surf.appendChild(surfLink("Analyse"));
+    surf.appendChild(surfLink("Charting"));
     /* Reflect the active in-document view across Row 1 + the shell: highlight the
        current tab, swap the wordmark mode word, and set data-active-surface (which
        drives hiding the charting Rows 2/3 for surfaces that carry their own bar). */
@@ -471,9 +476,23 @@
         if (s === activeSurface) { a.setAttribute("aria-current", "true"); tip(a, GLOSS[CAPS[s]] + " · current"); }
         else { a.removeAttribute("aria-current"); tip(a, GLOSS[CAPS[s]] + " · switch"); }
       });
-      var wordHost = wm.querySelector(".sh-mode-word .fx-marker") || wm.querySelector(".sh-mode-word");
-      if (wordHost && CAPS[activeSurface]) { wordHost.textContent = CAPS[activeSurface]; }
+      // Swap the wordmark mode word AND replay the fx-marker Hi-Liter wipe, so
+      // each switch lands with the new surface name sweeping in (as it did on load).
+      var word = wm.querySelector(".sh-mode-word");
+      if (word && CAPS[activeSurface]) {
+        word.textContent = "";
+        var mk = document.createElement("span");
+        mk.className = "fx-marker";
+        mk.textContent = CAPS[activeSurface];   // plain text — no HTML injection
+        word.appendChild(mk);
+        requestAnimationFrame(function () { requestAnimationFrame(function () { mk.classList.add("is-marking"); }); });
+      }
       shell.setAttribute("data-active-surface", activeSurface);
+      // The one shell is shared across functions — reset the drill-down trail on
+      // switch and keep the search reading neutrally (not chart-specific).
+      setBreadcrumb([]);
+      var sb = shell.querySelector(".sh-search-input");
+      if (sb) { sb.setAttribute("placeholder", "Search…"); }
     }
     if (window.SolarRouter && window.SolarRouter.onChange) {
       window.SolarRouter.onChange(function (s) { reflectSurface(s); });
@@ -608,7 +627,7 @@
     var crumbs = el("nav", { class: "sh-crumbs", "aria-label": "Breadcrumb" });
     ctx.appendChild(crumbs);
     crumbEl = crumbs;
-    renderCrumbs([{ label: IS_REGISTRY ? "Database" : "Charting" }]);
+    renderCrumbs([]);   // surface name lives in Row 1; the breadcrumb only shows drill-down
     // Search slot — receives the real #search input (re-parented after mount).
     var searchSlot = el("div", { class: "sh-search" });
     ctx.appendChild(searchSlot);
@@ -646,8 +665,8 @@
      be visible/focusable (#search, #case-name) into the shell. We move the
      real nodes (never clone) so ids + listeners stay intact.               */
   function retireToolbars(shell) {
-    // 1) relocate #search into Row 3 (both surfaces)
-    var search = byId("search");
+    // 1) relocate #search into Row 3 (both surfaces; registry's box is #reg-search)
+    var search = byId("search") || byId("reg-search");
     var searchSlot = shell.querySelector(".sh-search");
     if (search && searchSlot) {
       search.classList.add("sh-search-input");
@@ -807,6 +826,20 @@
           tabs.forEach(function (o) { if (o !== t) { o.open = false; } });
           if (window.SolarSound) { window.SolarSound.play("open"); }   // mega-menu open cue
         }
+      });
+    });
+    /* Hover-to-open: the mega-menus reveal on hover (a small close delay lets the
+       pointer travel from the tab down into the panel without it snapping shut).
+       Click and keyboard still work — hovering just opens sooner. */
+    var hoverTimer = null;
+    tabs.forEach(function (t) {
+      t.addEventListener("mouseenter", function () {
+        if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+        if (!t.open) { t.open = true; }
+      });
+      t.addEventListener("mouseleave", function () {
+        if (hoverTimer) { clearTimeout(hoverTimer); }
+        hoverTimer = setTimeout(function () { t.open = false; }, 180);
       });
     });
     document.addEventListener("click", function (e) {
