@@ -1,0 +1,3 @@
+# SOLAR front door: the cinematic cover hero.html is served at the root
+# (matches serve-lan.js and the exe). 302 so it's not cached hard.
+/    /hero.html    302

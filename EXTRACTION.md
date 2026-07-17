@@ -160,7 +160,7 @@ The chrome's **Add menu → "Add from URL"** charts a live web article (news,
 report) end-to-end. Because a browser can't fetch a third-party news site
 directly (CORS), the fetch runs server-side:
 
-1. `api/fetch.js` (Vercel serverless) takes `?url=`, validates it's `http(s)`,
+1. `functions/api/fetch.js` (Cloudflare Pages Function, route `/api/fetch`) takes `?url=`, validates it's `http(s)`,
    fetches with a UA header + 15s timeout, guards the content-type is HTML,
    caps the body, then runs **Mozilla Readability** (in `jsdom`) to strip nav /
    ads / footers and return `{ title, byline, excerpt, text, url }`.
@@ -174,12 +174,12 @@ only on the hosted deploy. On the offline exe / `file://` the call fails cleanly
 and the UI tells the analyst to paste the text instead — the air-gapped paste
 path is untouched. CM stays the authority; the URL feature only supplies text.
 
-Verified in Node by invoking the real `api/fetch.js` handler with a mocked
+Verified in Node by invoking the real `functions/api/fetch.js` handler with a mocked
 `fetch` over synthetic article HTML: Readability stripped chrome, the handler
 returned HTTP 200 + clean JSON, and `CRExtract` charted persons, organisation,
 vehicle, money and relationships. Error paths return 400 (bad URL), 415
 (non-HTML), 502 (upstream failure). The only thing not verifiable in-sandbox is
-the live network fetch itself, which exercises on the Vercel deploy.
+the live network fetch itself, which exercises on the hosted deploy.
 
 ## Roadmap — the next layer, in priority order
 

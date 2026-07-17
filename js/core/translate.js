@@ -14,7 +14,7 @@
  *  - GISTING ONLY: MT output is an analytic aid, never certified translation.
  *    Callers MUST flag anything derived from it — use provenanceTag() so every
  *    MT batch is labelled identically.
- *  - DESKTOP ONLY in practice: an https page (e.g. the Vercel deployment) calling
+ *  - DESKTOP ONLY in practice: an https page (e.g. the hosted deployment) calling
  *    http://127.0.0.1 is mixed-content and will be blocked by the browser; the
  *    probe simply fails and the feature stays hidden. Works from the .exe, the
  *    LAN server and file://.

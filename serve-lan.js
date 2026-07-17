@@ -11,7 +11,7 @@ mp3:"audio/mpeg",ogg:"audio/ogg"};
 const mime=p=>T[(p.split(".").pop()||"").toLowerCase()]||"application/octet-stream";
 http.createServer((req,res)=>{
   let p=decodeURIComponent((req.url.split("?")[0]||"/"));
-  if(p==="/"||p==="") p="/hero.html";   // canonical front door - matches Vercel redirect + exe_build/server.js (keep in sync)
+  if(p==="/"||p==="") p="/hero.html";   // canonical front door - matches the hero redirect + exe_build/server.js (keep in sync)
   if(p.endsWith("/")) p=p+"index.html";  // directory request -> its index.html (e.g. /registry/ -> /registry/index.html)
   let f=path.join(ROOT,p.replace(/^\/+/,""));
   if(!f.startsWith(ROOT)){res.writeHead(403);return res.end("no");}

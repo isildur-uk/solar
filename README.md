@@ -1,10 +1,10 @@
 # SOLAR — link analysis & smart matching
 *(Solar — a connections map looks like a solar system)*
 
-i2-Analyst's-Notebook-style charting workbench. Single-page app: the cinematic cover `hero.html` is the one front door — served at `/` on Vercel, by the LAN server (`serve-lan.js`) and by the `.exe` — and its ENTER leads into the workbench `index.html`
-(or host the folder — Vercel/static hosting works as-is). There is no frontend build step;
+i2-Analyst's-Notebook-style charting workbench. Single-page app: the cinematic cover `hero.html` is the one front door — served at `/` on Cloudflare, by the LAN server (`serve-lan.js`) and by the `.exe` — and its ENTER leads into the workbench `index.html`
+(or host the folder — Cloudflare/static hosting works as-is). There is no frontend build step;
 normal case data stays in the browser (localStorage + JSON save/load). The hosted
-**Add from URL** feature uses the Vercel function in `api/fetch.js`; basemap tiles and
+**Add from URL** feature uses the Cloudflare Pages Function in `functions/api/fetch.js` (route `/api/fetch`); basemap tiles and
 analyst-initiated external checks are the other online surfaces. Core extraction and case
 storage continue to work offline.
 
@@ -59,11 +59,11 @@ with the SOLAR wordmark; ENTER blooms an iris into the workbench (`index.html`).
 prefers-reduced-motion, and on touch/small screens it redirects straight to the workbench.
 
 How each path reaches it (kept in sync — change all of these together, never just one):
-- Vercel (the tested deployment): `vercel.json` redirects `/` -> `/hero.html` (redirects run before
-  the filesystem, so this beats the default `index.html`).
+- Hosted (Cloudflare): the front door `/` -> `/hero.html` is handled by the host's redirect config
+  (a `_redirects` file on Cloudflare Pages), processed before the filesystem so it beats `index.html`.
 - LAN server: `serve-lan.js` serves `/` -> `hero.html`.
 - Desktop `.exe`: `exe_build/server.js` serves `/` -> `hero.html` (falls back to `index.html`).
-- `1-Launch-SOLAR.cmd`: syncs to GitHub, then opens the live Vercel URL — the same front door.
+- `1-Launch-SOLAR.cmd`: syncs to GitHub, then opens the live Cloudflare URL — the same front door.
 
 The legacy in-app cover (`js/ui/hero.js`) is retired: it builds hidden and an empty case boots
 straight into the workbench, so the hero never shows twice. `hero.html` is the only cover to edit.
