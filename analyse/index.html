@@ -42,9 +42,11 @@
   <div class="tool-switch" id="tool-switch">
     <button class="btn btn-on" type="button" data-tool="cdr">CDR viewer</button>
     <button class="btn" type="button" data-tool="link">Cross-file analysis</button>
+    <button class="btn" type="button" data-tool="nbtc">Border / NBTC</button>
   </div>
   <div class="tool-host" id="tool-cdr"></div>
   <div class="tool-host" id="tool-link" hidden></div>
+  <div class="tool-host" id="tool-nbtc" hidden></div>
 </main>
 
 <!-- Data-standards layer (load first) -->
@@ -58,6 +60,9 @@
 <!-- Shared case spine + Analyse->case bridge -->
 <script src="../js/core/solar-case.js"></script>
 <script src="../js/core/comms-case.js"></script>
+<!-- Border / NBTC: vendored aviation reference + passenger identity resolution -->
+<script src="../js/core/aviation-ref.js"></script>
+<script src="../js/core/nbtc.js"></script>
 <!-- Shared identity + shared shell top bar (one product, three functions) -->
 <script src="../js/ui/identity.js"></script>
 <script src="./shell-lite.js"></script>
@@ -73,22 +78,24 @@
 <!-- Analyse views -->
 <script src="./comms-view.js"></script>
 <script src="./comms-link-view.js"></script>
+<script src="./nbtc-view.js"></script>
 <script>
   (function(){
     function boot(){
       var u = document.querySelector(".masthead-user");
       if (u && window.SolarIdentity) { u.textContent = window.SolarIdentity.label(); u.title = "Your identity (shared across SOLAR)"; }
-      var cdr = document.getElementById("tool-cdr"), link = document.getElementById("tool-link");
+      var cdr = document.getElementById("tool-cdr"), link = document.getElementById("tool-link"), nbtc = document.getElementById("tool-nbtc");
       if (cdr && window.RegistryCommsView) window.RegistryCommsView.mount(cdr);
       if (link && window.RegistryCommsLinkView) window.RegistryCommsLinkView.mount(link);
+      if (nbtc && window.RegistryNbtcView) window.RegistryNbtcView.mount(nbtc);
       var sw = document.getElementById("tool-switch");
+      var hosts = { cdr: cdr, link: link, nbtc: nbtc };
       if (sw) sw.addEventListener("click", function(e){
         var b = e.target && e.target.closest ? e.target.closest("[data-tool]") : null; if (!b) return;
-        var tool = b.getAttribute("data-tool"), showCdr = tool === "cdr";
+        var tool = b.getAttribute("data-tool");
         [].forEach.call(sw.querySelectorAll(".btn"), function(x){ x.classList.toggle("btn-on", x === b); });
-        if (cdr) cdr.toggleAttribute("hidden", !showCdr);
-        if (link) link.toggleAttribute("hidden", showCdr);
-        if (!showCdr && window.RegistryCommsLinkView && window.RegistryCommsLinkView.refresh) window.RegistryCommsLinkView.refresh();
+        Object.keys(hosts).forEach(function(k){ if (hosts[k]) hosts[k].toggleAttribute("hidden", k !== tool); });
+        if (tool === "link" && window.RegistryCommsLinkView && window.RegistryCommsLinkView.refresh) window.RegistryCommsLinkView.refresh();
       });
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
