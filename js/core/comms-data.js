@@ -254,6 +254,7 @@
         bParty: phone(g("bParty")),
         fwdParty: phone(g("fwdParty")),
         durationHms: g("durationHms"),
+        ringSecs: num(g("ringSecs")),
         imei: g("imei"),
         imsi: g("imsi"),
         startCell: sc, endCell: ec,

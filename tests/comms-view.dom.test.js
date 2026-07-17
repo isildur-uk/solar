@@ -20,6 +20,7 @@ dom.window.RegistryCommsPattern = require("../js/core/comms-pattern.js");
 dom.window.RegistryCommsJourneys = require("../js/core/comms-journeys.js");
 dom.window.SolarCase = require("../js/core/solar-case.js");
 dom.window.CRCommsCase = require("../js/core/comms-case.js");
+dom.window.CRCommsContacts = require("../js/core/comms-contacts.js");
 var CV = require("../analyse/comms-view.js");
 
 // small fixture: two events, same A-number on two IMEIs (SIM-swap), with geo.
@@ -60,6 +61,10 @@ CV._ingestRows(CD.parseDelimited(mvCsv));
 ok("journeys tab builds tables (journeys + legs)", d.querySelectorAll("#cd-pane-journeys .cd-table").length >= 2);
 ok("journeys tab shows leg rows with a mode", d.querySelectorAll("#cd-pane-journeys .cd-table tbody tr").length >= 1 && /Road vehicle|Motorway|Train|On foot/.test(d.getElementById("cd-pane-journeys").textContent));
 ok("mode legend rendered", d.querySelectorAll("#cd-pane-journeys .cd-legkey").length >= 5);
+
+/* Contacts tab: significance-ranked counterparties */
+ok("contacts tab renders a ranked table", d.querySelectorAll("#cd-pane-contacts .cd-table tbody tr").length >= 1);
+ok("contacts tab shows a significance score bar", d.querySelectorAll("#cd-pane-contacts .cd-scorebar").length >= 1);
 
 /* P5: Add-to-case writes into the shared SolarCase spine */
 dom.window.SolarCase._reset();

@@ -16,6 +16,8 @@
   var CD = (typeof window !== "undefined") ? window.RegistryCommsData : (typeof require !== "undefined" ? require("../js/core/comms-data.js") : null);
   var PAT = (typeof window !== "undefined") ? window.RegistryCommsPattern : (typeof require !== "undefined" ? require("../js/core/comms-pattern.js") : null);
   var JRN = (typeof window !== "undefined") ? window.RegistryCommsJourneys : (typeof require !== "undefined" ? require("../js/core/comms-journeys.js") : null);
+  var CT = (typeof window !== "undefined") ? window.CRCommsContacts : (typeof require !== "undefined" ? require("../js/core/comms-contacts.js") : null);
+  var CA = (typeof window !== "undefined") ? window.CRCommsAttribution : (typeof require !== "undefined" ? require("../js/core/comms-attribution.js") : null);
   var doc = (typeof document !== "undefined") ? document : null;
 
   var state = { res: null, events: [], summary: null, sorted: [], map: null, mapLayers: null, filterN: null, built: false, tab: "table", showAllCols: false, i2Format: true };
@@ -86,7 +88,7 @@
 
     // tabs
     var tabs = el("div", "cd-tabs");
-    [["table", "Cleaned table"], ["map", "Map"], ["timeline", "Timeline"], ["patterns", "Patterns"], ["journeys", "Journeys"]].forEach(function (t) {
+    [["table", "Cleaned table"], ["map", "Map"], ["timeline", "Timeline"], ["patterns", "Patterns"], ["journeys", "Journeys"], ["contacts", "Contacts"], ["handsets", "Handsets"]].forEach(function (t) {
       var b = el("button", "cd-tab", t[1]);
       b.type = "button"; b.dataset.tab = t[0]; b.onclick = function () { showTab(t[0]); };
       if (t[0] === "table") b.classList.add("cd-tab-on");
@@ -100,6 +102,8 @@
     var tl = mk("cd-pane-timeline"); tl.setAttribute("hidden", ""); body.appendChild(tl);
     var pp = mk("cd-pane-patterns"); pp.setAttribute("hidden", ""); body.appendChild(pp);
     var jj = mk("cd-pane-journeys"); jj.setAttribute("hidden", ""); body.appendChild(jj);
+    var cn = mk("cd-pane-contacts"); cn.setAttribute("hidden", ""); body.appendChild(cn);
+    var hs = mk("cd-pane-handsets"); hs.setAttribute("hidden", ""); body.appendChild(hs);
     panel.appendChild(body);
 
     if (host) { host.appendChild(panel); }
@@ -112,7 +116,7 @@
 
   function showTab(t) {
     state.tab = t;
-    ["table", "map", "timeline", "patterns", "journeys"].forEach(function (x) {
+    ["table", "map", "timeline", "patterns", "journeys", "contacts", "handsets"].forEach(function (x) {
       var pane = doc.getElementById("cd-pane-" + x); if (pane) { if (x === t) pane.removeAttribute("hidden"); else pane.setAttribute("hidden", ""); }
     });
     var tabsEl = doc.querySelectorAll(".cd-tab");
@@ -120,6 +124,8 @@
     if (t === "map") renderMap();
     if (t === "patterns") renderPatterns();
     if (t === "journeys") renderJourneys();
+    if (t === "contacts") renderContacts();
+    if (t === "handsets") renderHandsets();
   }
 
   function open() { ensureBuilt(); doc.getElementById("cd-overlay").removeAttribute("hidden"); }
@@ -170,7 +176,7 @@
     state.filterN = state.sorted.length;
     var exp = doc.getElementById("cd-export"); if (exp) exp.disabled = res.events.length === 0;
     var addb = doc.getElementById("cd-addcase"); if (addb) addb.disabled = res.events.length === 0;
-    renderMeta(res); renderSummary(); renderCrossRef(); renderTable(); renderTimeline(); renderPatterns(); renderJourneys();
+    renderMeta(res); renderSummary(); renderCrossRef(); renderTable(); renderTimeline(); renderPatterns(); renderJourneys(); renderContacts(); renderHandsets();
     if (state.map) { state.map.remove(); state.map = null; }  // force map rebuild for new data
     if (state.tab === "map") renderMap();
     flash(res.events.length + " events parsed (" + res.format.toUpperCase() + ").");
@@ -757,6 +763,57 @@
     }
     return wrap;
   }
+  function renderHandsets() {
+    var pane = doc.getElementById("cd-pane-handsets"); if (!pane) return; clear(pane);
+    if (!CA) { pane.appendChild(el("p", "cd-empty", "Attribution module unavailable.")); return; }
+    if (!state.sorted.length) { pane.appendChild(el("p", "cd-empty", "No events \u2014 drop a return or load the demo.")); return; }
+    var r = CA.analyse(state.sorted);
+    if (!r.pairs.length) { pane.appendChild(el("p", "cd-empty", "No IMEI/IMSI data in this return.")); return; }
+    var flags = el("div", "cd-flags");
+    r.multiSim.forEach(function (h) { var f = el("span", "cd-flag"); f.textContent = "Handset " + h.imei + " ran " + h.simCount + " SIMs"; flags.appendChild(f); });
+    r.movedSim.forEach(function (x) { var f = el("span", "cd-flag"); f.textContent = "SIM " + x.imsi + " used in " + x.handsetCount + " handsets"; flags.appendChild(f); });
+    if (!flags.childNodes.length) pane.appendChild(el("p", "cd-note", "Single handset/SIM \u2014 no swap or multi-SIM pattern detected."));
+    else pane.appendChild(flags);
+    pane.appendChild(el("h3", "cd-h", "IMEI \u2194 IMSI pairings"));
+    var wrap = el("div", "cd-tablewrap"), t = el("table", "cd-table"), th = el("thead"), htr = el("tr");
+    ["IMEI", "IMSI", "Events", "First", "Last"].forEach(function (h) { htr.appendChild(el("th", null, h)); });
+    th.appendChild(htr); t.appendChild(th); var tb = el("tbody");
+    r.pairs.forEach(function (pr) { var tr = el("tr"); [pr.imei || "\u2014", pr.imsi || "\u2014", pr.count, pr.firstISO, pr.lastISO].forEach(function (v) { tr.appendChild(el("td", null, v)); }); tb.appendChild(tr); });
+    t.appendChild(tb); wrap.appendChild(t); pane.appendChild(wrap);
+    if (r.timeline.length > 1) {
+      pane.appendChild(el("h3", "cd-h", "Swap timeline"));
+      var tl = el("div", "cd-swaps");
+      r.timeline.forEach(function (e) { var row = el("div", "cd-swap"); row.textContent = e.tISO + "  \u00b7  IMEI " + (e.imei || "?") + " / IMSI " + (e.imsi || "?") + "  \u2014  " + e.change; tl.appendChild(row); });
+      pane.appendChild(tl);
+    }
+  }
+
+  function renderContacts() {
+    var pane = doc.getElementById("cd-pane-contacts"); if (!pane) return; clear(pane);
+    if (!CT) { pane.appendChild(el("p", "cd-empty", "Contacts module unavailable.")); return; }
+    if (!state.sorted.length) { pane.appendChild(el("p", "cd-empty", "No events \u2014 drop a return or load the demo.")); return; }
+    var r = CT.profile(state.sorted, state.target);
+    if (!r.contacts.length) { pane.appendChild(el("p", "cd-empty", "No counterparties found.")); return; }
+    pane.appendChild(el("p", "cd-note", r.contacts.length + " counterparties \u00b7 " + (r.firstISO || "?") + " to " + (r.lastISO || "?") + " \u00b7 ranked by significance (reciprocity + call duration + active days), not raw count."));
+    var wrap = el("div", "cd-tablewrap"), t = el("table", "cd-table"), th = el("thead"), htr = el("tr");
+    ["#", "Number", "Significance", "Events", "V/S", "Out/In", "Recip.", "Total dur", "Days", "Tempo", "First", "Last", "Flags"].forEach(function (h) { htr.appendChild(el("th", null, h)); });
+    th.appendChild(htr); t.appendChild(th);
+    var tb = el("tbody");
+    r.contacts.forEach(function (c, i) {
+      var tr = el("tr");
+      function td(v) { var d = el("td"); if (v != null) d.textContent = v; tr.appendChild(d); return d; }
+      td(i + 1);
+      var nd = el("td"); nd.textContent = c.number; if (c.key === state.target) nd.className = "cd-subject"; tr.appendChild(nd);
+      var sc = el("td", "cd-scorecell"); var bar = el("span", "cd-scorebar"); bar.style.width = Math.max(4, c.score) + "%"; sc.appendChild(bar); var sl = el("span", "cd-scoreval"); sl.textContent = c.score; sc.appendChild(sl); tr.appendChild(sc);
+      td(c.events); td(c.voice + "/" + c.sms); td(c.outCount + "/" + c.inCount); td(c.reciprocity.toFixed(2)); td(fmtDur(c.totalDurSec)); td(c.activeDays); td(c.tempo); td(c.firstISO); td(c.lastISO);
+      var fd = el("td"), flags = [];
+      if (c.smsOnly) flags.push("SMS-only"); if (c.signalling) flags.push("signalling"); if (c.isNew) flags.push("new"); if (c.isDropped) flags.push("dropped");
+      flags.forEach(function (f) { var sp = el("span", "cd-flag"); sp.textContent = f; fd.appendChild(sp); });
+      tr.appendChild(fd); tb.appendChild(tr);
+    });
+    t.appendChild(tb); wrap.appendChild(t); pane.appendChild(wrap);
+  }
+
   function renderPatterns() {
     var pane = doc.getElementById("cd-pane-patterns"); if (!pane) return; clear(pane);
     if (!PAT) { pane.appendChild(el("p", "cd-empty", "Pattern module unavailable.")); return; }
@@ -895,6 +952,10 @@
       "select.cd-demo{cursor:pointer}",
       ".cd-tabs{display:flex;gap:4px;padding:8px 14px 0}",
       ".cd-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:var(--faint);padding:7px 12px;cursor:pointer;font:inherit}.cd-tab:hover{color:var(--dim)}.cd-tab-on{color:var(--accent);border-bottom-color:var(--accent)}",
+      ".cd-note{color:var(--faint);font-size:var(--fs-xs);margin:2px 0 8px}",
+      ".cd-scorecell{position:relative;min-width:74px}.cd-scorebar{position:absolute;left:0;top:2px;bottom:2px;background:rgba(142,162,255,.28);border-radius:3px;z-index:0}.cd-scoreval{position:relative;z-index:1}",
+      ".cd-flag{display:inline-block;font-size:var(--fs-2xs);color:var(--warn,#e8a13a);border:1px solid var(--warn,#e8a13a);border-radius:10px;padding:0 6px;margin-right:4px}",
+      ".cd-flags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.cd-swaps{display:flex;flex-direction:column;gap:3px}.cd-swap{font-size:var(--fs-xs);color:var(--dim);font-family:var(--mono)}",
       ".cd-body{flex:1;min-height:0;position:relative}",
       ".cd-pane{position:absolute;inset:0;overflow:auto;padding:12px 14px}",
       "#cd-map{position:absolute;inset:0;background:var(--bg)}.cd-map-offline{background:var(--bg)}",
