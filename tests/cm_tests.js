@@ -55,6 +55,12 @@ test("PHONE: intl + -> 00CC", function () { eq(S.phoneCM("+1 415 555 0100"), "00
 test("PHONE: never contains a plus", function () { no(S.phoneCM("+33 1 23 45 67 89").indexOf("+") !== -1); });
 test("PHONE: never contains a space", function () { no(/\s/.test(S.phoneCM("+44 7686 868 686"))); });
 test("PHONE: validity UK", function () { ok(S.phoneValid("07686868686")); });
+test("PHONE: bare 44.. -> national 0", function () { eq(S.phoneCM("447536935630"), "07536935630"); });
+test("PHONE: dropped leading 0 (10-digit 7..) -> 07..", function () { eq(S.phoneCM("7536935630"), "07536935630"); });
+test("PHONE: scientific notation is CORRUPT (no fabrication)", function () { eq(S.phoneCM("4.47E+11"), ""); ok(S.phoneLooksCorrupt("4.47E+11")); });
+test("PHONE: 'No available data' is corrupt", function () { ok(S.phoneLooksCorrupt("No available data")); eq(S.phoneCM("No available data"), ""); });
+test("PHONE: scientific-notation number is INVALID", function () { no(S.phoneValid("4.47E+11")); });
+test("PHONE: clean UK number is not flagged corrupt", function () { no(S.phoneLooksCorrupt("+447536935630")); });
 
 /* ---------------- CURRENCY ---------------- */
 test("CCY: £ -> GBP", function () { eq(S.currencyCM("£1,500"), "GBP 1500"); });

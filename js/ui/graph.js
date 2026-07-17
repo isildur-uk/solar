@@ -47,6 +47,7 @@
   var colorMode = "confidence";   // "confidence" | "type" | "source"
   var hlSet = null;               // null = no highlight; {} = dim everything;
                                   // {id:1,...} = keep these bright, dim the rest
+  var focusId = null;             // entity currently in FOCUS state (see focusEntity)
 
   var LINK_PALETTE = ["#6ea8d8", "#7fc97f", "#d87f9b", "#c9c36a", "#8f9ac4", "#d8a06a", "#5fc4c0", "#d86a6a", "#8d99ae", "#8ea2ff"];
   function paletteFor(key) {
@@ -534,8 +535,23 @@
         var col = i % cols, row = Math.floor(i / cols);
         pos[e.id] = { x: snapVal(col * GRID_STEP - offX), y: snapVal(row * GRID_STEP - offY) };
       });
+      // Orthogonal (Manhattan) routing — in grid mode every link moves on X or Y
+      // only, with a hard corner, so the chart reads like a circuit board and never
+      // curves. Nodes sit on the lattice, so a single mid-run corner snapped to the
+      // grid keeps corners on intersections too. Axis-aligned pairs stay straight.
+      store.links.forEach(function (l) {
+        var a = pos[l.from], b = pos[l.to];
+        if (!a || !b) return;
+        if (a.x === b.x || a.y === b.y) { l.bends = []; l._autoBend = true; return; }
+        // route via a mid-column bus (vertical out of source, across, into target),
+        // snapped to the grid — an even, board-like Manhattan path.
+        var midX = snapVal((a.x + b.x) / 2);
+        l.bends = [{ x: midX, y: a.y }, { x: midX, y: b.y }];
+        l._autoBend = true;
+      });
       pinAll(pos);
       setGridMode(true);                                 // turn on after pinAll (which fits)
+      store._emit("link:update");                        // materialise the orthogonal bends
       return;
     }
 
@@ -700,11 +716,13 @@
       if (p.nodes.length) {
         if (isBendNode(p.nodes[0])) { onSelect({ kind: "link", id: linkIdOf(p.nodes[0]) }); return; }
         try { pulseEdges(network.getConnectedEdges(p.nodes[0])); } catch (e) { /* noop */ }
+        // enter FOCUS: emphasise this entity + its direct neighbours, dim the rest
+        focusEntity(p.nodes[0]);
         onSelect({ kind: "entity", id: p.nodes[0] });
       } else if (p.edges.length) {
         pulseEdges([p.edges[0]]);
         onSelect({ kind: "link", id: linkIdOf(p.edges[0]) || p.edges[0] });
-      } else { stopPulse(); onSelect(null); }
+      } else { stopPulse(); clearFocus(); onSelect(null); }
     });
 
     network.on("doubleClick", function (p) {
@@ -716,6 +734,13 @@
       }
       if (p.nodes.length && !isBendNode(p.nodes[0])) {
         network.focus(p.nodes[0], { scale: 1.2, animation: true });
+        return;
+      }
+      // double-click empty canvas → clear the rubber-band selection and exit
+      // any focus state (the "exit select mode" gesture)
+      if (!p.nodes.length && !p.edges.length) {
+        try { network.unselectAll(); } catch (e) { /* noop */ }
+        clearFocus();
       }
     });
 
@@ -732,23 +757,36 @@
         view = { x1: tl.x, y1: tl.y, x2: br.x, y2: br.y };
       } catch (e) { return; }
       var light = document.documentElement.getAttribute("data-theme") === "light";
+      // minor = every SNAP_GRID cell (the snap resolution); major = every GRID_STEP
+      // (where lattice nodes land). Legible but restrained — the chart stays the hero.
+      var minorCol = light ? "rgba(74,91,214,0.10)" : "rgba(142,162,255,0.10)";
+      var majorCol = light ? "rgba(74,91,214,0.24)" : "rgba(142,162,255,0.26)";
+      var dotCol   = light ? "rgba(74,91,214,0.40)" : "rgba(142,162,255,0.42)";
       var startX = Math.floor(view.x1 / SNAP_GRID) * SNAP_GRID;
       var startY = Math.floor(view.y1 / SNAP_GRID) * SNAP_GRID;
       ctx.save();
-      ctx.lineWidth = 1;
-      for (var gx = startX; gx <= view.x2; gx += SNAP_GRID) {
-        var major = Math.round(gx / GRID_STEP) * GRID_STEP === gx;
-        ctx.strokeStyle = light
-          ? (major ? "rgba(74,91,214,0.14)" : "rgba(74,91,214,0.06)")
-          : (major ? "rgba(142,162,255,0.16)" : "rgba(142,162,255,0.06)");
+      var gx, gy, major, majorY;
+      for (gx = startX; gx <= view.x2; gx += SNAP_GRID) {
+        major = Math.round(gx / GRID_STEP) * GRID_STEP === gx;
+        ctx.strokeStyle = major ? majorCol : minorCol;
+        ctx.lineWidth = major ? 1.4 : 1;
         ctx.beginPath(); ctx.moveTo(gx, view.y1); ctx.lineTo(gx, view.y2); ctx.stroke();
       }
-      for (var gy = startY; gy <= view.y2; gy += SNAP_GRID) {
-        var majorY = Math.round(gy / GRID_STEP) * GRID_STEP === gy;
-        ctx.strokeStyle = light
-          ? (majorY ? "rgba(74,91,214,0.14)" : "rgba(74,91,214,0.06)")
-          : (majorY ? "rgba(142,162,255,0.16)" : "rgba(142,162,255,0.06)");
+      for (gy = startY; gy <= view.y2; gy += SNAP_GRID) {
+        majorY = Math.round(gy / GRID_STEP) * GRID_STEP === gy;
+        ctx.strokeStyle = majorY ? majorCol : minorCol;
+        ctx.lineWidth = majorY ? 1.4 : 1;
         ctx.beginPath(); ctx.moveTo(view.x1, gy); ctx.lineTo(view.x2, gy); ctx.stroke();
+      }
+      // snap anchors — a small dot at every major intersection (where nodes settle),
+      // so the lattice reads as a deliberate placement surface, not just faint lines.
+      ctx.fillStyle = dotCol;
+      var mStartX = Math.ceil(view.x1 / GRID_STEP) * GRID_STEP;
+      var mStartY = Math.ceil(view.y1 / GRID_STEP) * GRID_STEP;
+      for (gx = mStartX; gx <= view.x2; gx += GRID_STEP) {
+        for (gy = mStartY; gy <= view.y2; gy += GRID_STEP) {
+          ctx.beginPath(); ctx.arc(gx, gy, 1.6, 0, 2 * Math.PI); ctx.fill();
+        }
       }
       ctx.restore();
     });
@@ -778,7 +816,7 @@
     network.on("dragEnd", function (p) {
       if (!p.nodes || !p.nodes.length) { return; }
       var positions = network.getPositions(p.nodes);
-      var touched = false;
+      var touched = false, movedEnts = [];
       p.nodes.forEach(function (id) {
         var px = positions[id].x, py = positions[id].y;
         // snap-to-grid applies only on manual drag-release, never to the
@@ -801,9 +839,29 @@
             var keepPinned = !!(e.chart && e.chart.pinned);
             e.chart = { x: Math.round(px), y: Math.round(py), pinned: keepPinned };
             touched = true;
+            movedEnts.push(id);
           }
         }
       });
+      // Grid mode: a dropped node stays on the board — re-route every link touching
+      // it on X/Y only (snapped mid-column bus), so dragging never reintroduces a curve.
+      if (gridMode && movedEnts.length) {
+        var mSet = {}; movedEnts.forEach(function (i) { mSet[i] = 1; });
+        var nodeXY = function (id) {
+          try { var pp = network.getPositions([id])[id]; if (pp) return { x: pp.x, y: pp.y }; } catch (e2) { /* noop */ }
+          var en = store.getEntity(id); return (en && en.chart) ? { x: en.chart.x, y: en.chart.y } : null;
+        };
+        store.links.forEach(function (l) {
+          if (!mSet[l.from] && !mSet[l.to]) { return; }
+          var a = nodeXY(l.from), b = nodeXY(l.to);
+          if (!a || !b) { return; }
+          if (a.x === b.x || a.y === b.y) { l.bends = []; l._autoBend = true; return; }
+          var midX = snapVal((a.x + b.x) / 2);
+          l.bends = [{ x: midX, y: a.y }, { x: midX, y: b.y }];
+          l._autoBend = true;
+        });
+        store._emit("link:update");
+      }
       // Settle back to the manual (physics-off) resting state so nothing drifts
       // after the drop. If the user was in Force mode, this ends that session.
       if (physicsOn) {
@@ -814,14 +872,40 @@
       if (touched) store._emit("layout");
     });
 
-    // shift+drag rubber-band multi-select
-    var band = null, bandStart = null;
+    /* ---------------- rubber-band (drag-to-select) ----------------
+       DEFAULT gesture: a left-drag starting on EMPTY canvas draws a selection
+       marquee and selects every visible entity inside it. This is the least
+       surprising default for a link-analysis chart (i2 behaviour) — dragging a
+       node still moves that node; dragging empty space now selects rather than
+       pans. Panning stays available two ways, so nothing is lost:
+         • hold SPACE and drag, or
+         • drag with the RIGHT / MIDDLE mouse button.
+       While a marquee is live we turn vis's own dragView OFF so the canvas can't
+       pan under the rubber-band, then restore it on mouseup. Double-click on
+       empty space clears the selection (see the doubleClick handler above).
+       Reduced-motion: the marquee is a plain static rect (no animated dashes) —
+       the .select-band dash animation is gated in CSS on prefers-reduced-motion. */
+    var band = null, bandStart = null, panHeld = false;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.addEventListener("keydown", function (ev) { if (ev.code === "Space" || ev.key === " ") panHeld = true; }, true);
+    document.addEventListener("keyup", function (ev) { if (ev.code === "Space" || ev.key === " ") panHeld = false; }, true);
+    window.addEventListener("blur", function () { panHeld = false; });
+
+    function setDragView(on) {
+      try { network.setOptions({ interaction: { dragView: !!on } }); } catch (e) { /* noop */ }
+    }
     container.addEventListener("mousedown", function (ev) {
-      if (!ev.shiftKey || ev.button !== 0) return;
+      // right/middle button, or Space held → pan: leave vis to handle it
+      if (ev.button !== 0 || panHeld) return;
+      // only start a marquee on empty canvas (never over a node) — a node-drag
+      // must still move that node
+      if (nodeAtDOM(ev.offsetX, ev.offsetY)) return;
       ev.preventDefault(); ev.stopPropagation();
+      setDragView(false);                                   // stop the canvas panning under the band
       bandStart = { x: ev.offsetX, y: ev.offsetY };
       band = document.createElement("div");
       band.className = "select-band";
+      if (reduce) band.classList.add("no-motion");
       container.appendChild(band);
     }, true);
     container.addEventListener("mousemove", function (ev) {
@@ -837,6 +921,7 @@
       rect.x2 = rect.x1 + parseFloat(band.style.width || "0");
       rect.y2 = rect.y1 + parseFloat(band.style.height || "0");
       band.remove(); band = null;
+      setDragView(true);                                    // restore panning
       var c1 = network.DOMtoCanvas({ x: rect.x1, y: rect.y1 });
       var c2 = network.DOMtoCanvas({ x: rect.x2, y: rect.y2 });
       var ids = [];
@@ -849,6 +934,11 @@
       });
       if (ids.length) network.selectNodes(ids);
     }, true);
+
+    // Esc exits entity focus (see focusEntity below)
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && focusId) { clearFocus(); }
+    });
 
     store.onChange(rebuild);
     rebuild();
@@ -918,6 +1008,38 @@
     }
     rebuild();
   }
+
+  /* ---------------- entity focus ----------------
+     FOCUS state: clicking an entity emphasises it and its DIRECT neighbours and
+     dims everything else, so an analyst instantly sees everything connected to
+     that subject. It rides the existing hlSet dim path (nodeFromEntity /
+     baseEdge already fade anything outside hlSet), so no new render code — we
+     just compute {subject + neighbours} and the connected edges pulse.
+     Exit: click empty canvas, or press Esc (both call clearFocus).
+     Reduced-motion: the dim itself is static (opacity, no animation); only the
+     edge pulse animates, and pulseEdges is already the app's single motion path
+     — callers wanting a still focus can leave it (kept minimal here). */
+  function neighbourIds(id) {
+    var set = {}; set[id] = 1;
+    store.links.forEach(function (l) {
+      if (l.from === id) set[l.to] = 1;
+      else if (l.to === id) set[l.from] = 1;
+    });
+    return set;
+  }
+  function focusEntity(id) {
+    if (!network || !store.getEntity(id)) return;
+    focusId = id;
+    hlSet = neighbourIds(id);
+    rebuild();
+  }
+  function clearFocus() {
+    if (!focusId) return;
+    focusId = null;
+    hlSet = null;
+    rebuild();
+  }
+  function focused() { return focusId; }
 
   function exportPNG() {
     var canvas = document.querySelector("#chart canvas");
@@ -991,6 +1113,7 @@
 
   window.CRGraph = {
     init: init, rebuild: rebuild, select: select, focus: focus, fit: fit,
+    focusEntity: focusEntity, clearFocus: clearFocus, focused: focused,
     togglePhysics: togglePhysics, highlight: highlight, exportPNG: exportPNG,
     getNetwork: getNetwork, getStore: getStore,
     // v2

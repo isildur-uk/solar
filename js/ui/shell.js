@@ -113,6 +113,105 @@
     return "Untitled case";
   }
 
+  /* ---- Row-1 "Select Case" picker ------------------------------------------
+     A compact dropdown showing the active case name; opening it lists the cases
+     that genuinely exist in this local-only app: the current shared case
+     (renameable on the workbench via the re-parented #case-name input), the five
+     worked sample cases (which load their intelligence through the existing
+     btn-demo-N flow), and a "New case" reset. Fixed height so it never resizes
+     the bar. XSS-safe (labels are set via textContent / escHtml).             */
+  var CASE_SAMPLES = [
+    { n: "1", label: "BAINES profile" },
+    { n: "2", label: "Surveillance / meeting" },
+    { n: "3", label: "Financial enquiries" },
+    { n: "4", label: "Travel / border" },
+    { n: "5", label: "Arrests" }
+  ];
+  var CARET = '<svg viewBox="0 0 12 12" class="sh-casepick-caret" aria-hidden="true" focusable="false"><path d="M3 4.5L6 7.5l3-3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function currentCaseName() { return (sharedCaseName() || "").trim() || "Untitled case"; }
+
+  function buildCasePicker() {
+    var wrap = el("details", { class: "sh-case sh-casepick" });
+    var sum = el("summary", { class: "sh-casepick-trigger", "aria-label": "Select case" });
+    // label shows the active case name; placeholder "Select case" when unnamed
+    var nameEl = el("span", { class: "sh-casepick-name" });
+    var nm = currentCaseName();
+    nameEl.textContent = (nm && nm !== "Untitled case") ? nm : "Select case";
+    sum.appendChild(nameEl);
+    sum.insertAdjacentHTML("beforeend", CARET);
+    tip(sum, "The case you are working — pick a sample, start a new case, or rename this one");
+    wrap.appendChild(sum);
+
+    var menu = el("div", { class: "sh-casepick-menu", role: "menu" });
+
+    // group: current case (with inline rename slot on the workbench)
+    var curGroup = el("div", { class: "sh-casepick-group" });
+    curGroup.appendChild(el("p", { class: "sh-casepick-h" }, "Current case"));
+    if (!IS_REGISTRY) {
+      // holder for the re-parented editable #case-name input (moved in by retire step)
+      curGroup.appendChild(el("div", { class: "sh-casepick-rename", id: "sh-casepick-rename" }));
+    } else {
+      var ro = el("span", { class: "sh-casepick-current" });
+      ro.textContent = nm;
+      curGroup.appendChild(ro);
+    }
+    menu.appendChild(curGroup);
+
+    // group: sample cases (workbench has the demo buttons; on registry they route
+    // over to the workbench where the same demos live)
+    var sampGroup = el("div", { class: "sh-casepick-group" });
+    sampGroup.appendChild(el("p", { class: "sh-casepick-h" }, "Sample cases"));
+    CASE_SAMPLES.forEach(function (s) {
+      var b = el("button", { class: "sh-casepick-item", type: "button" });
+      b.appendChild(el("span", { class: "sh-casepick-num" }, s.n));
+      b.appendChild(el("span", null, s.label));
+      tip(b, "Load the worked sample: " + s.label);
+      b.addEventListener("click", function () {
+        wrap.open = false;
+        var btn = byId("btn-demo-" + s.n);
+        if (btn) { btn.click(); }                 // workbench: opens the demo's intelligence
+        else { location.href = OTHER; }            // registry: no demos here → go to Charting
+      });
+      sampGroup.appendChild(b);
+    });
+    menu.appendChild(sampGroup);
+
+    // group: actions
+    var actGroup = el("div", { class: "sh-casepick-group" });
+    var newBtn = el("button", { class: "sh-casepick-item", type: "button" });
+    newBtn.appendChild(el("span", { class: "sh-casepick-num" }, "+"));
+    newBtn.appendChild(el("span", null, "New case"));
+    tip(newBtn, "Start a fresh, empty case (clears the current chart)");
+    newBtn.addEventListener("click", function () {
+      wrap.open = false;
+      var clr = byId("btn-clear");
+      if (clr) { clr.click(); }                    // workbench: real clear (with its own confirm)
+      else { location.href = OTHER; }              // registry: the clear lives on the workbench
+    });
+    actGroup.appendChild(newBtn);
+    menu.appendChild(actGroup);
+
+    wrap.appendChild(menu);
+
+    // keep the trigger label in sync with the live case name (edits + cross-tab)
+    function syncName() {
+      var v = currentCaseName();
+      nameEl.textContent = (v && v !== "Untitled case") ? v : "Select case";
+    }
+    window.addEventListener("storage", function (e) { if (e.key === "chart_room_case_v1") { syncName(); } });
+    if (!IS_REGISTRY) {
+      // the re-parented input fires "input"/"change" as the analyst renames
+      document.addEventListener("input", function (e) { if (e.target && e.target.id === "case-name") { syncName(); } });
+    }
+
+    // close on outside-click / Esc (independent of the tab-menu wiring)
+    document.addEventListener("click", function (e) { if (wrap.open && !wrap.contains(e.target)) { wrap.open = false; } });
+    wrap.addEventListener("keydown", function (e) { if (e.key === "Escape" && wrap.open) { wrap.open = false; sum.focus(); } });
+
+    return wrap;
+  }
+
   var ico = {
     plus: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
     doc: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h5l3 3V13.5H4z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M9 2.5v3h3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
@@ -503,20 +602,14 @@
     var _id = (typeof window !== "undefined" && window.SolarIdentity && window.SolarIdentity.get) ? window.SolarIdentity.get() : { grade: "G5", name: "Analyst" };
     var user = el("div", { class: "sh-user" }, '<span class="sh-grade">' + escHtml(_id.grade) + '</span><span>' + escHtml(_id.name) + '</span>');
     idRow.appendChild(wm); idRow.appendChild(surf);
-    // Shared "Case: <name>" context — the SAME case reads on BOTH tools (one
-    // product). The workbench re-parents its editable #case-name input into this
-    // slot (editable there); the registry shows the same name read-only from the
-    // shared store so the analyst always sees which case they're working.
-    var caseSlot = el("div", { class: "sh-case" });
-    caseSlot.appendChild(el("span", { class: "sh-case-label" }, "Case"));
-    if (IS_REGISTRY) {
-      var roName = el("span", { class: "sh-case-name", title: "Active charting case (shared)" }, escHtml(sharedCaseName()));
-      caseSlot.appendChild(roName);
-      // keep it fresh if the workbench edits the case in another tab
-      window.addEventListener("storage", function (e) {
-        if (e.key === "chart_room_case_v1") { roName.textContent = sharedCaseName(); }
-      });
-    }
+    // Shared case context — the SAME case reads on BOTH tools (one product). The
+    // redundant "CASE" label is gone; Row 1 now carries a compact "Select Case"
+    // picker showing the active case name with a dropdown of the cases that
+    // actually exist here: the current shared case (renameable on the workbench),
+    // the five worked sample cases, and a "New case" reset. On the workbench the
+    // real editable #case-name input is re-parented into the picker (kept as the
+    // rename field); the registry shows the same name read-only from the store.
+    var caseSlot = buildCasePicker();
     idRow.appendChild(caseSlot);
     idRow.appendChild(user);
 
@@ -675,14 +768,15 @@
       searchSlot.appendChild(search);
     }
 
-    // 2) relocate #case-name into Row 1 (workbench only)
+    // 2) relocate #case-name into the Row-1 case picker's rename slot (workbench
+    //    only) — kept as the real editable rename field inside "Current case".
     var caseName = byId("case-name");
-    var caseSlot = shell.querySelector(".sh-case");
-    if (!IS_REGISTRY && caseName && caseSlot) {
+    var renameSlot = shell.querySelector("#sh-casepick-rename");
+    if (!IS_REGISTRY && caseName && renameSlot) {
       caseName.classList.add("sh-case-input");
       caseName.setAttribute("aria-label", "Case name");
-      caseName.setAttribute("title", "Click to rename this case");
-      caseSlot.appendChild(caseName);
+      caseName.setAttribute("title", "Rename this case");
+      renameSlot.appendChild(caseName);
     }
 
     // 3) hide the old toolbars — nodes stay in the DOM as the control substrate
@@ -788,18 +882,14 @@
         '<div class="sh-set-row"><span class="sh-set-row-label">UI sound</span><span id="sh-set-sound-slot"></span></div>' +
       '</div>' +
       '<div class="sh-modal-sec"><h3>Developer</h3>' +
-        '<div class="sh-set-row"><span class="sh-set-row-label">Developer mode<br><span style="font-size:var(--fs-xs);color:var(--faint);font-weight:400">Click any text to edit it inline · Ctrl+Shift+D</span></span><span id="sh-set-dev-slot"></span></div>' +
+        '<div class="sh-set-row"><span class="sh-set-row-label">Developer mode<br><span style="font-size:var(--fs-xs);color:var(--faint);font-weight:400">Click any text on the page to edit it inline · Ctrl+Shift+D</span></span><span id="sh-set-dev-slot"></span></div>' +
       '</div>' +
       '<div class="sh-modal-sec"><h3>Identity</h3>' +
         '<label>Signed in as<span style="font-family:var(--mono);color:var(--dim)">G5 · Benedict WILSON</span></label>' +
         '<p style="font-size:var(--fs-xs);color:var(--faint);margin:2px 0 0">Set your working identity from the header user chip on the ' + (IS_REGISTRY ? "database" : "workbench") + '.</p>' +
       '</div>' +
-      '<div class="sh-modal-sec" id="sh-set-about"><h3>About</h3>' +
-        '<p style="font-size:var(--fs-sm);color:var(--dim);margin:0 0 6px">SOLAR — link-analysis workbench and structured-intelligence database. Local-only: all case data stays in this browser.</p>' +
-        '<p style="font-size:var(--fs-xs);color:var(--faint);margin:0">OFFICIAL · one shared case across both surfaces.</p>' +
-        '<p style="font-size:var(--fs-2xs);color:var(--faint);margin:6px 0 0;font-family:var(--mono)">Build <b style="color:var(--dim)">' + (window.SOLAR_BUILD || "dev") + '</b> — if this doesn’t match the latest deploy, hard-refresh (F5).</p>' +
-      '</div>' +
       '<div class="sh-modal-foot">' +
+        '<span class="sh-build-stamp">Build <b>' + escHtml(window.SOLAR_BUILD || "dev") + '</b><span class="sh-build-hint"> — if this doesn’t match the latest deploy, hard-refresh (F5)</span></span>' +
         '<button class="btn" id="sh-set-close" type="button">Close</button>' +
       '</div>';
     veil.appendChild(m);
@@ -810,11 +900,25 @@
     byId("sh-set-sound-slot").appendChild(buildSoundToggle(false));
     var devSlot = byId("sh-set-dev-slot");
     if (devSlot && window.SolarDev) {
-      var devBtn = el("button", { type: "button", class: "sh-switch", role: "switch" });
-      devBtn.innerHTML = '<span class="sh-switch-track"><span class="sh-switch-thumb"></span></span>';
-      var reflectDev = function () { devBtn.setAttribute("aria-checked", window.SolarDev.get() ? "true" : "false"); };
+      // A proper on/off SWITCH (track + thumb, periwinkle-lit when ON) with an
+      // explicit ON/OFF state word, so dev mode reads unmistakably as a toggle.
+      var devBtn = el("button", { type: "button", class: "sh-switch", role: "switch", "aria-label": "Developer mode" });
+      devBtn.innerHTML =
+        '<span class="sh-switch-track"><span class="sh-switch-thumb"></span></span>' +
+        '<span class="sh-switch-label sh-switch-state"></span>';
+      var devState = devBtn.querySelector(".sh-switch-state");
+      var reflectDev = function () {
+        var on = !!window.SolarDev.get();
+        devBtn.setAttribute("aria-checked", on ? "true" : "false");
+        if (devState) { devState.textContent = on ? "On" : "Off"; }
+        tip(devBtn, on ? "Turn developer mode off (currently on)" : "Turn developer mode on (currently off)");
+      };
       reflectDev();
-      devBtn.addEventListener("click", function () { window.SolarDev.toggle(); reflectDev(); });
+      // Set explicitly (not toggle) so the switch always drives to the state it shows.
+      devBtn.addEventListener("click", function () {
+        window.SolarDev.set(!window.SolarDev.get());
+        reflectDev();
+      });
       window.addEventListener("solar-devmode", reflectDev);
       devSlot.appendChild(devBtn);
     }
@@ -822,7 +926,9 @@
     veil.addEventListener("click", function (e) { if (e.target === veil) { closeSettings(); } });
     document.addEventListener("keydown", settingsEsc);
 
-    var focusTarget = focusSection === "about" ? byId("sh-set-about") : themeSwitch;
+    // The About section was removed; the help icon (focusSection "about") now
+    // just opens Settings focused on the first control like the gear does.
+    var focusTarget = themeSwitch;
     if (focusTarget && focusTarget.focus) { try { focusTarget.focus(); } catch (e) { /* noop */ } }
   }
   function settingsEsc(e) { if (e.key === "Escape") { closeSettings(); } }

@@ -74,6 +74,11 @@
     communication:"phone", cyber:"ip", firearm:"flag", official_document:"document", location:"location", drug:"drug", cash:"money"
   };
   function siGlyph(type) { return SI_TYPE_GLYPH[type] || "flag"; }
+  // Node sizing parity with the main Charting surface (js/ui/graph.js ICON_SIZE):
+  // richer per-type emphasis instead of the flat person/other split.
+  var SI_ICON_SIZE = { person: 24, organisation: 22, location: 20, address: 18 };
+  // Link confidence dashing parity with Charting (js/ui/graph.js DASH).
+  var SI_DASH = { high: false, med: [8, 4], low: [2, 5] };
 
   /* ---- highlight extracted entities inside report item text (usability) ---- */
   var siHighlightOn = (function () { try { return localStorage.getItem("reg_hl_entities") !== "0"; } catch (e) { return true; } })();
@@ -160,6 +165,78 @@
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
+  }
+  /* An IR reference number (URN) rendered as a periwinkle, clickable control that
+     opens that report. XSS-safe: the urn is escaped into both the label and the
+     data attribute; navigation runs through delegated handling on .urn-link. */
+  function urnLink(urn) {
+    var u = String(urn == null ? "" : urn);
+    if (!u) return "—";
+    return '<button type="button" class="urn-link" data-urn-link="' + esc(u) + '" title="Open ' + esc(u) + '">' + esc(u) + '</button>';
+  }
+  /* The Point of Contact rendered as a clickable control that opens a local
+     compose affordance. XSS-safe: the name is escaped into the label + data
+     attribute; the popover is built with textContent (see openPocCompose). */
+  function pocControl(name) {
+    var n = String(name == null ? "" : name).trim();
+    if (!n) return '—';
+    return '<button type="button" class="poc-link" data-poc="' + esc(n) + '" title="Message ' + esc(n) + '">' + esc(n) + '</button>';
+  }
+  /* Local/demo compose affordance for the Point of Contact. NO network, NO email:
+     Send records to the access log (if present) and shows a confirmation toast.
+     Built entirely with createElement + textContent, so the untrusted POC name
+     and analyst message never touch innerHTML. */
+  // Floating overlays must live inside the scoped view root (.v-database) when
+  // the Database is embedded in the SOLAR host, or the scoped stylesheet's
+  // rules (prefixed .v-database) never reach them. Standalone → document.body.
+  function overlayRoot() {
+    try { var v = document.querySelector(".v-database"); if (v) return v; } catch (e) {}
+    return document.body;
+  }
+  var _pocEl = null;
+  function closePocCompose() { if (_pocEl && _pocEl.parentNode) { _pocEl.parentNode.removeChild(_pocEl); } _pocEl = null; document.removeEventListener("keydown", _pocEsc, true); }
+  function _pocEsc(e) { if (e.key === "Escape") { closePocCompose(); } }
+  function openPocCompose(name, anchor) {
+    closePocCompose();
+    name = String(name || "").trim(); if (!name) return;
+    var scrim = document.createElement("div");
+    scrim.className = "poc-scrim";
+    scrim.setAttribute("role", "dialog");
+    scrim.setAttribute("aria-modal", "true");
+    scrim.setAttribute("aria-label", "Message " + name);
+    var card = document.createElement("div");
+    card.className = "poc-compose";
+    var head = document.createElement("div"); head.className = "poc-head";
+    var title = document.createElement("span"); title.className = "poc-title"; title.textContent = "Message " + name;
+    var x = document.createElement("button"); x.type = "button"; x.className = "poc-x"; x.setAttribute("aria-label", "Close"); x.textContent = "×";
+    x.addEventListener("click", closePocCompose);
+    head.appendChild(title); head.appendChild(x);
+    var ta = document.createElement("textarea"); ta.className = "poc-ta";
+    ta.setAttribute("placeholder", "Write a message to " + name + "…");
+    ta.setAttribute("aria-label", "Message to " + name);
+    var foot = document.createElement("div"); foot.className = "poc-foot";
+    var note = document.createElement("span"); note.className = "poc-note"; note.textContent = "Local demo — nothing is sent off this device.";
+    var send = document.createElement("button"); send.type = "button"; send.className = "btn poc-send"; send.textContent = "Send";
+    send.addEventListener("click", function () {
+      var msg = ta.value.trim();
+      if (!msg) { setStatus("Write a message before sending.", "err"); ta.focus(); return; }
+      try {
+        if (window.RegistryAccessLog && window.RegistryAccessLog.record) {
+          window.RegistryAccessLog.record({ actor: currentUser(), action: "poc-message", target: name,
+            reason: "Operational tasking", justification: msg.slice(0, 240) });
+        }
+      } catch (e) { /* logging is best-effort */ }
+      closePocCompose();
+      setStatus("Message to " + name + " queued (local demo — not sent).", "ok");
+    });
+    foot.appendChild(note); foot.appendChild(send);
+    card.appendChild(head); card.appendChild(ta); card.appendChild(foot);
+    scrim.appendChild(card);
+    scrim.addEventListener("click", function (e) { if (e.target === scrim) closePocCompose(); });
+    _pocEl = scrim;
+    overlayRoot().appendChild(scrim);
+    document.addEventListener("keydown", _pocEsc, true);
+    ta.focus();
   }
   /* Designed empty state — the sanctioned constellation motif (DESIGN.md):
      quiet twinkling glyph (opacity ≤ .5, reduced-motion gated in CSS) + a
@@ -646,11 +723,6 @@
      dr-lede + dr-foot (the real, defensible definition). Full breakdown stays on click. */
   var GRADE_TIP = 'Graded on the 3×5×2 system: source-evaluation number, intelligence-evaluation letter, handling code. Source 1 Reliable · 2 Untested · 3 Not reliable. Intelligence A–E, known-true to suspected-false. Handling P permitted · C permitted subject to conditions.';
 
-  /* whether the analyst has dismissed the "select text to highlight" hint */
-  var USER_HL_HINT_KEY = "reg_hl_hint_dismissed_v1";
-  function userHlHintDismissed(){ try { return localStorage.getItem(USER_HL_HINT_KEY) === "1"; } catch(e){ return false; } }
-  function dismissUserHlHint(){ try { localStorage.setItem(USER_HL_HINT_KEY, "1"); } catch(e){ /* ignore */ } }
-
   function explainGrade(grade, handling){
     var sc=String(grade||''), s=sc.charAt(0), i=sc.charAt(1).toUpperCase(), hc=String(handling||'P').toUpperCase();
     var se=G.SOURCE_EVAL[s], as=G.ASSESSMENT[i], ha=G.HANDLING[hc];
@@ -688,7 +760,7 @@
       var idRows=[['PNC',d.identifiers.pnc],['CRO',d.identifiers.cro],['NINO',d.identifiers.nino],['Passport',d.identifiers.passport]]
         .filter(function(x){return x[1].length;}).map(function(x){ return cell(x[0], x[1].join(', ')); }).join('');
       function listCard(title,arr){ if(!arr.length) return ''; return '<div class="dos-card"><h3>'+esc(title)+'<span class="dos-n">'+arr.length+'</span></h3><ul class="dos-list">'+arr.map(function(a){ return '<li>'+esc(a.label)+(a.dob?' <span class="dos-dim">DOB '+esc(a.dob)+'</span>':'')+(a.link?' <span class="dos-link">'+esc((SI.LINK_TYPES[a.link]||a.link))+'</span>':'')+'</li>'; }).join('')+'</ul></div>'; }
-      var appRows=d.appearances.map(function(a){ return '<tr class="dos-appear" data-urn="'+esc(a.urn)+'"><td>'+esc(a.date||'\u2014')+'</td><td>'+esc(a.operation||'')+'</td><td class="dos-urn">'+esc(a.urn)+'</td><td>'+esc(a.title||'')+'</td><td class="dos-grade">'+esc(a.grade||'')+'</td><td>'+esc((SI.ROLES[a.role]||a.role||''))+'</td></tr>'; }).join('');
+      var appRows=d.appearances.map(function(a){ return '<tr class="dos-appear" data-urn="'+esc(a.urn)+'"><td>'+esc(a.date||'\u2014')+'</td><td>'+esc(a.operation||'')+'</td><td class="dos-urn">'+urnLink(a.urn)+'</td><td>'+esc(a.title||'')+'</td><td class="dos-grade">'+esc(a.grade||'')+'</td><td>'+esc((SI.ROLES[a.role]||a.role||''))+'</td></tr>'; }).join('');
       els.main.innerHTML='<div class="detail page person">'
         +'<div class="crumbs"><button type="button" class="linklike" id="dp-back">\u2190 Back</button> <button type="button" class="btn secondary" id="dp-watch">'+(onWatch?'On watchlist':'Add to watchlist')+'</button></div>'
         +'<div class="dos-head"><span class="dos-eyebrow">NOMINAL RECORD</span><h1 tabindex="-1">'+esc(d.primaryName)+'</h1>'
@@ -941,7 +1013,7 @@
             irHdr('Operation', esc(ir.operation || '—')) +
             irHdr('Date of Intelligence', irDateIntel) +
             irHdr('Date Created', irDateMade) +
-            irHdr('Point of Contact', esc(ir.pointOfContact || '—')) +
+            irHdr('Point of Contact', pocControl(ir.pointOfContact)) +
             irHdr('Status', '<b class="wf-tag" data-status="' + esc(ir.status) + '">' + esc(ir.status) + '</b>') +
           '</div>' +
           '<div class="ir-si"><div class="ir-si-h">Supporting information</div>' +
@@ -954,16 +1026,6 @@
           '<details class="ir-sec" open><summary>Items (' + items.length + ')</summary>' +
           '<div class="items-head">' +
           '<label class="hl-toggle" title="Bold + colour the entities extracted from this report, by type"><input type="checkbox" id="hl-entities"' + (siHighlightOn ? ' checked' : '') + '> Highlight extracted entities</label>' +
-          // Discoverable entry point for the USER highlighter (select text -> mark +
-          // save a note). Distinct from the entity-extraction checkbox above. The
-          // hint is dismissible and stays dismissed (localStorage).
-          (userHlHintDismissed()
-            ? ''
-            : '<span class="hl-hint" role="note">' +
-                '<span class="hl-hint-badge" aria-hidden="true">✎ Highlight &amp; note</span>' +
-                '<span class="hl-hint-text">Select any text below to highlight it and save a note.</span>' +
-                '<button type="button" class="hl-hint-x" id="hl-hint-dismiss" aria-label="Dismiss this hint"><svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false" style="display:inline-block;vertical-align:-0.08em"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></button>' +
-              '</span>') +
           '</div>' +
           irItems + '</details>' +
           '<details class="ir-sec" open><summary>Provenance</summary>' +
@@ -1006,12 +1068,6 @@
       if (window.RegistryHighlighter && window.RegistryHighlighter.attach) {
         try { window.RegistryHighlighter.attach(els.main, ir.urn); } catch (e) { /* never break the report view */ }
       }
-      var _hlHintX = document.getElementById("hl-hint-dismiss");
-      if (_hlHintX) _hlHintX.addEventListener("click", function () {
-        dismissUserHlHint();
-        var host = _hlHintX.closest(".hl-hint");
-        if (host && host.parentNode) host.parentNode.removeChild(host);
-      });
       [].forEach.call(els.main.querySelectorAll('.src-chip'), function(c){ c.addEventListener('click', function(){ openSourceDrawer(c.getAttribute('data-src')); }); });
       [].forEach.call(els.main.querySelectorAll('[data-grade]'), function(g){ g.addEventListener('click', function(){ openIrDrawer(explainGrade(g.getAttribute('data-grade'), g.getAttribute('data-handling'))); }); });
       var _dx=document.getElementById('ir-drawer-x'); if(_dx) _dx.addEventListener('click', closeIrDrawer);
@@ -1028,6 +1084,10 @@
         els.main._siWired = true;
         els.main.addEventListener("click", function (ev) {
           var t = ev.target;
+          var ul = t.closest && t.closest(".urn-link");
+          if (ul) { ev.preventDefault(); showDetail(ul.getAttribute("data-urn-link")); return; }
+          var pc = t.closest && t.closest(".poc-link");
+          if (pc) { ev.preventDefault(); openPocCompose(pc.getAttribute("data-poc"), pc); return; }
           var hl = t.closest && t.closest(".si-hl");
           if (hl) { siFlash(siFindByEid(".si-ent-row", hl.getAttribute("data-eid"))); return; }
           var row = t.closest && t.closest(".si-ent-row");
@@ -1480,10 +1540,10 @@
       if (ico) {
         node.shape = "image";
         node.image = { unselected: ico.unselected, selected: ico.selected };
-        node.size = e.type === "person" ? 20 : 16;
+        node.size = SI_ICON_SIZE[e.type] || 17;
       } else {
         node.shape = "dot";
-        node.size = e.type === "person" ? 16 : 13;
+        node.size = (SI_ICON_SIZE[e.type] || 17) - 4;
         node.color = { background: "#131c28", border: c, highlight: { background: "#1d2a3a", border: c } };
         node.shadow = { enabled: !reduce, color: siGlow(c, 0.42), size: 14, x: 0, y: 0 };
       }
@@ -1497,7 +1557,8 @@
         to: l.to,
         label: SI.LINK_TYPES[l.type] || l.type,
         arrows: { to: { enabled: true, scaleFactor: 0.6 } },
-        color: { color: "#3d4d61", highlight: "#6f7fe0", hover: "#9bb1c9" },
+        dashes: SI_DASH[l.confidence] || false,
+        color: { color: "#5a6c85", highlight: "#6f7fe0", hover: "#9bb1c9" },
         font: { color: "#7d8a99", size: 9, face: "Geist Mono, Consolas, monospace", strokeWidth: 4, strokeColor: "#0b1017", align: "middle" },
         smooth: { enabled: !reduce, type: "dynamic" }
       };

@@ -110,6 +110,58 @@
       }).join("") + "</select>";
   }
 
+  /* Subject profile (person dossier). For a PERSON, gather everything linked to
+     them in the case and group it by the NEIGHBOUR'S entity type — phones,
+     vehicles, addresses, associates (other people), accounts, organisations… —
+     so the panel reads like a subject file. Each row is clickable and selects
+     that entity across every pane (via CRApp.selectEntity). All values escaped. */
+  var DOSSIER_ORDER = ["person", "phone", "email", "ip", "vehicle", "address", "location",
+    "organisation", "account", "money", "weapon", "drug", "document", "event", "date", "note"];
+  var DOSSIER_GROUP_LABEL = { person: "Associates" };  // rest use ENTITY_TYPES plural-ish label
+  function subjectDossierHtml(id) {
+    var types = window.CRModel ? window.CRModel.ENTITY_TYPES : {};
+    var groups = {};  // type -> [{ent, link}]
+    store.links.forEach(function (l) {
+      if (l.from !== id && l.to !== id) return;
+      var otherId = l.from === id ? l.to : l.from;
+      var other = store.getEntity(otherId);
+      if (!other) return;
+      (groups[other.type] = groups[other.type] || []).push({ ent: other, link: l });
+    });
+    var typeKeys = Object.keys(groups);
+    if (!typeKeys.length) return "";
+    // ordered: known dossier order first, then any leftover types
+    var ordered = DOSSIER_ORDER.filter(function (t) { return groups[t]; })
+      .concat(typeKeys.filter(function (t) { return DOSSIER_ORDER.indexOf(t) === -1; }));
+    var total = typeKeys.reduce(function (n, t) { return n + groups[t].length; }, 0);
+    var html = '<div class="sec">Subject profile — linked (' + total + ")</div>";
+    ordered.forEach(function (t) {
+      var T = types[t] || {};
+      var col = T.colour || "#8593a3";
+      var title = DOSSIER_GROUP_LABEL[t] || (T.label || t);
+      var chip;
+      if (window.CRIcons) {
+        chip = '<img src="' + window.CRIcons.get(t, col).unselected +
+          '" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:6px">';
+      } else {
+        chip = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' +
+          col + ';margin-right:6px;vertical-align:baseline"></span>';
+      }
+      html += '<div style="color:#76879b;font-size:11px;margin:8px 0 2px">' + chip +
+        U.esc(title) + " <span style=\"font-variant-numeric:tabular-nums\">(" + groups[t].length + ")</span></div>";
+      html += "<table>";
+      groups[t].forEach(function (g) {
+        var rel = U.esc(g.link.type.replace(/_/g, " "));
+        var dt = g.link.dateISO ? ' <span style="color:#5a6878">' + U.esc(U.fmtDate(g.link.dateISO)) + "</span>" : "";
+        html += '<tr class="dossier-row" data-eid="' + U.escAttr(g.ent.id) + '" style="cursor:pointer">' +
+          '<td class="id">' + U.esc(g.ent.label) + "</td>" +
+          '<td style="color:#76879b">' + rel + dt + "</td></tr>";
+      });
+      html += "</table>";
+    });
+    return html;
+  }
+
   function showEntity(id) {
     var e = store.getEntity(id);
     if (!e) { clear(); return; }
@@ -127,6 +179,10 @@
     if (e.ids && e.ids.email) rows += '<tr><td>canonical</td><td class="id">' + U.esc(e.ids.email) + "</td></tr>";
     if (e.geo) rows += '<tr><td>coords</td><td class="id">' + U.esc(e.geo.lat.toFixed(4) + ", " + e.geo.lon.toFixed(4)) + "</td></tr>";
     if (rows) html += '<div class="sec">Attributes</div><table>' + rows + "</table>";
+
+    // Subject profile (person dossier): everything linked to this person, grouped
+    // by neighbour type. Sits high in the panel so it reads like a subject file.
+    if (e.type === "person") html += subjectDossierHtml(id);
 
     // CM — recognised terms + canonical string
     var St2 = window.CRStandards;
@@ -215,6 +271,14 @@
       "</div>";
 
     U.el("inspector").innerHTML = html;
+
+    // dossier rows: click a linked entity to select it across all panes
+    document.querySelectorAll(".dossier-row").forEach(function (r) {
+      r.addEventListener("click", function () {
+        var eid = r.getAttribute("data-eid");
+        if (eid && window.CRApp && window.CRApp.selectEntity) window.CRApp.selectEntity(eid);
+      });
+    });
 
     // wire provenance
     ["prov-source", "prov-assessment", "prov-handling"].forEach(function (pid) {

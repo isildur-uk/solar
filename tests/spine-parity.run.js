@@ -25,6 +25,11 @@ eq("account strips spaces + dashes", SC.canonicalIdentity("account", "20-00-00 1
 eq("person left to norm()", SC.canonicalIdentity("person", "John SMITH"), "John SMITH");
 
 /* ---- entityId parity for the same phone formatted differently ---- */
+var pf = ["447700900111", "+447700900111", "0044 7700 900111", "07700900111", "7700900111"];
+var pfIds = pf.map(function (x) { return SC.entityId({ type: "phone", identity: x }); });
+ok("all five UK phone forms collapse to ONE canonical id  (got " + JSON.stringify(pfIds) + ")",
+   pfIds.every(function (id) { return id === "E:phone|07700900111"; }));
+eq("scientific-notation phone canonicalises to empty body", SC.canonicalIdentity("phone", "4.47E+11"), "");
 eq("entityId phone spaced == unspaced",
    SC.entityId({ type: "phone", identity: "07700 900111" }),
    SC.entityId({ type: "phone", identity: "07700900111" }));

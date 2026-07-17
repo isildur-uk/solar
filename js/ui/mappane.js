@@ -219,7 +219,7 @@
     layer = L.layerGroup().addTo(map);      // markers on top of arcs
     overlay = L.layerGroup().addTo(map);    // analysis tools on top
 
-    L.control.scale({ metric: true, imperial: false, position: "bottomleft" }).addTo(map);
+    L.control.scale({ metric: false, imperial: true, position: "bottomleft" }).addTo(map);
 
     store.onChange(function () { rebuild(); });
     rebuild();

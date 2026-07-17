@@ -17,8 +17,8 @@ var e1b = C.upsertEntity({ type: "person", label: "June BAILEY", attrs: { dob: "
 ok("same identity does not duplicate (idempotent)", C.stats().entities === 1 && e1b.id === e1.id);
 ok("attrs merged on re-upsert", C.entities()[0].attrs.dob === "14/02/1972");
 
-var ph = C.upsertEntity({ type: "phone", label: "07700900111", identity: "447700900111" });
-ok("explicit identity used for id", ph.id === "E:phone|447700900111");
+var ph = C.upsertEntity({ type: "phone", label: "07700900111", identity: "447700900222" });
+ok("explicit identity used for id (canonicalised to UK national)", ph.id === "E:phone|07700900222");
 ok("two distinct entities", C.stats().entities === 2);
 
 var l1 = C.upsertLink({ from: e1.id, to: ph.id, type: "USES" });

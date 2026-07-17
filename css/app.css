@@ -850,8 +850,32 @@ mark.hl-cue.active { outline: 2px solid var(--accent); border-bottom-style: soli
 .ctx-item.danger:hover { background: rgba(216,106,106,0.12); }
 .ctx-sep { height: 1px; background: var(--line); margin: 4px 6px; }
 
+/* Rubber-band (drag-to-select) marquee. Default gesture: drag empty chart canvas
+   to select; drag a node still moves it; hold Space or right-drag to pan (see
+   graph.js). The marching-ants dash animation is a MOTION effect — gated behind
+   prefers-reduced-motion and force-killed by the .no-motion class graph.js adds
+   when reduced motion is requested. */
 .select-band { position: absolute; z-index: 640; border: 1px dashed var(--accent);
-  background: var(--accent-soft); pointer-events: none; }
+  background: var(--accent-soft); pointer-events: none;
+  background-image:
+    repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 12px),
+    repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 12px),
+    repeating-linear-gradient(0deg, var(--accent) 0 6px, transparent 6px 12px),
+    repeating-linear-gradient(0deg, var(--accent) 0 6px, transparent 6px 12px);
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  border: 0;
+  animation: select-band-march 0.6s linear infinite;
+}
+@keyframes select-band-march { to { background-position: 12px 0, -12px 100%, 0 -12px, 100% 12px; } }
+.select-band.no-motion { animation: none; }
+@media (prefers-reduced-motion: reduce) { .select-band { animation: none; } }
+
+/* Subject-profile (person dossier) rows in the inspector: click to select the
+   linked entity across every pane. Quiet hover, single accent, 4px radius. */
+.dossier-row:hover td { background: var(--accent-soft); color: var(--accent); }
+.dossier-row:hover td.id { color: var(--accent); }
 
 #timeline-wrap { min-height: 0; }
 #timeline { flex: 0 0 88px !important; height: 88px; min-height: 0; position: relative; overflow: hidden; }

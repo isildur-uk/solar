@@ -268,24 +268,74 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
 
 .sh-ctx-gear { margin-left: auto; }
 
-/* Row-1 case slot — holds the re-parented real #case-name input (workbench) */
-.sh-case { display: flex; align-items: center; gap: 6px; }
-.sh-case-label { font-size: var(--fs-2xs); font-family: var(--mono); letter-spacing: .12em;
-  text-transform: uppercase; color: var(--faint); }
-.sh-case-input {
+/* Row-1 "Select Case" picker — a compact dropdown showing the active case name;
+   opening it lists the cases that exist (current · samples · new). Relative so
+   the menu drops out absolutely and never resizes the bar. */
+.sh-case.sh-casepick { position: relative; display: inline-flex; align-items: center; }
+.sh-casepick > summary { list-style: none; }
+.sh-casepick > summary::-webkit-details-marker { display: none; }
+.sh-casepick-trigger {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
   font-size: var(--fs-xs); font-family: var(--mono); color: var(--text);
   background: transparent; border: 1px solid transparent; border-radius: var(--radius);
-  padding: 3px 7px; min-width: 130px; max-width: 260px;
+  padding: 3px 8px; height: 26px; box-sizing: border-box;
 }
-.sh-case-input:hover { border-color: var(--line); }
+.sh-casepick-trigger:hover { border-color: var(--line); }
+.sh-casepick[open] > .sh-casepick-trigger {
+  border-color: var(--accent); background: var(--glass-fill); color: var(--accent);
+}
+.sh-casepick-trigger:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(142,162,255,0.28); }
+.sh-casepick-name { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sh-casepick-caret { width: 11px; height: 11px; flex: 0 0 auto; color: var(--faint); transition: transform .16s ease; }
+.sh-casepick[open] .sh-casepick-caret { transform: rotate(180deg); color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .sh-casepick-caret { transition: none; } }
+
+/* the dropdown panel — cosmic glass, on the shell's mega-menu language */
+.sh-casepick-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 200;
+  min-width: 232px; max-width: 300px;
+  background: linear-gradient(180deg, rgba(142,162,255,0.06), rgba(0,0,0,0)), #0d0d0b;
+  -webkit-backdrop-filter: blur(26px) saturate(1.2); backdrop-filter: blur(26px) saturate(1.2);
+  border: 1px solid var(--line);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: var(--radius); box-shadow: var(--shadow-2);
+  padding: 8px; animation: sh-mega-in 120ms ease;
+}
+html[data-theme="light"] .sh-casepick-menu { background: linear-gradient(180deg, rgba(74,91,214,0.06), rgba(0,0,0,0)), #f7f3eb; }
+@media (prefers-reduced-motion: reduce) { .sh-casepick-menu { animation: none; } }
+.sh-casepick-group { padding: 4px 0; }
+.sh-casepick-group + .sh-casepick-group { border-top: 1px solid var(--line); }
+.sh-casepick-h {
+  margin: 0 0 4px; padding: 0 8px; font-size: var(--fs-2xs); font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase; color: var(--faint);
+}
+.sh-casepick-current {
+  display: block; padding: 4px 8px; font-size: var(--fs-xs); font-family: var(--mono); color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sh-casepick-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 6px 8px; border: 0; border-radius: var(--radius); background: transparent;
+  font: var(--fs-xs)/1.3 var(--sans); color: var(--text); text-align: left; cursor: pointer;
+}
+.sh-casepick-item:hover { background: rgba(142,162,255,0.08); color: var(--accent); }
+.sh-casepick-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+.sh-casepick-num {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 3px; font: 600 var(--fs-2xs)/1 var(--mono);
+  color: var(--dim); background: var(--panel-2); border: 1px solid var(--line);
+}
+.sh-casepick-item:hover .sh-casepick-num { color: var(--accent); border-color: var(--accent); }
+/* the re-parented editable #case-name input, shown as the rename field */
+.sh-casepick-rename { padding: 0 4px; }
+.sh-case-input {
+  font-size: var(--fs-xs); font-family: var(--mono); color: var(--text);
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 5px 8px; width: 100%; box-sizing: border-box;
+}
 .sh-case-input:focus {
   outline: none; background: var(--glass-fill);
   border-color: var(--accent); box-shadow: 0 0 0 2px rgba(142,162,255,0.28);
-}
-/* registry read-only case name — same type as the workbench input, no edit affordance */
-.sh-case-name {
-  font-size: var(--fs-xs); font-family: var(--mono); color: var(--text);
-  padding: 3px 7px; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* Chunk 5 — retire the old toolbars (kept in DOM as the control substrate) */
@@ -387,6 +437,10 @@ html[data-theme="light"] .sh-context { background: rgba(246,241,230,0.6); }
 .sh-switch:focus-visible { outline: none; }
 .sh-switch:focus-visible .sh-switch-track { box-shadow: 0 0 0 2px rgba(142,162,255,0.4); }
 .sh-switch-c { margin-left: 10px; }
+/* explicit ON/OFF state word beside a switch (Developer mode) — reads periwinkle
+   when on, faint mono when off, so the toggle state is unmistakable. */
+.sh-switch-state { font: 600 var(--fs-2xs) var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.sh-switch[aria-checked="true"] .sh-switch-state { color: var(--accent); }
 
 /* sound / mute toggle — reuses .sh-icobtn sizing/hover. Lit periwinkle when ON,
    dimmed when muted. The non-compact (Settings) variant shows a text label. */
@@ -474,7 +528,13 @@ html[data-theme="light"] .sh-modal { background: var(--panel); }
   font-size: var(--fs-sm); color: var(--text); padding: 5px 0; }
 .sh-modal select, .sh-modal input[type="text"] { background: var(--panel-2); border: 1px solid var(--line);
   color: var(--text); border-radius: var(--radius); padding: 5px 8px; font: var(--fs-sm) var(--sans); min-width: 180px; }
-.sh-modal .sh-modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.sh-modal .sh-modal-foot { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 20px;
+  border-top: 1px solid var(--line); padding-top: 14px; }
+/* subtle build stamp relocated from the removed About section — faint mono, left
+   of the Close button; the F5 hint stays quiet so it never competes with actions. */
+.sh-build-stamp { margin-right: auto; font: var(--fs-2xs)/1.4 var(--mono); color: var(--faint); }
+.sh-build-stamp b { color: var(--dim); font-weight: 600; }
+.sh-build-hint { color: var(--faint); }
 
 /* On phones the chrome collapses to essentials (mobile shell tuning is a later chunk). */
 @media (max-width: 760px) {

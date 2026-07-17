@@ -236,9 +236,21 @@ S.time24 = time24;
 /* ================================================================== */
 /*  PHONE (CM: UK national 0…, intl 00CC…, no "+" , no spaces)          */
 /* ================================================================== */
+/* A phone value is CORRUPT / non-recoverable if it is not purely a phone.
+ * The big one: Excel exports large numbers in scientific notation (e.g. a
+ * comms result renders 447536935630 as "4.47E+11"), which is LOSSY — the
+ * subscriber digits are gone. We must NEVER fabricate a number from it. Any
+ * letter (other than a leading "+") — incl. the "E" of sci-notation — or a
+ * bare "e"/"E" means this is not a usable phone value. */
+function phoneLooksCorrupt(raw) {
+  var s = trim(raw);
+  if (!s) return false;
+  return /[a-zA-Z]/.test(s.replace(/^\s*\+/, ""));
+}
 function phoneCM(raw) {
   var s = trim(raw);
   if (!s) return "";
+  if (phoneLooksCorrupt(s)) return "";      // sci-notation / gibberish -> do not fabricate
   var hadPlus = /^\s*\+/.test(s);
   var d = digitsOnly(s);
   if (!d) return "";
@@ -264,6 +276,7 @@ function phoneValid(raw) {
 
 S.phoneCM = phoneCM;
 S.phoneValid = phoneValid;
+S.phoneLooksCorrupt = phoneLooksCorrupt;
 
 /* ================================================================== */
 /*  CURRENCY (CM: ISO code + amount; minus for negative)               */

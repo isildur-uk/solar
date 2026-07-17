@@ -47,7 +47,18 @@
    * Database IRs, Charting). Closes the "07700 900111" vs "07700900111" gap. */
   function canonicalIdentity(type, value) {
     var t = str(type).toLowerCase(), v = str(value);
-    if (t === "phone") return v.replace(/[\s().\-]/g, "");      // drop spaces, dots, dashes, parens
+    if (t === "phone") {                                          // UK-national canonical so
+      if (/[a-zA-Z]/.test(v.replace(/^\s*\+/, ""))) return "";       // corrupt (sci-notation/gibberish)
+      var plus = /^\s*\+/.test(v), d = v.replace(/\D/g, "");        // 447.. / +44.. / 0044.. / 07.. / 7..
+      if (!d) return "";                                          // all collapse to one 0.. key
+      if (plus && d.indexOf("44") === 0) return "0" + d.slice(2);
+      if (d.indexOf("0044") === 0) return "0" + d.slice(4);
+      if (!plus && d.indexOf("44") === 0 && d.length >= 12) return "0" + d.slice(2);
+      if (plus) return "00" + d;                                  // non-UK +CC -> 00CC
+      if (d.charAt(0) === "0") return d;                          // already national
+      if (d.length === 9 || d.length === 10) return "0" + d;      // dropped leading 0 (07.. -> 7..)
+      return d;                                                   // bare non-UK / unknown: stable as-is
+    }
     if (t === "vehicle") return v.replace(/\s+/g, "");           // VRM: drop spaces (norm lowercases)
     if (t === "account") return v.replace(/[\s\-]/g, "");        // sort code / acct: drop spaces + dashes
     return v;                                                    // others: norm() handles case + whitespace

@@ -136,6 +136,21 @@
   var container = null, currentUrn = null, toolbar = null, palette = null, panel = null;
   var lastRange = null, chosenColour = "periwinkle", escBound = false;
 
+  /* Floating UI (toolbar/palette/panel/toggle) must mount inside the scoped view
+     root (.v-database) when the Database is embedded in the SOLAR host — the
+     generated scoped stylesheet prefixes every rule with `.v-database`, so a
+     `document.body` mount leaves the palette completely unstyled (the reported
+     "colour picker doesn't work"). Standalone page → falls back to document.body. */
+  function mountRoot() {
+    try {
+      var v = (container && container.closest) ? container.closest(".v-database") : null;
+      if (v) { return v; }
+      var q = document.querySelector(".v-database");
+      if (q) { return q; }
+    } catch (e) { /* fall through */ }
+    return document.body;
+  }
+
   /* ---- selection toolbar ------------------------------------------------- */
   function hideToolbar() {
     if (toolbar) { toolbar.remove(); toolbar = null; }
@@ -204,7 +219,7 @@
     save.addEventListener("click", function (e) { e.stopPropagation(); commitHighlight(); });
     toolbar.appendChild(save);
 
-    document.body.appendChild(toolbar);
+    mountRoot().appendChild(toolbar);
     // position above the selection, clamped to viewport
     var tw = toolbar.offsetWidth, th = toolbar.offsetHeight;
     var top = rect.top - th - 8, left = rect.left + rect.width / 2 - tw / 2;
@@ -241,7 +256,7 @@
       });
       palette.appendChild(b);
     });
-    document.body.appendChild(palette);
+    mountRoot().appendChild(palette);
     var wr = well.getBoundingClientRect();
     var pw = palette.offsetWidth;
     var left = Math.max(6, Math.min(wr.left, window.innerWidth - pw - 6));
@@ -301,7 +316,7 @@
     panel.appendChild(head);
     var body = elt("div", "rh-panel-body");
     panel.appendChild(body);
-    document.body.appendChild(panel);
+    mountRoot().appendChild(panel);
   }
 
   var toggleBtn = null;
@@ -322,7 +337,7 @@
       toggleBtn.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
       if (!panel.hidden) { renderPanel(); }
     });
-    document.body.appendChild(toggleBtn);
+    mountRoot().appendChild(toggleBtn);
   }
   function reflectToggle() {
     if (!toggleBtn) { return; }
@@ -340,7 +355,6 @@
     if (!arr.length) {
       var empty = elt("div", "rh-empty");
       empty.appendChild(elt("p", "rh-empty-h", "No highlights yet"));
-      empty.appendChild(elt("p", "rh-empty-p", "Select text in the report, pick a colour and Save note."));
       body.appendChild(empty);
       return;
     }

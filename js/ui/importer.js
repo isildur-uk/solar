@@ -96,15 +96,26 @@
 
     U.el("csv-table").innerHTML = head + body;
 
-    // hub column choice (rows become star-linked to this column's entity)
+    // hub choice — every row's entities star-link to this hub. The hub is either
+    // a column IN this file (col:<field>) or an entity ALREADY in the case
+    // (existing:<id>). The latter is how a bare list of phone numbers gets
+    // assigned to a subject already on the chart (e.g. import 6 handsets → BAINES).
     var hubSel = U.el("csv-hub");
+    var colOpts = parsed.fields.map(function (f) {
+      return '<option value="col:' + U.escAttr(f) + '">' + U.esc(f) + "</option>";
+    }).join("");
+    var existing = (store.entities || []).filter(function (e) {
+      return e.type === "person" || e.type === "organisation";
+    }).sort(function (a, b) { return String(a.label).localeCompare(String(b.label)); });
+    var exOpts = existing.map(function (e) {
+      return '<option value="existing:' + U.escAttr(e.id) + '">' + U.esc(e.label) + " · " + U.esc(e.type) + "</option>";
+    }).join("");
     hubSel.innerHTML = '<option value="">— no row links —</option>' +
-      parsed.fields.map(function (f) {
-        return '<option value="' + U.escAttr(f) + '">' + U.esc(f) + "</option>";
-      }).join("");
+      '<optgroup label="Column in this file">' + colOpts + "</optgroup>" +
+      (exOpts ? '<optgroup label="Assign every row to an existing case entity">' + exOpts + "</optgroup>" : "");
     // default: first person column
     var firstPerson = parsed.fields.find(function (f) { return colTypes[f].type === "person"; });
-    if (firstPerson) hubSel.value = firstPerson;
+    if (firstPerson) hubSel.value = "col:" + firstPerson;
 
     document.querySelectorAll(".csv-type").forEach(function (n) {
       n.addEventListener("change", function () {
@@ -119,7 +130,12 @@
     if (!parsed) return;
     store.snapshot();
     var batch = "CSV " + parsed.name + " " + new Date().toISOString().slice(0, 10);
-    var hub = U.el("csv-hub").value;
+    var hubRaw = U.el("csv-hub").value;
+    // hub is either a column in this file (col:<field>) or an existing case
+    // entity every row links to (existing:<id>).
+    var hubCol = null, hubExistingId = null;
+    if (hubRaw.indexOf("existing:") === 0) { hubExistingId = hubRaw.slice(9); }
+    else if (hubRaw.indexOf("col:") === 0) { hubCol = hubRaw.slice(4); }
     var linkType = U.el("csv-linktype").value || "LINKED_TO";
     var added = 0, matched = 0, links = 0, skipped = 0;
 
@@ -167,7 +183,8 @@
     }
 
     parsed.rows.forEach(function (row, idx) {
-      var hubId = null;
+      // when assigning to an existing entity, it is the hub for every row
+      var hubId = hubExistingId || null;
       var rowEnts = [];
       var textAttrs = {};
       parsed.fields.forEach(function (f) {
@@ -180,7 +197,7 @@
         var id = upsert(t, row[f], idx);
         if (!id) { skipped++; return; }
         rowEnts.push(id);
-        if (f === hub) hubId = id;
+        if (hubCol && f === hubCol) hubId = id;
       });
       // attach text attrs to the hub entity (or first entity)
       var owner = hubId || rowEnts[0];

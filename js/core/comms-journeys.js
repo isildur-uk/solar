@@ -22,7 +22,7 @@
     CYCLE: "Cycle / slow",
     ROAD: "Road vehicle",
     MOTORWAY: "Motorway / fast road",
-    RAIL_AIR: "Train or air (>130 km/h)",
+    RAIL_AIR: "Train or air (>81 mph)",
     IMPOSSIBLE: "Implausible speed"
   };
   // Map colours for the movement path (consumed by the render layer).
@@ -32,7 +32,7 @@
     "Cycle / slow": "#3aa6a6",
     "Road vehicle": "#e8a13a",
     "Motorway / fast road": "#e0662a",
-    "Train or air (>130 km/h)": "#9a6ff0",
+    "Train or air (>81 mph)": "#9a6ff0",
     "Implausible speed": "#e05a5a"
   };
 

@@ -32,6 +32,39 @@
   function si(ir){ return (ir && ir.structuredIntelligence) || { entities:[], links:[] }; }
   function itemGrade(ir, g){ return G ? G.code(g.sourceEval, g.intelEval, (ir.handling&&ir.handling.code)||"P") : ""; }
 
+  // Free-text engines used to enrich an export with the rich entities buried in
+  // the report's item text (parity with the Charting free-text extractor).
+  var XT = (typeof require!=="undefined") ? null : (typeof window!=="undefined"?window.CRExtract:null);
+  var SX = (typeof require!=="undefined") ? null : (typeof window!=="undefined"?window.RegistrySIExtract:null);
+  function normLabel(s){ return String(s==null?"":s).toLowerCase().replace(/\s+/g," ").trim(); }
+  function reportText(ir){
+    return (ir.items||[]).filter(function(i){ return !i.isProvenance; })
+      .map(function(it){ return it.text||""; }).join("\n");
+  }
+  /* Extract entities/links from an IR's item text and merge them into `sink`
+   * (the flat SI-entity array feeding the Master index), de-duplicating against
+   * entities already present by normalised type|label. Extracted link endpoints
+   * are remapped onto the surviving ids. Returns any surviving extracted links
+   * (with owner urn stamped) so the caller can chart them. Falls back to a no-op
+   * when the extraction engines aren't loaded. */
+  function enrichFromText(ir, sink, seenKeys, ownerUrn){
+    if (!(XT && XT.extract && SX && SX.fromExtraction)) return [];
+    var body = reportText(ir); if (!body.trim()) return [];
+    var res; try { res = XT.extract(body, { dateFormat:"DMY" }); } catch(e){ return []; }
+    var gen; try { gen = SX.fromExtraction(res, { actor:"engine" }); } catch(e){ return []; }
+    if (!gen || !gen.entities) return [];
+    var idmap = {};
+    gen.entities.forEach(function(e){
+      var k = e.type + "|" + normLabel(e.label);
+      if (seenKeys[k]) { idmap[e.id] = seenKeys[k]; return; }   // already charted from SI or a prior item
+      seenKeys[k] = e.id; idmap[e.id] = e.id;
+      sink.push(e); ownerUrn[e.id] = ir.urn;
+    });
+    return (gen.links||[]).map(function(l){
+      return { from: idmap[l.from]||l.from, to: idmap[l.to]||l.to, type: l.type, label: l.label||"" };
+    }).filter(function(l){ return l.from && l.to && l.from!==l.to; });
+  }
+
   /* The contract. Provenance deliberately omitted. */
   function toHandoff(ir){
     var S = si(ir);
@@ -67,8 +100,17 @@
     if(opts.onlyAuthorised) irs = irs.filter(function(ir){ return ir.status==="AUTHORISED"; });
 
     // gather all SI entities + remember owning IR
-    var allEnts = [], ownerUrn = {}, handlingByUrn = {}, operationByUrn = {};
-    irs.forEach(function(ir){ handlingByUrn[ir.urn] = (ir.handling && ir.handling.code) || "P"; operationByUrn[ir.urn] = ir.operation || ""; si(ir).entities.forEach(function(e){ allEnts.push(e); ownerUrn[e.id]=ir.urn; }); });
+    var allEnts = [], ownerUrn = {}, handlingByUrn = {}, operationByUrn = {}, seenKeys = {};
+    irs.forEach(function(ir){
+      handlingByUrn[ir.urn] = (ir.handling && ir.handling.code) || "P";
+      operationByUrn[ir.urn] = ir.operation || "";
+      si(ir).entities.forEach(function(e){ allEnts.push(e); ownerUrn[e.id]=ir.urn; seenKeys[e.type+"|"+normLabel(e.label)] = e.id; });
+    });
+    // Parity with free-text charting: also mine the rich entities buried in each
+    // report's item text and merge them (de-duplicated against the SI skeleton),
+    // so the exported chart is as rich as pasting the same text into Charting.
+    var extraLinks = [];
+    irs.forEach(function(ir){ enrichFromText(ir, allEnts, seenKeys, ownerUrn).forEach(function(l){ l._urn = ir.urn; extraLinks.push(l); }); });
 
     // Master index -> map each lower entity id to its master + representative
     var masters = MX ? MX.buildMasterIndex(allEnts) : [];
@@ -112,22 +154,22 @@
 
     // Build links remapped to master ids, de-duplicated, no self-loops
     var seen = {}, solarLinks = [];
-    irs.forEach(function(ir){
-      si(ir).links.forEach(function(l){
-        var from = nodeIdOf[lowerToMaster[l.from]], to = nodeIdOf[lowerToMaster[l.to]];
-        if(!from || !to || from===to) return;            // skip if endpoint missing or collapsed to same master
-        var type = LINK_MAP[l.type] || "LINKED_TO";
-        var key = from + "|" + to + "|" + type;
-        if(seen[key]) return; seen[key]=true;
-        solarLinks.push({
-          id: "lnk_" + key.replace(/[^a-zA-Z0-9]/g,"").slice(0,40) + "_" + solarLinks.length,
-          from: from, to: to, type: type, direction:"->", confidence:"med",
-          dateISO:null, modality:null, negated:false, amount:null,
-          label: l.label || "", sentence:"",
-          audit:[{ ts:new Date().toISOString(), action:"created", detail:"registry-handoff" }]
-        });
+    function addLink(l){
+      var from = nodeIdOf[lowerToMaster[l.from]], to = nodeIdOf[lowerToMaster[l.to]];
+      if(!from || !to || from===to) return;            // skip if endpoint missing or collapsed to same master
+      var type = LINK_MAP[l.type] || "LINKED_TO";
+      var key = from + "|" + to + "|" + type;
+      if(seen[key]) return; seen[key]=true;
+      solarLinks.push({
+        id: "lnk_" + key.replace(/[^a-zA-Z0-9]/g,"").slice(0,40) + "_" + solarLinks.length,
+        from: from, to: to, type: type, direction:"->", confidence:"med",
+        dateISO:null, modality:null, negated:false, amount:null,
+        label: l.label || "", sentence:"",
+        audit:[{ ts:new Date().toISOString(), action:"created", detail:"registry-handoff" }]
       });
-    });
+    }
+    irs.forEach(function(ir){ si(ir).links.forEach(addLink); });
+    extraLinks.forEach(addLink);   // links mined from item text (parity with free-text charting)
 
     var nowISO = new Date().toISOString();
     return {
