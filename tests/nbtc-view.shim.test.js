@@ -48,6 +48,7 @@ document.getElementById = function(id){ var pools = registry.concat([document.he
 global.window = global; global.document = document;
 window.SolarCase = require("../js/core/solar-case.js");
 window.CRAviation = require("../js/core/aviation-ref.js");
+window.CRFlags = require("../js/core/country-flags.js");
 window.CRNbtc = require("../js/core/nbtc.js");
 var V = require("../analyse/nbtc-view.js");
 
@@ -68,6 +69,9 @@ ok("a check-in-only / no-show badge is shown", host.querySelectorAll(".nb-badge-
 ok("timeline summary stats rendered", host.querySelectorAll(".nb-sum .nb-stat").length >= 3);
 ok("timeline flags an aborted no-show trip", /No-show/.test(document.getElementById("nb-pane-timeline").textContent));
 ok("timeline shows a passport/document switch legend", host.querySelectorAll(".nb-doclegend").length >= 1);
+ok("timeline renders labelled trip chips", host.querySelectorAll(".nb-trip").length >= 1);
+ok("timeline chips carry country flags", host.querySelectorAll(".nb-flag").length >= 1);
+ok("timeline chip shows origin+destination airport codes", host.querySelectorAll(".nb-tcode").length >= 2);
 ok("summary chips rendered", host.querySelectorAll(".nb-chip").length >= 3);
 ok("identities tab has resolved person card(s)", host.querySelectorAll(".nb-person").length >= 1);
 ok("meta summarises boarded flights", /boarded/.test(document.getElementById("nb-meta").textContent));

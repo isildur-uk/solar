@@ -154,7 +154,8 @@
       Object.keys(j.airports).forEach(function(k){ var a = j.airports[k]; var mk;
         if (LOCURL) mk = L.marker([a.lat, a.lon], { icon: L.divIcon({ html: "<img src='" + LOCURL + "' width='26' height='26' alt=''>", className: "nb-apin", iconSize: [26, 26], iconAnchor: [13, 13] }) });
         else mk = L.circleMarker([a.lat, a.lon], { radius: 6, color: "#8ea2ff", weight: 2, fillColor: "#8ea2ff", fillOpacity: 0.85 });
-        mk.addTo(map).bindPopup("<b>" + esc(a.iata) + "</b> " + esc(a.name) + "<br>" + esc(a.city || "") + (a.country ? ", " + esc(a.country) : ""));
+        var fimg = (window.CRFlags && a.country) ? ("<img src=\"" + window.CRFlags.uri(a.country) + "\" width=\"18\" height=\"12\" style=\"vertical-align:middle;margin-right:5px;border-radius:2px\">") : "";
+        mk.addTo(map).bindPopup(fimg + "<b>" + esc(a.iata) + "</b> " + esc(a.name) + "<br>" + esc(a.city || "") + (a.country ? ", " + esc(a.country) : ""));
       });
       if (pts.length) map.fitBounds(L.latLngBounds(pts).pad(0.3));
       state.map = map;
@@ -184,7 +185,11 @@
       r.appendChild(el("td", "nb-mono", lg.flight || ""));
       r.appendChild(el("td", null, lg.airline ? lg.airline.name : (lg.airlineCode || "—")));
       var route = el("td");
-      route.innerHTML = esc(lg.fromCode) + (lg.from ? " <span class='nb-dim'>" + esc(lg.from.city || lg.from.name) + "</span>" : "") + " &rarr; " + esc(lg.toCode) + (lg.to ? " <span class='nb-dim'>" + esc(lg.to.city || lg.to.name) + "</span>" : "");
+      var ffo = flagImg(lg.from); if (ffo) route.appendChild(ffo);
+      route.appendChild(el("span", "nb-tcode", lg.fromCode));
+      route.appendChild(el("span", "nb-tarr", " → "));
+      var ffd = flagImg(lg.to); if (ffd) route.appendChild(ffd);
+      route.appendChild(el("span", "nb-tcode", lg.toCode));
       r.appendChild(route);
       var bd = el("td");
       var bcls = lg.boarded === true ? "nb-badge-b" : (lg.boarded === false ? "nb-badge-n" : "nb-badge-u");
@@ -238,13 +243,16 @@
 
   function dms(raw){ var m = String(raw || "").match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (!m) return NaN; var y = +m[3]; if (y < 100) y += 2000; return Date.UTC(y, +m[2] - 1, +m[1]); }
   function ico(type, px){ try { if (typeof window !== "undefined" && window.SolarEntityStyle && window.SolarEntityStyle.icon) return window.SolarEntityStyle.icon(type, px || 16); } catch (e) {} return null; }
+  function flagImg(ap){ var country = ap && ap.country; if (!country || typeof window === "undefined" || !window.CRFlags) return null; var img = el("img", "nb-flag"); img.src = window.CRFlags.uri(country); img.alt = country; img.title = country; return img; }
 
-  /* Timeline: a time axis of the subject's flights + trips (out->return bars with
-   * dwell), coloured by boarded status, with trip-border colour = travel document
-   * so a passport switch shows as a colour change. Reveals travel tempo/escalation. */
+  /* Timeline: a dated track of the subject's TRIPS. Each trip is a labelled chip
+   * (origin -> destination with country flags, date, dwell, status), sitting on a
+   * month axis, alternating above/below the line, colour-coded by travel document
+   * so a passport switch is visible. Reads as "who went where, when" — tempo,
+   * escalation, dwell, no-shows and identity switches at a glance. */
   function drawTimeline(j, trips){
     var host = pane("timeline"); if (!host) return; host.innerHTML = "";
-    var legs = (j && j.legs) || []; if (!legs.length) { host.appendChild(el("div", "nb-empty", "No flights to plot.")); return; }
+    var legs = (j && j.legs) || []; if (!legs.length){ host.appendChild(el("div", "nb-empty", "No flights to plot.")); return; }
     trips = trips || { trips: [], summary: {} };
     var recs = state.recs || [], sm = trips.summary || {};
     var palette = ["#8ea2ff", "#e8a13a", "#5fbf7f", "#d86a6a", "#b08ee8", "#57c7d4"], docColour = {}, di = 0;
@@ -262,35 +270,49 @@
     if (sm.destinations && sm.destinations.length) sum.appendChild(stat(sm.destinations.join(", "), "destinations"));
     host.appendChild(sum);
 
-    if (typeof document.createElementNS === "function") {
-    var dates = legs.map(function(l){ return dms(l.date); }).filter(function(x){ return isFinite(x); });
-    var tMin = Math.min.apply(null, dates), tMax = Math.max.apply(null, dates); if (tMin === tMax) tMax = tMin + 86400000;
-    var ns = "http://www.w3.org/2000/svg", W = 1000, padL = 12, padR = 12, H = 108, axisY = 84, tripY = 30, dotY = 62;
-    function X(t){ return padL + (t - tMin) / (tMax - tMin) * (W - padL - padR); }
-    function E(tag, at){ var e = document.createElementNS(ns, tag); for (var k in at) e.setAttribute(k, at[k]); return e; }
-    var svg = E("svg", { viewBox: "0 0 " + W + " " + H, "class": "nb-tl", preserveAspectRatio: "none" });
+    var tl = (trips.trips || []).slice().sort(function(a, b){ return dms(a.out.date) - dms(b.out.date); });
+    var ds = []; tl.forEach(function(t){ var a = dms(t.out.date); if (isFinite(a)) ds.push(a); if (t.ret){ var b = dms(t.ret.date); if (isFinite(b)) ds.push(b); } });
+    if (!ds.length) legs.forEach(function(l){ var a = dms(l.date); if (isFinite(a)) ds.push(a); });
+    var tMin = Math.min.apply(null, ds), tMax = Math.max.apply(null, ds); if (tMin >= tMax) tMax = tMin + 86400000;
+    var span = tMax - tMin;
+    function pct(t){ return (t - tMin) / span * 100; }
+
+    var track = el("div", "nb-track");
     var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     var d0 = new Date(tMin), my = d0.getUTCFullYear(), mo = d0.getUTCMonth(), t = Date.UTC(my, mo, 1);
     while (t <= tMax){
-      if (t >= tMin){ var x = X(t); svg.appendChild(E("line", { x1: x, y1: 16, x2: x, y2: axisY, stroke: "rgba(142,162,255,.14)", "stroke-width": 1 }));
-        var lab = E("text", { x: x + 3, y: axisY + 14, "class": "nb-tl-mo" }); lab.textContent = MON[new Date(t).getUTCMonth()] + " " + String(new Date(t).getUTCFullYear()).slice(2); svg.appendChild(lab); }
+      if (t >= tMin){ var gx = pct(t);
+        var gl = el("div", "nb-grid"); gl.style.left = gx + "%"; track.appendChild(gl);
+        var ml = el("div", "nb-mon"); ml.style.left = gx + "%"; ml.textContent = MON[new Date(t).getUTCMonth()] + " " + String(new Date(t).getUTCFullYear()).slice(2); track.appendChild(ml);
+      }
       mo++; if (mo > 11){ mo = 0; my++; } t = Date.UTC(my, mo, 1);
     }
-    (trips.trips || []).forEach(function(tr){
-      var doc = (recs[tr.out.idx] && recs[tr.out.idx].doc) || "", col = docColour[doc.trim()] || "#8ea2ff", x1 = X(dms(tr.out.date));
-      if (tr.aborted){ var g = E("path", { d: "M" + (x1 - 5) + " " + (tripY - 5) + " l10 10 M" + (x1 + 5) + " " + (tripY - 5) + " l-10 10", stroke: "#e8a13a", "stroke-width": 2, fill: "none" });
-        var at = E("title", {}); at.textContent = "ABORTED / no-show: " + tr.out.fromCode + " -> " + tr.out.toCode + " " + tr.out.date; g.appendChild(at); svg.appendChild(g); return; }
-      var x2 = tr.ret ? X(dms(tr.ret.date)) : x1;
-      var rect = E("rect", { x: x1, y: tripY - 6, width: Math.max(6, x2 - x1), height: 12, rx: 3, fill: "rgba(95,191,127,.5)", stroke: col, "stroke-width": 2 });
-      var tt = E("title", {}); tt.textContent = tr.person + " · " + (tr.destination || "") + " · out " + tr.out.date + (tr.ret ? (" return " + tr.ret.date + " · dwell " + tr.dwellDays + "d") : "") + " · doc " + doc; rect.appendChild(tt); svg.appendChild(rect);
+    track.appendChild(el("div", "nb-base"));
+
+    var lane = 0;
+    tl.forEach(function(tr){
+      var doc = (recs[tr.out.idx] && recs[tr.out.idx].doc) || "", col = docColour[doc.trim()] || "#8ea2ff";
+      var g = el("div", "nb-trip " + (lane ? "nb-trip-lo" : "nb-trip-hi")); g.style.left = pct(dms(tr.out.date)) + "%";
+      var dot = el("span", "nb-tdot" + (tr.aborted ? " nb-tdot-ab" : "")); g.appendChild(dot);
+      g.appendChild(el("span", "nb-tstem"));
+      var chip = el("div", "nb-tchip" + (tr.aborted ? " nb-tchip-ab" : "")); chip.style.borderLeftColor = col;
+      var route = el("div", "nb-troute");
+      var fo = flagImg(tr.out.from); if (fo) route.appendChild(fo);
+      route.appendChild(el("span", "nb-tcode", tr.out.fromCode));
+      route.appendChild(el("span", "nb-tarr", " → "));
+      var fd = flagImg(tr.out.to); if (fd) route.appendChild(fd);
+      route.appendChild(el("span", "nb-tcode", tr.out.toCode));
+      chip.appendChild(route);
+      chip.appendChild(el("div", "nb-tsub", tr.out.date + (tr.aborted ? " · NO-SHOW" : (tr.ret ? (" · " + tr.dwellDays + "d dwell") : " · one-way"))));
+      chip.title = tr.person + " · " + (tr.destination || "") + " · " + (tr.aborted ? "aborted no-show" : ("out " + tr.out.date + (tr.ret ? ", return " + tr.ret.date : ""))) + " · passport " + doc;
+      g.appendChild(chip);
+      track.appendChild(g);
+      lane = lane ? 0 : 1;
     });
-    legs.forEach(function(l){ var c = E("circle", { cx: X(dms(l.date)), cy: dotY, r: 3.2, fill: l.boarded === false ? "#e8a13a" : (l.boarded === true ? "#5fbf7f" : "#8fa3bd") });
-      var tt = E("title", {}); tt.textContent = l.date + " " + l.flight + " " + l.fromCode + " -> " + l.toCode + (l.airline ? (" (" + l.airline.name + ")") : "") + " · " + (l.boarded === true ? "boarded" : l.boarded === false ? "check-in only" : "booked"); c.appendChild(tt); svg.appendChild(c); });
-    host.appendChild(svg);
-    }
+    host.appendChild(track);
 
     if (Object.keys(docColour).length > 1){
-      host.appendChild(el("div", "nb-note", "Trip border colour = travel document — a colour change mid-series is a passport / identity switch."));
+      host.appendChild(el("div", "nb-note", "Chip border colour = travel document — a colour change mid-series is a passport / identity switch."));
       var lg = el("div", "nb-doclegend");
       Object.keys(docColour).forEach(function(d){ var sp = el("span", "nb-dockey"); var sw = el("i", "nb-docsw"); sw.style.background = docColour[d]; sp.appendChild(sw); sp.appendChild(document.createTextNode(" " + d)); lg.appendChild(sp); });
       host.appendChild(lg);
@@ -299,10 +321,10 @@
     var wrap = el("div", "nb-tablewrap"), tbl = el("table", "nb-table"), thd = el("thead"), htr = el("tr");
     ["Out", "Route", "Destination", "Dwell", "Return", "Status", "Traveller", "Document"].forEach(function(h){ htr.appendChild(el("th", null, h)); });
     thd.appendChild(htr); tbl.appendChild(thd); var tb = el("tbody");
-    (trips.trips || []).forEach(function(tr){
+    tl.forEach(function(tr){
       var r = el("tr"); function td(v){ var d = el("td"); if (v != null) d.textContent = v; r.appendChild(d); return d; }
       td(tr.out.date); td(tr.out.fromCode + " → " + tr.out.toCode);
-      var dd = el("td"); var pic = ico("location", 14); if (pic) dd.appendChild(pic); dd.appendChild(document.createTextNode((pic ? " " : "") + (tr.destination || ""))); r.appendChild(dd);
+      var dd = el("td"); var df = flagImg(tr.out.to); if (df) dd.appendChild(df); dd.appendChild(document.createTextNode((df ? " " : "") + (tr.destination || ""))); r.appendChild(dd);
       td(tr.dwellDays != null ? (tr.dwellDays + "d") : "—"); td(tr.ret ? tr.ret.date : "—");
       var st = el("td"); var b = el("span", "nb-bd " + (tr.aborted ? "nb-badge-n" : "nb-badge-b")); b.textContent = tr.aborted ? "No-show" : "Travelled"; st.appendChild(b); r.appendChild(st);
       td(tr.person); td((recs[tr.out.idx] && recs[tr.out.idx].doc) || "");
@@ -334,7 +356,14 @@
       ".nb-bd{font-size:var(--fs-2xs);font-weight:700;border-radius:4px;padding:1px 7px}.nb-badge-b{background:rgba(95,191,127,.16);color:#5fbf7f}.nb-badge-n{background:rgba(232,161,58,.16);color:#e8a13a}.nb-badge-u{background:rgba(160,160,160,.14);color:var(--faint)}",
       ".nb-note{color:var(--faint);font-size:var(--fs-xs);margin-bottom:10px}",
       ".nb-sum{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}.nb-stat{font-size:var(--fs-xs);color:var(--faint)}.nb-stat b{color:var(--text);font-size:var(--fs-md)}",
-      ".nb-tl{width:100%;height:108px;display:block;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius)}.nb-tl-mo{fill:var(--faint);font:9px var(--sans)}",
+      ".nb-track{position:relative;height:158px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:8px;overflow:hidden}",
+      ".nb-grid{position:absolute;top:0;bottom:24px;width:1px;background:rgba(142,162,255,.12)}.nb-mon{position:absolute;bottom:5px;transform:translateX(3px);font-size:var(--fs-2xs);color:var(--faint)}",
+      ".nb-base{position:absolute;left:0;right:0;top:76px;height:2px;background:var(--line)}",
+      ".nb-trip{position:absolute;top:0;bottom:24px;width:0}.nb-tdot{position:absolute;top:72px;left:-5px;width:10px;height:10px;border-radius:50%;background:#5fbf7f;border:2px solid var(--panel-2);z-index:2}.nb-tdot-ab{background:#e8a13a}",
+      ".nb-tstem{position:absolute;left:-1px;width:2px;background:var(--line)}.nb-trip-hi .nb-tstem{top:44px;height:33px}.nb-trip-lo .nb-tstem{top:77px;height:33px}",
+      ".nb-tchip{position:absolute;left:-5px;min-width:92px;background:var(--panel-3,#141d2b);border:1px solid var(--line);border-left:3px solid #8ea2ff;border-radius:6px;padding:3px 7px;z-index:3;white-space:nowrap}.nb-trip-hi .nb-tchip{top:6px}.nb-trip-lo .nb-tchip{top:98px}.nb-tchip-ab{border-color:#e8a13a}",
+      ".nb-troute{display:flex;align-items:center;gap:3px;font-size:var(--fs-xs);color:var(--text);font-family:var(--mono)}.nb-tcode{font-weight:600}.nb-tarr{color:var(--faint)}.nb-tsub{font-size:var(--fs-2xs);color:var(--dim);margin-top:1px}",
+      ".nb-flag{width:18px;height:12px;border-radius:2px;object-fit:cover;box-shadow:0 0 0 1px rgba(0,0,0,.35)}",
       ".nb-doclegend{display:flex;gap:12px;flex-wrap:wrap;font-size:var(--fs-2xs);color:var(--dim);margin:4px 0 10px}.nb-docsw{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle}",
       ".nb-tablewrap{overflow:auto}",
       ".nb-person{border:1px solid var(--line);border-radius:var(--radius);padding:9px 11px;margin-bottom:8px;background:var(--panel-2)}.nb-person-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.nb-person-name{font-weight:600;font-family:var(--mono)}",
