@@ -79,7 +79,8 @@
     flight: ["flight", "flight no", "flight number"],
     from: ["from", "departure", "origin", "dep"],
     to: ["to", "arrival", "destination", "arr"],
-    date: ["travel date", "date", "flight date"]
+    date: ["travel date", "date", "flight date"],
+    status: ["status", "boarded", "boarding", "ci dc", "check in status", "board status"]
   };
   function splitLine(line){ return line.indexOf("\t") !== -1 ? line.split("\t") : line.split(","); }
   function mapHeader(cells){
@@ -102,7 +103,7 @@
       var c = splitLine(lines[i]); if (c.every(function(x){ return s(x).trim() === ""; })) continue;
       function g(k){ return map[k] != null && c[map[k]] != null ? s(c[map[k]]).trim() : ""; }
       var rec = { name: g("name"), gender: g("gender"), dob: g("dob"), nationality: g("nationality"),
-                  doc: g("doc"), flight: g("flight"), from: g("from"), to: g("to"), date: g("date") };
+                  doc: g("doc"), flight: g("flight"), from: g("from"), to: g("to"), date: g("date"), status: g("status") };
       if (!rec.name && !rec.dob) continue;
       out.push(rec);
     }
@@ -192,7 +193,40 @@
     return { entities: Object.keys(ents).map(function(k){ return ents[k]; }), links: Object.keys(links).map(function(k){ return links[k]; }) };
   }
 
+  /* CI = check-in only (did NOT board); DC = departure confirmed (boarded); P = booked. */
+  function boardedFromStatus(raw){
+    var s = String(raw == null ? "" : raw).toUpperCase();
+    if (/\bDC\b|DEPARTURE CONFIRMED|BOARDED|DEPARTED|FLEW|FLOWN/.test(s)) return true;
+    if (/\bCI\b|CHECK.?IN ONLY|NO.?SHOW|NOT BOARDED|OFFLOADED/.test(s)) return false;
+    return null;
+  }
+  function dkey(raw){ var m = String(raw || "").match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (!m) return 0; var y = +m[3]; if (y < 100) y += 2000; return y * 10000 + (+m[2]) * 100 + (+m[1]); }
+
+  /* Build flight legs from records: decoded airline + airport coords + boarded status. */
+  function journeys(records){
+    var legs = [], airlines = {}, airports = {}, countries = {}, boarded = 0, notBoarded = 0, unknown = 0;
+    (records || []).forEach(function(r, i){
+      var r0 = r.raw ? r.raw : r;
+      if (!r0.flight && !r0.from && !r0.to) return;
+      var air = (r0.flight && AV) ? AV.airlineFromFlight(r0.flight) : null;
+      var fa = (r0.from && AV) ? AV.airport(r0.from) : null;
+      var ta = (r0.to && AV) ? AV.airport(r0.to) : null;
+      var b = boardedFromStatus(r0.status);
+      if (b === true) boarded++; else if (b === false) notBoarded++; else unknown++;
+      if (air && air.airline) airlines[air.airline.name] = true;
+      [fa, ta].forEach(function(a){ if (a){ airports[a.iata] = a; if (a.country) countries[a.country] = true; } });
+      legs.push({ idx: i, name: r0.name || "", flight: r0.flight || "", date: r0.date || "",
+        airline: air && air.airline ? air.airline : null, airlineCode: air ? air.code : "",
+        from: fa, to: ta, fromCode: (r0.from || "").toUpperCase(), toCode: (r0.to || "").toUpperCase(),
+        boarded: b, status: r0.status || "" });
+    });
+    legs.sort(function(a, b){ return dkey(a.date) - dkey(b.date); });
+    return { legs: legs, airlines: Object.keys(airlines), airports: airports,
+      countries: Object.keys(countries), boarded: boarded, notBoarded: notBoarded, unknown: unknown };
+  }
+
   root.CRNbtc = { parse: parse, annotate: annotate, resolve: resolve, toCase: toCase,
+    journeys: journeys, boardedFromStatus: boardedFromStatus,
     decodeTravel: decodeTravel, parseName: parseName, parseDob: parseDob, parseDoc: parseDoc, sim: sim };
   if (typeof module !== "undefined" && module.exports) module.exports = root.CRNbtc;
 })(typeof window !== "undefined" ? window : this);

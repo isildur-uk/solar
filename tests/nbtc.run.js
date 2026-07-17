@@ -64,5 +64,26 @@ ok("toCase links person -> document (DOCUMENT_OWNERSHIP)", parts.links.some(func
 var st = SC.merge(parts);
 ok("merges into the shared spine", st.entities > 0);
 
+/* ---- journeys(): flight legs, airline + airport decode, boarded status ---- */
+var TRAVEL = [
+ "Passenger name\tDate of birth\tTravel Doc\tFlight\tDate\tFrom\tTo\tStatus",
+ "GUBBINS, DEAN\t01/01/2000\t574444444 (GBR)\tBA462\t03/01/2026\tLHR\tAMS\tDC",
+ "GUBBINS, DEAN\t01/01/2000\t574444444 (GBR)\tU28040\t02/02/2026\tLGW\tBCN\tCI",
+ "GUBBINS, DEAN\t01/01/2000\t574444444 (GBR)\tFR8542\t18/01/2026\tSTN\tAGP\tDC"
+].join("\n");
+var trecs = N.parse(TRAVEL);
+ok("travel rows parse a Status column", trecs[0].status === "DC");
+var jr = N.journeys(trecs);
+ok("journeys builds one leg per flight", jr.legs.length === 3);
+ok("legs sorted chronologically (03 Jan first, 02 Feb last)", jr.legs[0].date === "03/01/2026" && jr.legs[2].date === "02/02/2026");
+ok("flight decoded to airline (BA462 -> British Airways)", jr.legs[0].airline && jr.legs[0].airline.name === "British Airways");
+ok("airports resolved with coordinates (LHR)", jr.legs[0].from && Math.abs(jr.legs[0].from.lat - 51.4775) < 0.01);
+ok("boarded classified: 2 boarded, 1 check-in-only", jr.boarded === 2 && jr.notBoarded === 1);
+ok("DC = boarded", N.boardedFromStatus("DC") === true);
+ok("CI = not boarded", N.boardedFromStatus("CI") === false);
+ok("P/blank = unknown boarding", N.boardedFromStatus("P") === null);
+ok("airlines aggregated", jr.airlines.indexOf("British Airways") !== -1 && jr.airlines.indexOf("Ryanair") !== -1);
+ok("countries aggregated across airports", jr.countries.indexOf("United Kingdom") !== -1 && jr.countries.indexOf("Spain") !== -1);
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

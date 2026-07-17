@@ -17,6 +17,7 @@ Object.defineProperty(El.prototype, "innerHTML", {
 });
 El.prototype.appendChild = function(c){ this.children.push(c); c.parent = this; return c; };
 El.prototype.setAttribute = function(k, v){ if (k === "id") this.id = v; this["_attr_" + k] = v; };
+El.prototype.getAttribute = function(k){ return this["_attr_" + k] != null ? this["_attr_" + k] : null; };
 El.prototype.toggleAttribute = function(k, on){ this["_" + k] = !!on; };
 El.prototype.addEventListener = function(ev, fn){ (this._handlers[ev] = this._handlers[ev] || []).push(fn); };
 Object.defineProperty(El.prototype, "onclick", { get: function(){ return this._onclick; }, set: function(fn){ this._onclick = fn; } });
@@ -51,23 +52,32 @@ var V = require("../analyse/nbtc-view.js");
 
 console.log("NBTC-view shim tests\n");
 var host = new El("div"); host.id = "host"; ensureClassList(host); registry.push(host);
-// className property on host
 Object.defineProperty(host, "className", { get: function(){ return this._cls || ""; }, set: function(v){ this._cls = v || ""; } });
 
 var thrown = null;
 try { V.mount(host); V._resolveText(V._loadSample()); } catch (e) { thrown = e; }
-ok("mount + resolve did not throw", thrown === null);
+ok("mount + analyse did not throw", thrown === null);
 if (thrown) console.log("   " + thrown.message);
 ok("panel built", host.querySelectorAll(".nb-panel").length === 1);
-ok("resolved-people cards rendered", host.querySelectorAll(".nb-person").length >= 1);
-ok("review candidates rendered", host.querySelectorAll(".nb-cand").length >= 1);
-ok("raw table has 12 data rows", host.querySelectorAll(".nb-table tbody tr").length === 12);
-ok("a (GBR) document shown", /\(GBR\)/.test(host.textContent));
+ok("three inner tabs (Map/Flights/Identities)", host.querySelectorAll(".nb-tab").length === 3);
+ok("flights table has 8 legs", host.querySelectorAll(".nb-table tbody tr").length === 8);
+ok("a boarded badge is shown", host.querySelectorAll(".nb-badge-b").length >= 1);
+ok("a check-in-only (not boarded) badge is shown", host.querySelectorAll(".nb-badge-n").length >= 1);
+ok("summary chips rendered", host.querySelectorAll(".nb-chip").length >= 3);
+ok("identities tab has resolved person card(s)", host.querySelectorAll(".nb-person").length >= 1);
+ok("meta summarises boarded flights", /boarded/.test(document.getElementById("nb-meta").textContent));
+ok("map pane falls back gracefully without Leaflet", /Leaflet/.test(document.getElementById("nb-pane-map").textContent));
 
+/* flight lookup uses the aviation reference */
+document.getElementById("nb-flight").value = "BA286";
+(function(){ var b = host.querySelectorAll(".nb-bar .nb-btn"); b[b.length-1].click(); })();
+ok("flight BA286 decodes to British Airways", /British Airways/.test(document.getElementById("nb-flightout").textContent));
+
+/* add to case pushes person + documents + airports to the spine */
 window.SolarCase._reset();
 var ab = document.getElementById("nb-addcase"); if (ab) ab.click();
-ok("Add to case wrote entities to the spine", window.SolarCase.stats().entities > 0);
-ok("Add to case wrote links to the spine", window.SolarCase.stats().links >= 1);
+ok("Add to case writes entities to the spine", window.SolarCase.stats().entities > 0);
+ok("Add to case writes links to the spine", window.SolarCase.stats().links >= 1);
 
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);
