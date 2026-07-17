@@ -540,9 +540,10 @@
     var GLOSS = {
       Charting: "Charting — the link-analysis workbench (entities, links, timeline)",
       Analyse: "Analyse — comms/ANPR analysis (movement, links, patterns)",
-      Database: "Database — the structured-intelligence registry (reports & entities)"
+      Database: "Database — the structured-intelligence registry (reports & entities)",
+      Context: "Context — strategic threat-area maps (hawala, drug & migration flows, OCG)"
     };
-    var HREF = { Charting: PFX + "index.html", Analyse: PFX + "analyse/index.html", Database: PFX + "registry/index.html" };
+    var HREF = { Charting: PFX + "index.html", Analyse: PFX + "analyse/index.html", Database: PFX + "registry/index.html", Context: PFX + "index.html#context" };
     var surfBtns = {};   // surface (lowercase) -> anchor, for reflecting the active view
     function surfLink(label) {
       var surface = label.toLowerCase();
@@ -561,14 +562,15 @@
       });
       return a;
     }
-    // Order: Database → Analyse → Charting (source data → analysis → visualisation).
+    // Order: Database → Analyse → Charting → Context (source data → analysis → visualisation → strategic context).
     surf.appendChild(surfLink("Database"));
     surf.appendChild(surfLink("Analyse"));
     surf.appendChild(surfLink("Charting"));
+    surf.appendChild(surfLink("Context"));
     /* Reflect the active in-document view across Row 1 + the shell: highlight the
        current tab, swap the wordmark mode word, and set data-active-surface (which
        drives hiding the charting Rows 2/3 for surfaces that carry their own bar). */
-    var CAPS = { charting: "Charting", analyse: "Analyse", database: "Database" };
+    var CAPS = { charting: "Charting", analyse: "Analyse", database: "Database", context: "Context" };
     function reflectSurface(activeSurface) {
       Object.keys(surfBtns).forEach(function (s) {
         var a = surfBtns[s];

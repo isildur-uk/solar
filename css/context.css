@@ -1,0 +1,79 @@
+/* ============================================================
+   SOLAR — Context surface styles (threat-area maps)
+   Uses the shared workbench tokens only (app.css :root). Reuses the
+   dark analyst-console language: hairline borders, glass panel, mono
+   identifiers, periwinkle #8ea2ff for selection/focus only. Entity
+   hues carry the layer identity. No new palette.
+   ============================================================ */
+
+/* the view fills below the shared shell. The generic shell rule makes an active
+   view display:contents; the Context surface hosts a full-bleed map, so it must be
+   a real flex box that claims the height itself (more specific than .view[data-active]). */
+.view.v-context[data-active] { display: flex; flex: 1 1 0%; min-height: 0; }
+.context-main { flex: 1; min-height: 0; display: flex; position: relative; z-index: 1; }
+.ctx-wrap { flex: 1; min-height: 0; display: flex; }
+
+/* ---- left control panel ---- */
+.ctx-panel-host { flex: 0 0 268px; min-height: 0; overflow: auto; border-right: 1px solid var(--line); background: var(--panel); }
+.ctx-panel { display: flex; flex-direction: column; gap: 14px; padding: 14px 14px 18px; }
+.ctx-panel-head .ctx-title { font: 600 var(--fs-xl)/1.1 var(--sans); letter-spacing: -0.01em; color: var(--text); }
+.ctx-panel-head .ctx-sub { font: var(--fs-2xs) var(--mono); letter-spacing: 0.04em; color: var(--faint); margin-top: 3px; }
+
+.ctx-sec-h { font: 600 var(--fs-2xs)/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); border-bottom: 1px solid var(--line); padding-bottom: 5px; }
+.ctx-layers { display: flex; flex-direction: column; gap: 5px; margin-top: 9px; }
+
+.ctx-layer { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 8px 9px; background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); color: var(--dim); cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.ctx-layer:hover { border-color: var(--line-2); color: var(--text); }
+.ctx-layer:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ctx-layer.on { color: var(--text); border-color: var(--accent-dim); background: var(--accent-soft); }
+.ctx-swatch { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.35) inset; }
+.ctx-layer-name { flex: 1; font: var(--fs-xs) var(--sans); }
+.ctx-layer-count { flex: 0 0 auto; font-size: var(--fs-2xs); color: var(--faint); font-variant-numeric: tabular-nums; }
+
+.ctx-actions { display: flex; gap: 6px; }
+.ctx-actions .btn { flex: 1; font-size: var(--fs-2xs); padding: 5px 8px; }
+
+/* ---- console (active-layer detail) ---- */
+.ctx-console { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.ctx-console-empty { font: var(--fs-2xs) var(--mono); color: var(--faint); }
+.ctx-console-g { display: flex; align-items: center; gap: 7px; font: var(--fs-xs) var(--sans); color: var(--text); margin-top: 4px; }
+.ctx-typo-h { font: 600 var(--fs-2xs) var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-top: 4px; }
+.ctx-typo { border-left: 2px solid var(--line-2); padding: 2px 0 2px 8px; }
+.ctx-typo-name { font: var(--fs-xs) var(--sans); color: var(--text); }
+.ctx-typo-desc { font: var(--fs-2xs)/1.4 var(--sans); color: var(--dim); margin-top: 1px; }
+
+.ctx-note { font: var(--fs-2xs)/1.5 var(--sans); color: var(--dim); margin: 0; }
+.ctx-note.faint { color: var(--faint); letter-spacing: 0.02em; }
+
+/* ---- map ---- */
+.ctx-map-host { flex: 1; min-height: 0; position: relative; }
+#ctx-map { position: absolute; inset: 0; background: #0c0c0b; }
+.ctx-offline { position: absolute; left: 10px; bottom: 10px; z-index: 600; max-width: 320px; display: none; font: var(--fs-2xs)/1.4 var(--mono); color: var(--warn); background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--radius); padding: 7px 9px; box-shadow: var(--shadow-1); }
+.ctx-offline.show { display: block; }
+.ctx-fallback { margin: auto; padding: 40px; color: var(--faint); font: var(--fs-sm) var(--mono); }
+
+/* marching-ants flow lines — gated by reduced-motion */
+@keyframes ctx-flow-march { to { stroke-dashoffset: -110; } }
+.ctx-flow { animation: ctx-flow-march 3.2s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .ctx-flow { animation: none; } }
+
+/* ---- popups: dark analyst card (override Leaflet defaults) ---- */
+.ctx-popup .leaflet-popup-content-wrapper { background: var(--panel); color: var(--text); border: 1px solid var(--line-2); border-radius: var(--radius); box-shadow: var(--shadow-2); }
+.ctx-popup .leaflet-popup-tip { background: var(--panel); border: 1px solid var(--line-2); }
+.ctx-popup .leaflet-popup-content { margin: 10px 12px; font: var(--fs-xs)/1.45 var(--sans); }
+.ctx-popup a.leaflet-popup-close-button { color: var(--faint); }
+.ctx-pop-h { display: flex; align-items: center; gap: 7px; font: 600 var(--fs-sm) var(--sans); color: var(--text); }
+.ctx-dot { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 auto; }
+.ctx-pop-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.ctx-chip { font: var(--fs-2xs) var(--sans); color: var(--dim); background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: 1px 6px; }
+.ctx-chip.soft { color: var(--faint); }
+.ctx-chip.mono, .ctx-pop-coord.mono { font-family: var(--mono); }
+.ctx-pop-note { font: var(--fs-xs)/1.5 var(--sans); color: var(--dim); margin: 8px 0 0; }
+.ctx-pop-coord { margin-top: 7px; font-size: var(--fs-2xs); color: var(--faint); }
+.ctx-pop-src { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--line); font: var(--fs-2xs) var(--mono); color: var(--faint); letter-spacing: 0.02em; }
+
+/* Leaflet chrome to the dark theme */
+#ctx-map .leaflet-control-zoom a { background: var(--panel); color: var(--text); border-color: var(--line-2); }
+#ctx-map .leaflet-control-zoom a:hover { background: var(--panel-2); }
+#ctx-map .leaflet-control-attribution { background: rgba(12,12,11,0.7); color: var(--faint); }
+#ctx-map .leaflet-control-attribution a { color: var(--dim); }

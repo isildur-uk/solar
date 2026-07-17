@@ -225,8 +225,52 @@
       countries: Object.keys(countries), boarded: boarded, notBoarded: notBoarded, unknown: unknown };
   }
 
+  function dms(raw){ var m = String(raw || "").match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/); if (!m) return NaN; var y = +m[3]; if (y < 100) y += 2000; return Date.UTC(y, +m[2] - 1, +m[1]); }
+  function isGB(ap){ return !!(ap && /united kingdom|england|scotland|wales|northern ireland/i.test(String(ap.country || ""))); }
+  function median(a){ if (!a.length) return null; var b = a.slice().sort(function(x, y){ return x - y; }); var h = Math.floor(b.length / 2); return b.length % 2 ? b[h] : Math.round((b[h - 1] + b[h]) / 2); }
+
+  /* trips(legs): pair a GB departure with its next GB return per traveller; dwell
+   * days abroad; classify (aborted no-show, quick turnaround). This is the courier
+   * signature an analyst reads: cadence + short dwell + escalation. */
+  function trips(legs){
+    legs = legs || [];
+    var byP = {}; legs.forEach(function(l){ var k = l.name || "?"; (byP[k] = byP[k] || []).push(l); });
+    var out = [], DAY = 86400000;
+    Object.keys(byP).forEach(function(person){
+      var ls = byP[person].slice().sort(function(a, b){ return dms(a.date) - dms(b.date); });
+      var i = 0;
+      while (i < ls.length){
+        var o = ls[i];
+        if (!(o.from && isGB(o.from) && o.to && !isGB(o.to))){ i++; continue; }   // trip starts on a GB->foreign leg
+        if (o.boarded === false){                                                 // aborted (no-show) — did not travel
+          out.push({ person: person, out: o, ret: null, destination: (o.to && (o.to.city || o.to.name)) || o.toCode,
+            destinationCountry: (o.to && o.to.country) || "", dwellDays: null, boardedOut: false, boardedRet: null, aborted: true });
+          i++; continue;
+        }
+        var ret = null, j = i + 1;
+        for (; j < ls.length; j++){ if (ls[j].to && isGB(ls[j].to)){ ret = ls[j]; break; } }
+        var dwell = ret ? Math.round((dms(ret.date) - dms(o.date)) / DAY) : null;
+        out.push({ person: person, out: o, ret: ret,
+          destination: (o.to && (o.to.city || o.to.name)) || o.toCode,
+          destinationCountry: (o.to && o.to.country) || "",
+          dwellDays: dwell, boardedOut: o.boarded, boardedRet: ret ? ret.boarded : null,
+          aborted: false });
+        i = ret ? (j + 1) : (i + 1);
+      }
+    });
+    out.sort(function(a, b){ return dms(a.out.date) - dms(b.out.date); });
+    var dwells = out.map(function(t){ return t.dwellDays; }).filter(function(d){ return d != null; });
+    var gaps = [], prev = {};
+    out.forEach(function(t){ var k = dms(t.out.date); if (prev[t.person] != null) gaps.push(Math.round((k - prev[t.person]) / DAY)); prev[t.person] = k; });
+    var dests = {}; out.forEach(function(t){ if (t.destinationCountry) dests[t.destinationCountry] = (dests[t.destinationCountry] || 0) + 1; });
+    return { trips: out, summary: {
+      tripCount: out.length, aborted: out.filter(function(t){ return t.aborted; }).length,
+      medianDwellDays: median(dwells), medianCadenceDays: median(gaps),
+      destinations: Object.keys(dests).sort(function(a, b){ return dests[b] - dests[a]; }) } };
+  }
+
   root.CRNbtc = { parse: parse, annotate: annotate, resolve: resolve, toCase: toCase,
-    journeys: journeys, boardedFromStatus: boardedFromStatus,
+    journeys: journeys, boardedFromStatus: boardedFromStatus, trips: trips, isGB: isGB,
     decodeTravel: decodeTravel, parseName: parseName, parseDob: parseDob, parseDoc: parseDoc, sim: sim };
   if (typeof module !== "undefined" && module.exports) module.exports = root.CRNbtc;
 })(typeof window !== "undefined" ? window : this);

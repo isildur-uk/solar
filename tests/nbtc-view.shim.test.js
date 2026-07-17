@@ -25,8 +25,8 @@ El.prototype.click = function(){ if (this._onclick) this._onclick({ target: this
 El.prototype.classList = null;
 function ensureClassList(e){ e.classList = { toggle: function(c, on){ /* noop for counts */ } }; }
 function walk(node, out){ (node.children || []).forEach(function(c){ out.push(c); walk(c, out); }); return out; }
-function matchTok(node, t){ if (!t) return true; if (t.charAt(0) === "."){ return (" " + node.className + " ").indexOf(" " + t.slice(1) + " ") !== -1 || node.className.split(/\s+/).indexOf(t.slice(1)) !== -1; }
-  var dot = t.indexOf("."); if (dot > 0){ return node.tagName === t.slice(0, dot).toUpperCase() && node.className.split(/\s+/).indexOf(t.slice(dot + 1)) !== -1; }
+function matchTok(node, t){ if (!t) return true; var cn = node.className || ""; if (t.charAt(0) === "."){ return (" " + cn + " ").indexOf(" " + t.slice(1) + " ") !== -1 || cn.split(/\s+/).indexOf(t.slice(1)) !== -1; }
+  var dot = t.indexOf("."); if (dot > 0){ return node.tagName === t.slice(0, dot).toUpperCase() && (node.className || "").split(/\s+/).indexOf(t.slice(dot + 1)) !== -1; }
   return node.tagName === t.toUpperCase(); }
 function hasChain(node, toks){ var i = toks.length - 2, p = node.parent; while (i >= 0){ var found = false; while (p){ if (matchTok(p, toks[i])){ found = true; p = p.parent; break; } p = p.parent; } if (!found) return false; i--; } return true; }
 El.prototype.querySelectorAll = function(sel){ var toks = sel.trim().split(/\s+/), all = walk(this, []), last = toks[toks.length - 1];
@@ -40,6 +40,7 @@ var document = {
     Object.defineProperty(e, "className", { get: function(){ return this._cls || ""; }, set: function(v){ this._cls = v || ""; } });
     return e; },
   getElementById: function(id){ for (var i = 0; i < registry.length; i++){ var f = registry[i].querySelectorAll("*").filter(function(n){ return n.id === id; }); if (f.length) return f[0]; } return null; },
+  createTextNode: function(t){ return { textContent: String(t == null ? "" : t), children: [] }; },
   head: new El("head")
 };
 document.getElementById = function(id){ var pools = registry.concat([document.head]); for (var p = 0; p < pools.length; p++){ if (pools[p].id === id) return pools[p]; var all = walk(pools[p], []); for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i]; } return null; };
@@ -59,10 +60,14 @@ try { V.mount(host); V._resolveText(V._loadSample()); } catch (e) { thrown = e; 
 ok("mount + analyse did not throw", thrown === null);
 if (thrown) console.log("   " + thrown.message);
 ok("panel built", host.querySelectorAll(".nb-panel").length === 1);
-ok("three inner tabs (Map/Flights/Identities)", host.querySelectorAll(".nb-tab").length === 3);
-ok("flights table has 8 legs", host.querySelectorAll(".nb-table tbody tr").length === 8);
+ok("four inner tabs (Map/Timeline/Flights/Identities)", host.querySelectorAll(".nb-tab").length === 4);
+ok("flights + trips tables rendered", host.querySelectorAll(".nb-table").length >= 2);
+ok("all flights listed (17 rows)", host.querySelectorAll(".nb-table tbody tr").length >= 17);
 ok("a boarded badge is shown", host.querySelectorAll(".nb-badge-b").length >= 1);
-ok("a check-in-only (not boarded) badge is shown", host.querySelectorAll(".nb-badge-n").length >= 1);
+ok("a check-in-only / no-show badge is shown", host.querySelectorAll(".nb-badge-n").length >= 1);
+ok("timeline summary stats rendered", host.querySelectorAll(".nb-sum .nb-stat").length >= 3);
+ok("timeline flags an aborted no-show trip", /No-show/.test(document.getElementById("nb-pane-timeline").textContent));
+ok("timeline shows a passport/document switch legend", host.querySelectorAll(".nb-doclegend").length >= 1);
 ok("summary chips rendered", host.querySelectorAll(".nb-chip").length >= 3);
 ok("identities tab has resolved person card(s)", host.querySelectorAll(".nb-person").length >= 1);
 ok("meta summarises boarded flights", /boarded/.test(document.getElementById("nb-meta").textContent));

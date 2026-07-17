@@ -85,5 +85,23 @@ ok("P/blank = unknown boarding", N.boardedFromStatus("P") === null);
 ok("airlines aggregated", jr.airlines.indexOf("British Airways") !== -1 && jr.airlines.indexOf("Ryanair") !== -1);
 ok("countries aggregated across airports", jr.countries.indexOf("United Kingdom") !== -1 && jr.countries.indexOf("Spain") !== -1);
 
+/* ---- trips(): out->return pairing, dwell, aborted no-show ---- */
+var TR = [
+ "Passenger name\tDate of birth\tTravel Doc\tFlight\tDate\tFrom\tTo\tStatus",
+ "GUBBINS, DEAN\t01/01/2000\t574444444 (GBR)\tBA430\t12/10/2025\tLHR\tAMS\tDC",
+ "GUBBINS, DEAN\t01/01/2000\t574444444 (GBR)\tBA429\t14/10/2025\tAMS\tLHR\tDC",
+ "GUBBINS, DEAN\t01/01/2000\t574444444 (GBR)\tU28040\t17/11/2025\tLGW\tAMS\tCI",
+ "GUBBINS, DEAN\t01/01/2000\t574444444 (GBR)\tFR8542\t06/12/2025\tSTN\tAGP\tDC",
+ "GUBBINS, DEAN\t01/01/2000\t574444444 (GBR)\tFR8543\t08/12/2025\tAGP\tSTN\tDC"
+].join("\n");
+var tp = N.trips(N.journeys(N.parse(TR)).legs);
+ok("trips paired (2 return trips + 1 aborted = 3)", tp.summary.tripCount === 3);
+ok("the no-show is flagged aborted, not paired to a later return", tp.summary.aborted === 1);
+ok("completed trips have a 2-day dwell", tp.summary.medianDwellDays === 2);
+ok("first trip is the Amsterdam round-trip with a return leg", tp.trips[0].ret && tp.trips[0].out.toCode === "AMS");
+ok("aborted trip has no return/dwell", tp.trips.some(function(t){ return t.aborted && t.ret === null && t.dwellDays === null; }));
+ok("destinations aggregated (Netherlands + Spain)", tp.summary.destinations.indexOf("Netherlands") !== -1 && tp.summary.destinations.indexOf("Spain") !== -1);
+ok("GB airport recognised by isGB", N.isGB({ country: "United Kingdom" }) === true && N.isGB({ country: "Spain" }) === false);
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);
