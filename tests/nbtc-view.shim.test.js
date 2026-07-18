@@ -76,6 +76,9 @@ ok("summary chips rendered", host.querySelectorAll(".nb-chip").length >= 3);
 ok("identities tab has resolved person card(s)", host.querySelectorAll(".nb-person").length >= 1);
 ok("meta summarises boarded flights", /boarded/.test(document.getElementById("nb-meta").textContent));
 ok("map pane falls back gracefully without Leaflet", /Leaflet/.test(document.getElementById("nb-pane-map").textContent));
+ok("findings strip renders signal chips", host.querySelectorAll(".nb-find").length >= 4);
+ok("findings strip names the subject (GUBBINS)", /GUBBINS/.test(document.getElementById("nb-findings").textContent));
+ok("findings strip flags the same-day turnarounds", /same-day/.test(document.getElementById("nb-findings").textContent));
 
 /* flight lookup uses the aviation reference */
 document.getElementById("nb-flight").value = "BA286";

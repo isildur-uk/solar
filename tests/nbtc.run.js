@@ -103,5 +103,24 @@ ok("aborted trip has no return/dwell", tp.trips.some(function(t){ return t.abort
 ok("destinations aggregated (Netherlands + Spain)", tp.summary.destinations.indexOf("Netherlands") !== -1 && tp.summary.destinations.indexOf("Spain") !== -1);
 ok("GB airport recognised by isGB", N.isGB({ country: "United Kingdom" }) === true && N.isGB({ country: "Spain" }) === false);
 
+/* findings(): the briefing headline over a realistic escalating-courier table */
+global.CRAviation = require("../js/core/aviation-ref.js");
+var Nb = require("../js/core/nbtc.js");
+var fv = require("../analyse/nbtc-view.js");
+var F = Nb.findings(Nb.parse(fv._loadSample()));
+function has(key){ return F.signals.some(function(s){ return s.key === key; }); }
+function get(key){ return F.signals.filter(function(s){ return s.key === key; })[0]; }
+ok("findings picks the largest cluster as subject (GUBBINS)", /GUBBINS/.test(F.subject.label));
+ok("findings surfaces same-day turnarounds", has("sameday") && get("sameday").tone === "alert");
+ok("findings surfaces the no-show", has("noshow") && get("noshow").tone === "alert");
+ok("findings surfaces the passport switch", has("docs") && /574444444/.test(get("docs").detail) && /575555555/.test(get("docs").detail));
+ok("findings surfaces the co-traveller (NOWAK)", has("cotravel") && /NOWAK/.test(get("cotravel").detail));
+ok("findings surfaces cadence tightening", has("cadence"));
+ok("findings surfaces departure-airport spread", has("spread") && /LHR/.test(get("spread").detail));
+ok("no co-traveller signal on a single-traveller table", (function(){
+  var solo = Nb.findings(Nb.parse("Passenger name\tDate of birth\tNationality\tTravel Doc\tFlight\tDate\tFrom\tTo\tStatus\nSOLO, SAM\t01/01/1990\tGBR\tX1 (GBR)\tBA1\t01/02/2026\tLHR\tAMS\tDC\nSOLO, SAM\t01/01/1990\tGBR\tX1 (GBR)\tBA2\t03/02/2026\tAMS\tLHR\tDC"));
+  return !solo.signals.some(function(s){ return s.key === "cotravel"; });
+})());
+
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

@@ -514,7 +514,8 @@
     var latlngs = [];
     pts.forEach(function (e, idx) {
       var ll = [e.lat, e.lon]; latlngs.push(ll);
-      var mk = L.circleMarker(ll, { radius: 6, color: "#8ea2ff", weight: 2, fillColor: "#8ea2ff", fillOpacity: 0.7 });
+      var _mi = (window.SolarEntityStyle && window.SolarEntityStyle.mapIcon) ? window.SolarEntityStyle.mapIcon(state.res && state.res.format === "anpr" ? "vehicle" : "location", 26) : null;
+      var mk = _mi ? L.marker(ll, { icon: _mi }) : L.circleMarker(ll, { radius: 6, color: "#8ea2ff", weight: 2, fillColor: "#8ea2ff", fillOpacity: 0.7 });
       mk.bindPopup(popupHtml(e, idx + 1));
       mk.addTo(state.map); state.mapLayers.push(mk);
       if (e.cellAzimuth != null && isFinite(e.cellAzimuth)) {

@@ -237,7 +237,8 @@
     var lls = [];
     pts.forEach(function (r) {
       var ll = [r.lat, r.lon]; lls.push(ll);
-      var mk = L.circleMarker(ll, { radius: 7, color: "#d86a6a", weight: 2, fillColor: "#d86a6a", fillOpacity: 0.75 });
+      var _mi = (window.SolarEntityStyle && window.SolarEntityStyle.mapIcon) ? window.SolarEntityStyle.mapIcon("location", 26) : null;
+      var mk = _mi ? L.marker(ll, { icon: _mi }) : L.circleMarker(ll, { radius: 7, color: "#d86a6a", weight: 2, fillColor: "#d86a6a", fillOpacity: 0.75 });
       var pop = el("div", "cl-pop");
       pop.appendChild(el("div", "cl-pop-t", r.targetA + " ↔ " + r.targetB));
       if (r.place) pop.appendChild(el("div", null, r.place));

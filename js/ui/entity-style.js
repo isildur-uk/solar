@@ -45,5 +45,18 @@
     return "phone";
   }
 
-  window.SolarEntityStyle = { hue: hue, icon: icon, typeOf: typeOf };
+  // A Leaflet divIcon using the EXACT Charting node chip for a type, so every
+  // Analyse map (cell sites, ANPR, airports, co-locations) reads like the chart.
+  // Returns null if Leaflet or CRIcons isn't present (caller falls back).
+  function mapIcon(type, px) {
+    px = px || 26;
+    if (typeof L === "undefined" || !L || !L.divIcon) return null;
+    var ic = window.CRIcons;
+    if (!ic || !ic.get || (ic.has && !ic.has(type))) return null;
+    var url = ic.get(type, hue(type)).unselected;
+    return L.divIcon({ html: "<img src='" + url + "' width='" + px + "' height='" + px + "' alt='' style='display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.55))'>",
+      className: "se-mapicon", iconSize: [px, px], iconAnchor: [px / 2, px / 2], popupAnchor: [0, -px / 2] });
+  }
+
+  window.SolarEntityStyle = { hue: hue, icon: icon, typeOf: typeOf, mapIcon: mapIcon };
 })();

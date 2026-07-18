@@ -269,7 +269,59 @@
       destinations: Object.keys(dests).sort(function(a, b){ return dests[b] - dests[a]; }) } };
   }
 
-  root.CRNbtc = { parse: parse, annotate: annotate, resolve: resolve, toCase: toCase,
+  /* findings(records): the briefing headline. Factual signals an analyst reads
+   * first on a travel history — same-day turnarounds, no-shows, passport switch,
+   * co-travellers, tightening cadence, spread of UK departure airports. No
+   * inference or assessment: each signal is a counted observation on the data. */
+  function tidyName(n){ return String(n == null ? "" : n).replace(/\s+/g, " ").trim(); }
+  function findings(records){
+    var recs = records || [];
+    var res = resolve(recs), jr = journeys(recs), tr = trips(jr.legs);
+    var subj = res.clusters.slice().sort(function(a, b){ return b.size - a.size; })[0] || null;
+    var subjIdx = {}; if (subj) (subj.members || []).forEach(function(mi){ subjIdx[mi] = 1; });
+    var subjTrips = tr.trips.filter(function(t){ return t.out && subjIdx[t.out.idx]; });
+    var subjLegs = jr.legs.filter(function(l){ return subjIdx[l.idx]; });
+    var sig = [];
+
+    var sameDay = subjTrips.filter(function(t){ return t.dwellDays === 0; }).length;
+    if (sameDay) sig.push({ key: "sameday", tone: "alert", icon: "vehicle",
+      label: sameDay + " same-day turnaround" + (sameDay > 1 ? "s" : ""), detail: "out and back inside the day \u2014 classic courier signature" });
+
+    var aborted = subjTrips.filter(function(t){ return t.aborted; }).length;
+    if (aborted) sig.push({ key: "noshow", tone: "alert", icon: "document",
+      label: aborted + " no-show" + (aborted > 1 ? "s" : ""), detail: "checked in but did not board" });
+
+    if (subj && subj.documents && subj.documents.length > 1) sig.push({ key: "docs", tone: "alert", icon: "document",
+      label: "Passport switch", detail: subj.documents.map(function(d){ return d.number + " (" + d.state + ")"; }).join("  \u2192  ") });
+
+    if (subj && subj.nationalities && subj.nationalities.length > 1) sig.push({ key: "nats", tone: "note", icon: "person",
+      label: "Multiple nationalities", detail: subj.nationalities.join(", ") });
+
+    var gaps = [], byDate = subjTrips.slice().sort(function(a, b){ return dms(a.out.date) - dms(b.out.date); }), i;
+    for (i = 1; i < byDate.length; i++) gaps.push(Math.round((dms(byDate[i].out.date) - dms(byDate[i - 1].out.date)) / 86400000));
+    if (gaps.length >= 4){
+      var h = Math.floor(gaps.length / 2), early = median(gaps.slice(0, h)), late = median(gaps.slice(h));
+      if (early != null && late != null && late < early * 0.7) sig.push({ key: "cadence", tone: "note", icon: "date",
+        label: "Cadence tightening", detail: "~" + early + "d between trips \u2192 ~" + late + "d" });
+    }
+
+    var groups = {}; jr.legs.forEach(function(l){ var k = (l.flight || "?") + "|" + dms(l.date); (groups[k] = groups[k] || []).push(l); });
+    var mates = {}; subjLegs.forEach(function(l){ var k = (l.flight || "?") + "|" + dms(l.date);
+      (groups[k] || []).forEach(function(o){ if (!subjIdx[o.idx] && o.name) mates[o.name] = (mates[o.name] || 0) + 1; }); });
+    var mateNames = Object.keys(mates);
+    if (mateNames.length) sig.push({ key: "cotravel", tone: "note", icon: "person",
+      label: mateNames.length + " co-traveller" + (mateNames.length > 1 ? "s" : ""),
+      detail: mateNames.map(function(n){ return tidyName(n) + " (" + mates[n] + " shared flight" + (mates[n] > 1 ? "s" : "") + ")"; }).join("; ") });
+
+    var deps = {}; subjLegs.forEach(function(l){ if (l.from && isGB(l.from)) deps[l.from.iata] = 1; });
+    var depKeys = Object.keys(deps);
+    if (depKeys.length >= 3) sig.push({ key: "spread", tone: "info", icon: "location",
+      label: depKeys.length + " UK departure airports", detail: "departures spread across " + depKeys.join(", ") });
+
+    return { subject: subj, signals: sig, journeys: jr, trips: tr, resolve: res, subjectTrips: subjTrips };
+  }
+
+  root.CRNbtc = { parse: parse, annotate: annotate, resolve: resolve, toCase: toCase, findings: findings,
     journeys: journeys, boardedFromStatus: boardedFromStatus, trips: trips, isGB: isGB,
     decodeTravel: decodeTravel, parseName: parseName, parseDob: parseDob, parseDoc: parseDoc, sim: sim };
   if (typeof module !== "undefined" && module.exports) module.exports = root.CRNbtc;
