@@ -372,6 +372,10 @@ body.warping .content {
         <span class="pill-rim" aria-hidden="true"></span>
         <span class="pill-label">Analyse</span>
       </a>
+      <a class="pill" id="go-context" href="index.html#context">
+        <span class="pill-rim" aria-hidden="true"></span>
+        <span class="pill-label">Context</span>
+      </a>
     </nav>
     <button class="enter" id="enter" type="button" aria-label="Open the charting workbench">
       <span class="enter-fx" aria-hidden="true"></span>
@@ -840,6 +844,14 @@ body.warping .content {
     anLink.addEventListener("click", function (e) {
       e.preventDefault();
       detonate(anLink.getAttribute("href") || "analyse/");
+    });
+  }
+
+  var ctxLink = document.getElementById("go-context");
+  if (ctxLink) {
+    ctxLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      detonate(ctxLink.getAttribute("href") || "index.html#context");
     });
   }
 
