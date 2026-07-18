@@ -56,7 +56,7 @@
       if (!key || (target && key === target)) return;    // skip self / empty
       var c = by[key] || (by[key] = { number: cp, key: key, events: 0, voice: 0, sms: 0,
         outCount: 0, inCount: 0, totalDurSec: 0, maxDurSec: 0, days: {}, firstMs: Infinity, lastMs: -Infinity,
-        unanswered: 0, oneRing: 0 });
+        unanswered: 0, oneRing: 0, dayCounts: {} });
       c.events++;
       var dir = direction(ev, target); if (dir === "out") c.outCount++; else if (dir === "in") c.inCount++;
       var sms = isSms(ev.type); if (sms) c.sms++; else c.voice++;
@@ -65,11 +65,13 @@
       if (!sms && dur === 0 && ring > 0){ c.unanswered++; if (ring <= 3) c.oneRing++; }
       var ms = parseDt(ev.startDt);
       if (isFinite(ms)){ c.days[isoDay(ms)] = 1; if (ms < c.firstMs) c.firstMs = ms; if (ms > c.lastMs) c.lastMs = ms;
+        var _dk = isoDay(ms); c.dayCounts[_dk] = (c.dayCounts[_dk] || 0) + 1;
         if (ms < gMin) gMin = ms; if (ms > gMax) gMax = ms; }
     });
+    var domain = []; if (isFinite(gMin) && isFinite(gMax)){ var _d0 = Math.floor(gMin / DAY), _d1 = Math.floor(gMax / DAY); for (var _d = _d0; _d <= _d1 && domain.length < 400; _d++) domain.push(isoDay(_d * DAY)); }
     var list = Object.keys(by).map(function(k){
       var c = by[k];
-      var activeDays = Object.keys(c.days).length;
+      var activeDays = Object.keys(c.dayCounts).length;
       var mx = Math.max(c.outCount, c.inCount), mn = Math.min(c.outCount, c.inCount);
       c.reciprocity = mx > 0 ? Math.round((mn / mx) * 100) / 100 : 0;
       c.activeDays = activeDays;
@@ -80,7 +82,8 @@
       c.tempo = activeDays > 0 ? Math.round((c.events / activeDays) * 10) / 10 : 0;
       c.smsOnly = c.sms > 0 && c.voice === 0;
       c.signalling = (c.unanswered + c.oneRing) > 0 && (c.unanswered + c.oneRing) >= c.voice; // mostly ring/no-answer
-      delete c.days; delete c.firstMs; delete c.lastMs;
+      c.spark = domain.map(function(d){ return c.dayCounts[d] || 0; });
+      delete c.dayCounts; delete c.firstMs; delete c.lastMs;
       return c;
     });
     // composite, explainable significance: breadth + duration mass + volume + reciprocity
@@ -98,7 +101,7 @@
         c.isDropped = isFinite(l) && l <= t1;     // last seen early
       });
     }
-    return { contacts: list, firstISO: isFinite(gMin) ? isoDay(gMin) : "", lastISO: isFinite(gMax) ? isoDay(gMax) : "", target: target };
+    return { contacts: list, firstISO: isFinite(gMin) ? isoDay(gMin) : "", lastISO: isFinite(gMax) ? isoDay(gMax) : "", days: domain, target: target };
   }
 
   root.CRCommsContacts = { profile: profile, _parseDt: parseDt, _direction: direction };

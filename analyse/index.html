@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Analyse — SOLAR</title>
-<link rel="stylesheet" href="../css/lib/leaflet.css?v=20260717b">
+<link rel="stylesheet" href="../css/lib/leaflet.css?v=20260717c">
 <!-- Full workbench design-system stack (parity with charting/database): tokens, palette, polish, chrome. -->
 <link rel="stylesheet" href="../css/app.css?v=20260716b">
 <link rel="stylesheet" href="../css/tokens.css?v=20260716a">
@@ -50,38 +50,40 @@
 </main>
 
 <!-- Data-standards layer (load first) -->
-<script src="../js/core/cm-vocab.js?v=20260717b"></script>
-<script src="../js/core/cm-standards.js?v=20260717b"></script>
+<script src="../js/core/cm-vocab.js?v=20260717c"></script>
+<script src="../js/core/cm-standards.js?v=20260717c"></script>
 <!-- Comms-data CORE (parse / de-bloat / offline BNG->WGS84) + cross-file analysis -->
-<script src="../js/core/comms-data.js?v=20260717b"></script>
-<script src="../js/core/comms-link.js?v=20260717b"></script>
-<script src="../js/core/comms-pattern.js?v=20260717b"></script>
-<script src="../js/core/comms-journeys.js?v=20260717b"></script>
-<script src="../js/core/comms-contacts.js?v=20260717b"></script>
-<script src="../js/core/comms-attribution.js?v=20260717b"></script>
+<script src="../js/core/comms-data.js?v=20260717c"></script>
+<script src="../js/core/comms-link.js?v=20260717c"></script>
+<script src="../js/core/comms-network.js?v=20260717c"></script>
+<script src="../js/core/comms-pattern.js?v=20260717c"></script>
+<script src="../js/core/comms-journeys.js?v=20260717c"></script>
+<script src="../js/core/comms-contacts.js?v=20260717c"></script>
+<script src="../js/core/comms-attribution.js?v=20260717c"></script>
 <!-- Shared case spine + Analyse->case bridge -->
-<script src="../js/core/solar-case.js?v=20260717b"></script>
-<script src="../js/core/comms-case.js?v=20260717b"></script>
+<script src="../js/core/solar-case.js?v=20260717c"></script>
+<script src="../js/core/comms-case.js?v=20260717c"></script>
 <!-- Border / NBTC: vendored aviation reference + passenger identity resolution -->
-<script src="../js/core/aviation-ref.js?v=20260717b"></script>
-<script src="../js/core/country-flags.js?v=20260717b"></script>
-<script src="../js/core/nbtc.js?v=20260717b"></script>
+<script src="../js/core/aviation-ref.js?v=20260717c"></script>
+<script src="../js/core/country-flags.js?v=20260717c"></script>
+<script src="../js/core/nbtc.js?v=20260717c"></script>
 <!-- Shared identity + shared shell top bar (one product, three functions) -->
-<script src="../js/ui/identity.js?v=20260717b"></script>
-<script src="./shell-lite.js?v=20260717b"></script>
+<script src="../js/ui/identity.js?v=20260717c"></script>
+<script src="./shell-lite.js?v=20260717c"></script>
 <!-- Registry-parity ambient cosmic ground (fixed layer behind the chrome) -->
-<script src="../js/ui/cosmos.js?v=20260717b"></script>
+<script src="../js/ui/cosmos.js?v=20260717c"></script>
 <!-- Vendored libs (offline, no CDN except the Leaflet basemap tiles) -->
-<script src="../js/lib/leaflet.js?v=20260717b"></script>
-<script src="../js/lib/xlsx.full.min.js?v=20260717b"></script>
+<script src="../js/lib/leaflet.js?v=20260717c"></script>
+<script src="../js/lib/vis-network.min.js"></script>
+<script src="../js/lib/xlsx.full.min.js?v=20260717c"></script>
 <!-- Shared entity look: same node glyphs + hue scheme as Charting (CRIcons) -->
-<script src="../js/ui/icons.js?v=20260717b"></script>
-<script src="../js/ui/entity-style.js?v=20260717b"></script>
-<script src="../js/core/known-entities.js?v=20260717b"></script>
+<script src="../js/ui/icons.js?v=20260717c"></script>
+<script src="../js/ui/entity-style.js?v=20260717c"></script>
+<script src="../js/core/known-entities.js?v=20260717c"></script>
 <!-- Analyse views -->
-<script src="./comms-view.js?v=20260717b"></script>
-<script src="./comms-link-view.js?v=20260717b"></script>
-<script src="./nbtc-view.js?v=20260717b"></script>
+<script src="./comms-view.js?v=20260717c"></script>
+<script src="./comms-link-view.js?v=20260717c"></script>
+<script src="./nbtc-view.js?v=20260717c"></script>
 <script>
   (function(){
     function boot(){

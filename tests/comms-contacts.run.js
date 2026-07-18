@@ -33,6 +33,10 @@ ok("999 reciprocity 0 (pure one-way)", c999.reciprocity === 0);
 ok("333 flagged as signalling (one-ring/unanswered)", c333.signalling === true);
 ok("333 one-ring count captured", c333.oneRing >= 1 && c333.unanswered >= 1);
 ok("lifecycle first/last window set", r.firstISO === "2024-09-01" && r.lastISO === "2024-09-05");
+ok("a shared day-domain is returned for sparklines", Array.isArray(r.days) && r.days.length === 5);
+ok("each contact has a per-day activity array on that domain", c222.spark && c222.spark.length === r.days.length);
+ok("222 sparkline reflects daily activity (2 events on day 1)", c222.spark[0] === 2);
+ok("999 sparkline is a single-day burst (0 on day 1)", c999.spark[0] === 0 && c999.spark.reduce(function(a,b){return a+b;},0) === 8);
 ok("per-contact first/last seen set", c222.firstISO === "2024-09-01" && c222.lastISO === "2024-09-05");
 
 /* a late-appearing new contact is flagged */

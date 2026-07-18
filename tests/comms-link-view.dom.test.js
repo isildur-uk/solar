@@ -12,6 +12,7 @@ dom.window.RegistryCommsData = require("../js/core/comms-data.js");
 dom.window.RegistryCommsLink = require("../js/core/comms-link.js");
 dom.window.SolarCase = require("../js/core/solar-case.js");
 dom.window.CRCommsCase = require("../js/core/comms-case.js");
+dom.window.CRCommsNetwork = require("../js/core/comms-network.js");
 var V = require("../analyse/comms-link-view.js");
 
 var cA = { id: "LTN-A", name: "Luton Town Hall", lat: 51.8790, lon: -0.4200 };

@@ -788,6 +788,16 @@
     }
   }
 
+  function sparkline(spark, w, h){
+    if (!spark || !spark.length || !doc || typeof doc.createElementNS !== "function") return null;
+    var ns = "http://www.w3.org/2000/svg", max = Math.max.apply(null, spark) || 1, n = spark.length;
+    var svg = doc.createElementNS(ns, "svg"); svg.setAttribute("viewBox", "0 0 " + n + " " + h); svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("width", w); svg.setAttribute("height", h); svg.setAttribute("class", "cd-spark");
+    for (var i = 0; i < n; i++){ if (!spark[i]) continue; var bh = Math.max(0.7, spark[i] / max * h);
+      var r = doc.createElementNS(ns, "rect"); r.setAttribute("x", i); r.setAttribute("y", h - bh); r.setAttribute("width", 0.92); r.setAttribute("height", bh); r.setAttribute("fill", "#8ea2ff"); svg.appendChild(r); }
+    return svg;
+  }
+
   function renderContacts() {
     var pane = doc.getElementById("cd-pane-contacts"); if (!pane) return; clear(pane);
     if (!CT) { pane.appendChild(el("p", "cd-empty", "Contacts module unavailable.")); return; }
@@ -796,7 +806,7 @@
     if (!r.contacts.length) { pane.appendChild(el("p", "cd-empty", "No counterparties found.")); return; }
     pane.appendChild(el("p", "cd-note", r.contacts.length + " counterparties \u00b7 " + (r.firstISO || "?") + " to " + (r.lastISO || "?") + " \u00b7 ranked by significance (reciprocity + call duration + active days), not raw count."));
     var wrap = el("div", "cd-tablewrap"), t = el("table", "cd-table"), th = el("thead"), htr = el("tr");
-    ["#", "Number", "Significance", "Events", "V/S", "Out/In", "Recip.", "Total dur", "Days", "Tempo", "First", "Last", "Flags"].forEach(function (h) { htr.appendChild(el("th", null, h)); });
+    ["#", "Number", "Significance", "Events", "V/S", "Out/In", "Recip.", "Total dur", "Days", "Tempo", "Activity", "First", "Last", "Flags"].forEach(function (h) { htr.appendChild(el("th", null, h)); });
     th.appendChild(htr); t.appendChild(th);
     var tb = el("tbody");
     r.contacts.forEach(function (c, i) {
@@ -805,7 +815,9 @@
       td(i + 1);
       var nd = el("td"); nd.textContent = c.number; if (c.key === state.target) nd.className = "cd-subject"; tr.appendChild(nd);
       var sc = el("td", "cd-scorecell"); var bar = el("span", "cd-scorebar"); bar.style.width = Math.max(4, c.score) + "%"; sc.appendChild(bar); var sl = el("span", "cd-scoreval"); sl.textContent = c.score; sc.appendChild(sl); tr.appendChild(sc);
-      td(c.events); td(c.voice + "/" + c.sms); td(c.outCount + "/" + c.inCount); td(c.reciprocity.toFixed(2)); td(fmtDur(c.totalDurSec)); td(c.activeDays); td(c.tempo); td(c.firstISO); td(c.lastISO);
+      td(c.events); td(c.voice + "/" + c.sms); td(c.outCount + "/" + c.inCount); td(c.reciprocity.toFixed(2)); td(fmtDur(c.totalDurSec)); td(c.activeDays); td(c.tempo);
+      var spk = el("td", "cd-sparkcell"); var sv = sparkline(c.spark, 110, 18); if (sv) spk.appendChild(sv); tr.appendChild(spk);
+      td(c.firstISO); td(c.lastISO);
       var fd = el("td"), flags = [];
       if (c.smsOnly) flags.push("SMS-only"); if (c.signalling) flags.push("signalling"); if (c.isNew) flags.push("new"); if (c.isDropped) flags.push("dropped");
       flags.forEach(function (f) { var sp = el("span", "cd-flag"); sp.textContent = f; fd.appendChild(sp); });
@@ -955,6 +967,7 @@
       ".cd-note{color:var(--faint);font-size:var(--fs-xs);margin:2px 0 8px}",
       ".cd-scorecell{position:relative;min-width:74px}.cd-scorebar{position:absolute;left:0;top:2px;bottom:2px;background:rgba(142,162,255,.28);border-radius:3px;z-index:0}.cd-scoreval{position:relative;z-index:1}",
       ".cd-flag{display:inline-block;font-size:var(--fs-2xs);color:var(--warn,#e8a13a);border:1px solid var(--warn,#e8a13a);border-radius:10px;padding:0 6px;margin-right:4px}",
+      ".cd-sparkcell{padding:2px 4px}.cd-spark{display:block;opacity:.85}",
       ".cd-flags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.cd-swaps{display:flex;flex-direction:column;gap:3px}.cd-swap{font-size:var(--fs-xs);color:var(--dim);font-family:var(--mono)}",
       ".cd-body{flex:1;min-height:0;position:relative}",
       ".cd-pane{position:absolute;inset:0;overflow:auto;padding:12px 14px}",

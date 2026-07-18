@@ -7,9 +7,10 @@
 (function () {
   var CD = (typeof window !== "undefined") ? window.RegistryCommsData : (typeof require !== "undefined" ? require("../js/core/comms-data.js") : null);
   var CL = (typeof window !== "undefined") ? window.RegistryCommsLink : (typeof require !== "undefined" ? require("../js/core/comms-link.js") : null);
+  var NW = (typeof window !== "undefined") ? window.CRCommsNetwork : (typeof require !== "undefined" ? require("../js/core/comms-network.js") : null);
   var doc = (typeof document !== "undefined") ? document : null;
 
-  var state = { datasets: [], built: false, tab: "contacts", map: null, layers: [], cc: null, co: null };
+  var state = { datasets: [], built: false, tab: "contacts", map: null, layers: [], cc: null, co: null, net: null, netInstance: null };
 
   function el(t, c, x) { var e = doc.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
   function clear(n) { while (n && n.firstChild) n.removeChild(n.firstChild); }
@@ -53,7 +54,7 @@
     var rail = el("div", "cl-rail"); rail.id = "cl-rail"; panel.appendChild(rail);
 
     var tabs = el("div", "cl-tabs");
-    [["contacts", "Common contacts"], ["coloc", "Co-location"]].forEach(function (t) {
+    [["contacts", "Common contacts"], ["coloc", "Co-location"], ["network", "Network"], ["matrix", "Matrix"]].forEach(function (t) {
       var b = el("button", "cl-tab", t[1]); b.type = "button"; b.dataset.tab = t[0]; b.onclick = function () { showTab(t[0]); };
       if (t[0] === "contacts") b.classList.add("cl-tab-on"); tabs.appendChild(b);
     });
@@ -65,6 +66,8 @@
     var tbl = el("div", "cl-coloc-table"); tbl.id = "cl-coloc-table"; pl.appendChild(tbl);
     var mp = el("div"); mp.id = "cl-map"; mp.className = "cl-map"; pl.appendChild(mp);
     body.appendChild(pl);
+    var pn = el("div", "cl-pane"); pn.id = "cl-pane-network"; pn.setAttribute("hidden", ""); body.appendChild(pn);
+    var pmx = el("div", "cl-pane"); pmx.id = "cl-pane-matrix"; pmx.setAttribute("hidden", ""); body.appendChild(pmx);
     panel.appendChild(body);
 
     host.appendChild(panel); state.built = true;
@@ -75,12 +78,12 @@
 
   function showTab(t) {
     state.tab = t;
-    var pc = doc.getElementById("cl-pane-contacts"), pl = doc.getElementById("cl-pane-coloc");
-    if (pc) pc.toggleAttribute("hidden", t !== "contacts");
-    if (pl) pl.toggleAttribute("hidden", t !== "coloc");
+    ["contacts", "coloc", "network", "matrix"].forEach(function (x) { var p = doc.getElementById("cl-pane-" + x); if (p) p.toggleAttribute("hidden", x !== t); });
     var tb = doc.querySelectorAll(".cl-tab");
     for (var i = 0; i < tb.length; i++) tb[i].classList.toggle("cl-tab-on", tb[i].dataset.tab === t);
     if (t === "coloc") renderMap();
+    if (t === "network") renderNetwork();
+    if (t === "matrix") renderMatrix();
   }
 
   /* ---- ingest ---- */
@@ -121,6 +124,54 @@
     });
   }
 
+  /* ---- network + matrix (structural analysis) ---- */
+  function shortNum(x){ x = String(x || ""); return x.length > 8 ? x.slice(-7) : x; }
+  function renderNetwork(){
+    var pane = doc.getElementById("cl-pane-network"); if (!pane) return; clear(pane);
+    if (!NW){ pane.appendChild(el("p", "cl-empty", "Network module unavailable.")); return; }
+    if (state.datasets.length < 2){ pane.appendChild(el("p", "cl-empty", "Load at least two subjects to build the network.")); return; }
+    if (!state.net) state.net = NW.build(state.datasets);
+    var g = state.net;
+    var gc = el("div", "cl-graph"); gc.id = "cl-graph"; pane.appendChild(gc);
+    if (typeof vis !== "undefined"){ try { renderVis(gc, g); } catch (e){ clear(gc); gc.appendChild(el("p", "cl-empty", "Graph error: " + e.message)); } }
+    else gc.appendChild(el("p", "cl-empty", "Interactive graph loads in the browser \u2014 ranked structure is below."));
+    pane.appendChild(el("p", "cl-note", "Node size = contact volume; amber ring = broker / cut-out (bridges otherwise-separate clusters); amber fill = a loaded subject. Structural only \u2014 not seniority."));
+    pane.appendChild(el("h3", "cl-h", "Structural ranking \u2014 hubs & brokers"));
+    var rows = g.ranked.slice(0, 30).map(function(n, i){ return [i + 1, n.label, n.degree, n.betweenness, n.weightedDegree, (n.isTarget ? "subject" : "") + (n.broker ? (n.isTarget ? ", broker" : "broker") : "")]; });
+    pane.appendChild(tableFrom(["#", "Number", "Degree", "Betweenness", "Volume", "Role"], rows, "No network."));
+  }
+  function renderVis(container, g){
+    var nodes = g.nodes.map(function(n){ return { id: n.id, label: n.label, value: Math.max(1, n.weightedDegree), shape: "dot",
+      color: { background: (n.isTarget ? "#e8a13a" : "#8ea2ff"), border: (n.broker ? "#e8a13a" : "#26303f"), highlight: { background: "#b9c8dd", border: "#e8a13a" } },
+      borderWidth: (n.broker ? 3 : 1), font: { color: "#b9c8dd", size: 12 } }; });
+    var edges = g.edges.map(function(e){ return { from: e.from, to: e.to, value: e.weight, color: { color: "rgba(142,162,255,.30)", highlight: "#8ea2ff" } }; });
+    state.netInstance = new vis.Network(container, { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) },
+      { nodes: { scaling: { min: 6, max: 28 } }, edges: { scaling: { min: 1, max: 6 }, smooth: false }, physics: { stabilization: { iterations: 150 }, barnesHut: { springLength: 130 } }, interaction: { hover: true, tooltipDelay: 120 } });
+  }
+  function renderMatrix(){
+    var pane = doc.getElementById("cl-pane-matrix"); if (!pane) return; clear(pane);
+    if (!NW){ pane.appendChild(el("p", "cl-empty", "Network module unavailable.")); return; }
+    if (state.datasets.length < 2){ pane.appendChild(el("p", "cl-empty", "Load at least two subjects.")); return; }
+    if (!state.net) state.net = NW.build(state.datasets);
+    var g = state.net, ids = g.matrixOrder.slice(0, 40), n = ids.length;
+    if (!n){ pane.appendChild(el("p", "cl-empty", "No network.")); return; }
+    var max = 1; Object.keys(g.matrixCounts).forEach(function(k){ if (g.matrixCounts[k] > max) max = g.matrixCounts[k]; });
+    var labelOf = {}; g.nodes.forEach(function(nd){ labelOf[nd.id] = nd.label; });
+    pane.appendChild(el("p", "cl-note", "Who contacts whom \u2014 cell shade = volume; dense blocks = tight sub-groups. Ordered by volume; top 40 shown. A cell is contact between two lines, not a meeting."));
+    var wrap = el("div", "cl-tablewrap"), t = el("table", "cl-matrix"), thead = el("thead"), htr = el("tr");
+    htr.appendChild(el("th", "cl-mx-corner", ""));
+    ids.forEach(function(id){ var th = el("th", "cl-mx-colh"); th.appendChild(el("span", null, shortNum(labelOf[id] || id))); htr.appendChild(th); });
+    thead.appendChild(htr); t.appendChild(thead);
+    var tb = el("tbody");
+    ids.forEach(function(ri){ var tr = el("tr"); tr.appendChild(el("th", "cl-mx-rowh", shortNum(labelOf[ri] || ri)));
+      ids.forEach(function(ci){ var td = el("td", "cl-mx-cell");
+        if (ri === ci) td.className = "cl-mx-cell cl-mx-diag";
+        else { var c = g.matrixCounts[ri + "|" + ci] || 0; if (c){ td.style.background = "rgba(142,162,255," + (0.12 + 0.7 * c / max).toFixed(2) + ")"; td.title = (labelOf[ri] || ri) + " \u2194 " + (labelOf[ci] || ci) + ": " + c; } }
+        tr.appendChild(td); });
+      tb.appendChild(tr); });
+    t.appendChild(tb); wrap.appendChild(t); pane.appendChild(wrap);
+  }
+
   /* ---- analyse ---- */
   function analyse() {
     if (!CL || state.datasets.length < 2) { flash("Load at least two subjects."); return; }
@@ -128,7 +179,8 @@
     var win = +(doc.getElementById("cl-window") || {}).value || 60;
     var rad = +(doc.getElementById("cl-radius") || {}).value; if (isNaN(rad)) rad = 250;
     state.co = CL.coLocations(state.datasets, { windowMins: win, radiusM: rad });
-    renderContacts(); renderColoc();
+    state.net = null;
+    renderContacts(); renderColoc(); renderNetwork(); renderMatrix();
     if (state.tab === "coloc") renderMap();
     flash(state.cc.shared.length + " shared contacts · " + state.cc.directLinks.length + " direct links · " + state.co.length + " co-locations");
   }
@@ -248,6 +300,11 @@
       ".cl-tabs{display:flex;gap:4px;padding:8px 14px 0}.cl-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--faint);padding:7px 12px;cursor:pointer;font:inherit}.cl-tab:hover{color:var(--dim)}.cl-tab-on{color:var(--accent);border-bottom-color:var(--accent)}",
       ".cl-body{flex:1;min-height:0;position:relative}.cl-pane{position:absolute;inset:0;overflow:auto;padding:12px 14px}",
       ".cl-h{margin:14px 0 6px;font-size:var(--fs-sm);color:var(--dim);font-weight:600}.cl-h:first-child{margin-top:0}",
+      ".cl-note{color:var(--faint);font-size:var(--fs-xs);margin:2px 0 8px}",
+      ".cl-graph{height:440px;background:var(--bg,#0a0f18);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:8px}",
+      ".cl-matrix{border-collapse:collapse;font-size:var(--fs-2xs)}.cl-matrix th,.cl-matrix td{border:1px solid var(--line)}.cl-mx-cell{width:15px;height:15px}.cl-mx-diag{background:var(--panel-2)}",
+      ".cl-mx-rowh{padding:2px 6px;text-align:right;white-space:nowrap;color:var(--dim);font-family:var(--mono);font-weight:400}",
+      ".cl-mx-colh{height:66px;vertical-align:bottom;padding:0 1px}.cl-mx-colh span{display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);color:var(--dim);font-family:var(--mono);white-space:nowrap;font-size:var(--fs-2xs)}",
       ".cl-tablewrap{overflow:auto}.cl-table{border-collapse:collapse;width:100%;font-size:var(--fs-xs);margin-bottom:6px}",
       ".cl-table th,.cl-table td{border:1px solid var(--line);padding:4px 7px;text-align:left;white-space:nowrap}.cl-table td{font-family:var(--mono);font-variant-numeric:tabular-nums}.cl-table th{position:sticky;top:0;background:var(--panel-2);color:var(--faint);font-family:var(--mono);font-size:var(--fs-2xs);text-transform:uppercase;letter-spacing:.04em}",
       ".cl-table tbody tr:hover{background:rgba(142,162,255,.06)}",
