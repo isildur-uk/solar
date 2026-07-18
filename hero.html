@@ -364,15 +364,15 @@ body.warping .content {
     <h1 class="wordmark" id="wordmark" role="img" aria-label="SOLAR"><b aria-hidden="true" style="--i:0">S</b><b aria-hidden="true" style="--i:1">O</b><b aria-hidden="true" style="--i:2">L</b><b aria-hidden="true" style="--i:3">A</b><b aria-hidden="true" style="--i:4">R</b></h1>
     <!-- Database is the primary product (top); Charting is the second, in tandem -->
     <nav class="launch-nav" aria-label="SOLAR functions">
-      <a class="pill pill-primary" id="go-database" href="registry/">
+      <a class="pill pill-primary" id="go-database" href="/database">
         <span class="pill-rim" aria-hidden="true"></span>
         <span class="pill-label">Database</span>
       </a>
-      <a class="pill" id="go-analyse" href="analyse/">
+      <a class="pill" id="go-analyse" href="/analyse">
         <span class="pill-rim" aria-hidden="true"></span>
         <span class="pill-label">Analyse</span>
       </a>
-      <a class="pill" id="go-context" href="index.html#context">
+      <a class="pill" id="go-context" href="/context">
         <span class="pill-rim" aria-hidden="true"></span>
         <span class="pill-label">Context</span>
       </a>
@@ -790,7 +790,7 @@ body.warping .content {
   function detonate(dest) {
     if (launched) return;
     launched = true;
-    dest = dest || "index.html";
+    dest = dest || "/charting";
 
     /* the wordmark dissolves away (one-shot; letters waft up into smoke) */
     if (wordmarkEl) { wordmarkEl.classList.add("is-leaving"); }
@@ -826,7 +826,7 @@ body.warping .content {
 
   /* CHARTING (the ENTER button) → the workbench */
   var enterBtn = document.getElementById("enter");
-  enterBtn.addEventListener("click", function () { detonate("index.html"); });
+  enterBtn.addEventListener("click", function () { detonate("/charting"); });
 
   /* DATABASE (the primary pill) → the registry, with the SAME dissolve transition
      (previously it navigated plainly with no dissolve). We intercept the link so
@@ -835,7 +835,7 @@ body.warping .content {
   if (dbLink) {
     dbLink.addEventListener("click", function (e) {
       e.preventDefault();
-      detonate(dbLink.getAttribute("href") || "registry/");
+      detonate(dbLink.getAttribute("href") || "/database");
     });
   }
   /* ANALYSE (the second pill) → the Analyse workspace, same dissolve transition. */
@@ -843,7 +843,7 @@ body.warping .content {
   if (anLink) {
     anLink.addEventListener("click", function (e) {
       e.preventDefault();
-      detonate(anLink.getAttribute("href") || "analyse/");
+      detonate(anLink.getAttribute("href") || "/analyse");
     });
   }
 
@@ -851,7 +851,7 @@ body.warping .content {
   if (ctxLink) {
     ctxLink.addEventListener("click", function (e) {
       e.preventDefault();
-      detonate(ctxLink.getAttribute("href") || "index.html#context");
+      detonate(ctxLink.getAttribute("href") || "/context");
     });
   }
 
@@ -860,7 +860,7 @@ body.warping .content {
     /* don't hijack Enter when a launcher link/button is focused — let it activate */
     var a = document.activeElement;
     if (a && a !== enterBtn && (a.tagName === "A" || a.classList.contains("pill"))) return;
-    detonate("index.html");
+    detonate("/charting");
   });
 
   /* trail loop */

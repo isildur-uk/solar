@@ -20,9 +20,16 @@
   var active = null;     // currently-shown in-document surface
   var listeners = [];    // onChange(surface, prev) callbacks
 
-  function surfaceFromHash() {
+  /* Which surface does the URL name? Clean path first (/charting, /analyse,
+     /database, /context = the four function URLs), hash second (back-compat
+     deep links like #context). Returns null if the URL names no in-doc view. */
+  function surfaceFromLocation() {
+    var segs = (location.pathname || "").split("/").filter(Boolean);
+    var last = (segs.length ? segs[segs.length - 1] : "").toLowerCase();
+    if (views[last] && !views[last].external) { return last; }
     var h = (location.hash || "").replace(/^#/, "").toLowerCase();
-    return views[h] ? h : null;
+    if (views[h] && !views[h].external) { return h; }
+    return null;
   }
 
   /* register(surface, def)
@@ -71,23 +78,22 @@
     active = surface;
 
     if (!opts.silent) {
-      try { if (("#" + surface) !== location.hash) { history.pushState(null, "", "#" + surface); } } catch (e) { /* noop */ }
+      try { var url = "/" + surface; if (location.pathname !== url) { history.pushState(null, "", url); } } catch (e) { /* noop */ }
     }
     listeners.forEach(function (fn) { try { fn(surface, prev); } catch (e) { /* noop */ } });
     return true;
   }
 
-  // Back/forward + manual hash edits move between in-document views.
-  window.addEventListener("hashchange", function () {
-    var s = surfaceFromHash();
-    if (s && !views[s].external) { activate(s, { silent: true }); }
-  });
+  // Back/forward (clean-path pushState) + legacy hash edits move between views.
+  function syncFromLocation() { var s = surfaceFromLocation(); if (s) { activate(s, { silent: true }); } }
+  window.addEventListener("popstate", syncFromLocation);
+  window.addEventListener("hashchange", syncFromLocation);
 
   /* start(defaultSurface) — pick the initial view: the hash if it names a
      mounted view, else the caller's default. Silent (no history push). */
   function start(defaultSurface) {
-    var s = surfaceFromHash();
-    var pick = (s && !views[s].external) ? s : defaultSurface;
+    var s = surfaceFromLocation();
+    var pick = s || defaultSurface;
     activate(pick, { silent: true });
   }
 

@@ -1,3 +1,10 @@
-# SOLAR front door: the cinematic cover is served AT the root via a 200
-# rewrite, so the address bar stays solar.isildur.co.uk/ (no /hero path).
-/    /hero.html    200
+# SOLAR homepage — the cinematic hero is served AT the root (200 rewrite, so the
+# address bar stays solar.isildur.co.uk/ with no /hero path).
+/            /hero.html    200
+
+# The four functions are surfaces of the single-page app; the JS router reads the
+# path segment and shows that surface. 200 rewrites keep the clean URL in the bar.
+/charting    /index.html   200
+/analyse     /index.html   200
+/database    /index.html   200
+/context     /index.html   200

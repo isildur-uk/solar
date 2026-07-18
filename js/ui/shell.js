@@ -543,7 +543,7 @@
       Database: "Database — the structured-intelligence registry (reports & entities)",
       Context: "Context — strategic threat-area maps (hawala, drug & migration flows, OCG)"
     };
-    var HREF = { Charting: PFX + "index.html", Analyse: PFX + "analyse/index.html", Database: PFX + "registry/index.html", Context: PFX + "index.html#context" };
+    var HREF = { Charting: "/charting", Analyse: "/analyse", Database: "/database", Context: "/context" };
     var surfBtns = {};   // surface (lowercase) -> anchor, for reflecting the active view
     function surfLink(label) {
       var surface = label.toLowerCase();

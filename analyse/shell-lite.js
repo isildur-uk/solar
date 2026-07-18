@@ -27,10 +27,11 @@
     var GLOSS = {
       Charting: "Charting — the link-analysis workbench (entities, links, timeline)",
       Analyse: "Analyse — comms/ANPR analysis (movement, links, patterns)",
-      Database: "Database — the structured-intelligence registry (reports & entities)"
+      Database: "Database — the structured-intelligence registry (reports & entities)",
+      Context: "Context — strategic threat-area maps (hawala, drug & migration flows, OCG)"
     };
-    var HREF = { Charting: "../index.html", Analyse: "./index.html", Database: "../registry/index.html" };
-    ["Charting", "Analyse", "Database"].forEach(function (label) {
+    var HREF = { Charting: "/charting", Analyse: "/analyse", Database: "/database", Context: "/context" };
+    ["Database", "Analyse", "Charting", "Context"].forEach(function (label) {
       var cur = (label === "Analyse");
       var a = el("a", "sh-surf-btn fx-6", '<span class="sh-surf-label">' + label + '</span>');
       a.href = cur ? "#" : HREF[label];
